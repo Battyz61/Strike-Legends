@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Hill Rush</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#101827;font-family:system-ui,-apple-system,Segoe UI,sans-serif;touch-action:none}canvas{display:block;width:100vw;height:100vh;background:linear-gradient(#7ec8ff 0%,#c9efff 58%,#f3d39b 58%,#7fbd59 100%)}#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 4px #0008;font-weight:800}.top{display:flex;justify-content:space-between;padding:18px 20px;font-size:18px}.pill{background:#111b2bcc;border:1px solid #ffffff30;border-radius:14px;padding:8px 12px;backdrop-filter:blur(6px)}#hint{position:absolute;left:50%;top:14%;transform:translateX(-50%);font-size:16px;text-align:center;opacity:.9}#controls{position:fixed;left:0;right:0;bottom:0;padding:18px 20px calc(18px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;pointer-events:none}.btn{pointer-events:auto;width:100px;height:100px;border-radius:50%;border:2px solid #fff5;background:#162238bb;color:#fff;font-size:16px;font-weight:900;box-shadow:0 8px 25px #0004;user-select:none;-webkit-user-select:none}.btn:active{transform:scale(.94);background:#31476bbb}.stack{display:flex;gap:14px}.small{width:72px;height:72px;font-size:12px}#gameover{position:fixed;inset:0;display:none;place-items:center;background:#06101b88;pointer-events:auto}.card{background:#121c2af2;border:1px solid #ffffff22;border-radius:24px;padding:28px;text-align:center;color:#fff;min-width:260px;box-shadow:0 20px 60px #0007}.card h1{margin:0 0 8px}.card button{border:0;border-radius:12px;padding:13px 22px;font-weight:900;font-size:16px;cursor:pointer}
+</style></head><body>
+<canvas id="c"></canvas><div id="hud"><div class="top"><div class="pill">🏁 <span id="dist">0</span> m</div><div class="pill">🪙 <span id="coins">0</span></div></div><div id="hint">GAZ'a bas • havada dengeyi koru</div></div>
+<div id="controls"><div class="stack"><button class="btn" id="brake">◀<br>FREN</button><button class="btn" id="gas">▶<br>GAZ</button></div><div class="stack"><button class="btn small" id="tiltL">↶<br>GERİ</button><button class="btn small" id="tiltR">↷<br>İLERİ</button></div></div>
+<div id="gameover"><div class="card"><h1>Takla attın! 😵</h1><p><span id="finalDist">0</span> metre • 🪙 <span id="finalCoins">0</span></p><button id="restart">Tekrar Sür</button></div></div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');let W,H,dpr;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
+let terrain=[],coins=[],car,cam=0,over=false,score=0,collected=0,last=0;
+const keys={gas:false,brake:false,left:false,right:false};
+function height(x){return H*.62 + Math.sin(x*.004)*48+Math.sin(x*.009+1.2)*27+Math.sin(x*.018)*13+Math.sin(x*.0017)*80}
+function init(){terrain=[];coins=[];for(let x=-300;x<18000;x+=18)terrain.push({x,y:height(x)});for(let x=350;x<16000;x+=180+Math.random()*220)coins.push({x,y:height(x)-70,got:false});car={x:100,y:height(100)-45,vx:0,vy:0,a:0,va:0,ground:true,rotations:0};cam=0;over=false;score=0;collected=0;document.getElementById('gameover').style.display='none';}
+function groundY(x){return height(x)}
+function update(dt){if(over)return;let throttle=(keys.gas?1:0)-(keys.brake?.65:0);car.vx+=throttle*720*dt;car.vx*=Math.pow(.985,dt*60);car.vx=Math.max(-180,Math.min(700,car.vx));car.vy+=1450*dt;car.x+=car.vx*dt;car.y+=car.vy*dt;
+ const gy=groundY(car.x)-42;car.ground=false;if(car.y>=gy){car.y=gy;if(car.vy>0)car.vy*= -.12;car.ground=true}
+ let slope=(groundY(car.x+12)-groundY(car.x-12))/24;let target=Math.atan2(slope*car.vx,Math.abs(car.vx)+40);if(!car.ground){if(keys.left)car.va-=7*dt;if(keys.right)car.va+=7*dt} else car.va+=(target-car.a)*10*dt;car.a+=car.va*dt;car.va*=Math.pow(.84,dt*60);
+ if(Math.abs(car.a)>Math.PI*1.65){over=true;document.getElementById('finalDist').textContent=Math.max(0,Math.floor((car.x-100)/10));document.getElementById('finalCoins').textContent=collected;document.getElementById('gameover').style.display='grid'}
+ for(const q of coins)if(!q.got&&Math.hypot(q.x-car.x,q.y-car.y)<42){q.got=true;collected++}
+ cam+=(car.x-W*.28-cam)*Math.min(1,dt*5);score=Math.max(0,Math.floor((car.x-100)/10));document.getElementById('dist').textContent=score;document.getElementById('coins').textContent=collected;
+}
+function draw(){ctx.clearRect(0,0,W,H);let sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#79c9ff');sky.addColorStop(.58,'#d9f3ff');sky.addColorStop(.581,'#d9b36b');sky.addColorStop(1,'#6ba844');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ // distant hills
+ ctx.fillStyle='#73a4a0';ctx.beginPath();ctx.moveTo(0,H*.63);for(let x=0;x<=W;x+=20)ctx.lineTo(x,H*.53+Math.sin((x+cam*.2)*.006)*38+Math.sin(x*.014)*15);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+ ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(-20,groundY(cam-20)-cam*0);for(let sx=-30;sx<=W+30;sx+=10){let wx=sx+cam;ctx.lineTo(sx,groundY(wx))}ctx.lineTo(W,H);ctx.closePath();ctx.fillStyle='#6caf45';ctx.fill();ctx.strokeStyle='#355f31';ctx.lineWidth=4;ctx.stroke();
+ for(const q of coins){if(q.got)continue;let sx=q.x-cam;if(sx<-30||sx>W+30)continue;ctx.fillStyle='#ffd447';ctx.beginPath();ctx.arc(sx,q.y,10,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#b77812';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff1a0';ctx.beginPath();ctx.arc(sx-3,q.y-3,3,0,Math.PI*2);ctx.fill()}
+ let sx=car.x-cam,sy=car.y;ctx.save();ctx.translate(sx,sy);ctx.rotate(car.a);ctx.fillStyle='#e5483e';round(-38,-24,76,34,10);ctx.fillStyle='#26364d';round(-20,-20,27,18,5);ctx.fillStyle='#151b23';ctx.beginPath();ctx.arc(-24,14,13,0,Math.PI*2);ctx.arc(24,14,13,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8797a8';ctx.beginPath();ctx.arc(-24,14,6,0,Math.PI*2);ctx.arc(24,14,6,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+function round(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function loop(t){let dt=Math.min(.032,(t-last)/1000||.016);last=t;update(dt);draw();requestAnimationFrame(loop)}init();requestAnimationFrame(loop);
+function bind(id,k){const e=document.getElementById(id);['pointerdown','touchstart'].forEach(ev=>e.addEventListener(ev,x=>{x.preventDefault();keys[k]=true},{passive:false}));['pointerup','pointercancel','pointerleave','touchend'].forEach(ev=>e.addEventListener(ev,x=>{x.preventDefault();keys[k]=false},{passive:false}))}
+bind('gas','gas');bind('brake','brake');bind('tiltL','left');bind('tiltR','right');addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='d')keys.gas=true;if(e.key==='ArrowLeft'||e.key==='a')keys.brake=true;if(e.key==='ArrowUp'||e.key==='w')keys.right=true;if(e.key==='ArrowDown'||e.key==='s')keys.left=true});addEventListener('keyup',e=>{if(e.key==='ArrowRight'||e.key==='d')keys.gas=false;if(e.key==='ArrowLeft'||e.key==='a')keys.brake=false;if(e.key==='ArrowUp'||e.key==='w')keys.right=false;if(e.key==='ArrowDown'||e.key==='s')keys.left=false});
+document.getElementById('restart').onclick=init;
+setTimeout(()=>document.getElementById('hint').style.display='none',4500);
+</script></body></html>
