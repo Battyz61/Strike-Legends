@@ -11,7 +11,7 @@ function end(title){if(dead)return;dead=1;stats.best=Math.max(stats.best,dist);p
 function upd(dt){if(dead)return;
 const power=690*(1+stats.engine*.13),maxV=620+stats.engine*55;
 if(k.g)car.v+=power*dt;if(k.b)car.v-=power*.58*dt;
-car.v*=Math.pow(.985,dt*60);car.v=Math.max(-170,Math.min(maxV,car.v));car.w1+=car.v*dt/.42;car.w2+=car.v*dt/.42;
+car.v*=Math.pow(k.g?.992:.982,dt*60);car.v=Math.max(-170,Math.min(maxV,car.v));car.w1+=car.v*dt/.42;car.w2+=car.v*dt/.42;
 if(k.g){fuel-=dt*(2.05-.1*stats.tank);if(Math.random()<dt*24)particles.push({x:car.x-45,y:car.y-2,vx:-35-Math.random()*45,vy:-15-Math.random()*35,life:.55})}
 if(fuel<=0){fuel=0;end('Yakıt Bitti ⛽');return}
 const rearX=car.x-27,frontX=car.x+27,rearG=wheelY(rearX),frontG=wheelY(frontX);
@@ -20,7 +20,7 @@ const bodyBottom=car.y+20,ground=Math.min(rearG,frontG);const wheelRear=car.y+24
 if(bodyBottom>=ground){const impact=car.vy;car.y=ground-20;if(car.vy>0)car.vy*=-.16;car.vy+=slopeAt(car.x)*car.v*2.2*dt;if(impact>280)for(let i=0;i<8;i++)particles.push({x:car.x+(Math.random()-.5)*55,y:ground,vx:(Math.random()-.5)*120,vy:-50-Math.random()*90,life:.35});car.wasGround=1}else car.wasGround=0;
 const target=Math.atan2(hy(frontX)-hy(rearX),54);
 if(!ground||Math.abs(car.vy)>30){if(k.l)car.va-=6.5*(1+stats.tire*.06)*dt;if(k.r)car.va+=6.5*(1+stats.tire*.06)*dt}
-car.va+=(target-car.a)*(ground?12+stats.tire*.8:1.2)*dt;car.a+=car.va*dt;car.va*=Math.pow(.86,dt*60);
+car.va+=(target-car.a)*(ground?15+stats.tire*1.0:1.0)*dt;car.va+=slopeAt(car.x)*car.v*.0009*dt;car.a+=car.va*dt;car.va*=Math.pow(.86,dt*60);
 if(Math.abs(car.a)>Math.PI*1.65){end('Takla attın 😵');return}
 for(const q of coins)if(q.on&&Math.hypot(q.x-car.x,q.y-car.y)<46){q.on=0;got++;stats.wallet++;persist();particles.push({x:q.x,y:q.y,vx:(Math.random()-.5)*80,vy:-100,life:.55})}for(const q of fuelCans)if(q.on&&Math.hypot(q.x-car.x,q.y-car.y)<52){q.on=0;fuel=Math.min(100,fuel+32);for(let i=0;i<12;i++)particles.push({x:q.x,y:q.y,vx:(Math.random()-.5)*130,vy:-70-Math.random()*100,life:.5})}
 cam+=(car.x-W*.28-cam)*Math.min(1,dt*5);dist=Math.max(0,(car.x-100)/10);ui();
@@ -37,19 +37,41 @@ x.fillStyle=day>.45?'#fff3a6':'#eaf0ff';x.beginPath();x.arc(W-75,82,day>.45?28:2
 for(const q of fuelCans)if(q.on){let sx=q.x-cam;if(sx>-30&&sx<W+30){x.save();x.translate(sx,q.y);x.fillStyle='#d9443e';x.strokeStyle='#7b2522';x.lineWidth=2;x.beginPath();x.roundRect(-9,-13,18,26,4);x.fill();x.stroke();x.fillStyle='#fff1d0';x.fillRect(-3,-6,6,12);x.fillStyle='#d9443e';x.fillRect(-3,-17,6,5);x.restore()}}for(const q of coins)if(q.on){let sx=q.x-cam;if(sx>-30&&sx<W+30){x.save();x.translate(sx,q.y);x.rotate(performance.now()*.003);x.fillStyle='#ffd447';x.strokeStyle='#b87810';x.lineWidth=2;x.beginPath();x.ellipse(0,0,10,13,0,0,7);x.fill();x.stroke();x.fillStyle='#fff3a6';x.fillRect(-2,-9,3,5);x.restore()}}
 for(const p of particles){let sx=p.x-cam;x.globalAlpha=Math.max(0,p.life*2);x.fillStyle='#ddd';x.beginPath();x.arc(sx,p.y,3+p.life*5,0,7);x.fill();x.globalAlpha=1}
 const sx=car.x-cam;x.save();x.translate(sx,car.y);x.rotate(car.a);
-if(carSprite.complete&&carSprite.naturalWidth){
-  const sw=carSprite.naturalWidth,sh=carSprite.naturalHeight;
-  const dw=112,dh=sh*(dw/sw);
-  x.shadowColor='#0008';x.shadowBlur=7;x.shadowOffsetY=5;
-  x.drawImage(carSprite,-dw*.5,-dh*.62,dw,dh);
-  x.shadowBlur=0;x.shadowOffsetY=0;
-}else{
-  const bob=Math.sin(performance.now()*.02+car.x*.03)*1.5;
-  x.strokeStyle='#20242b';x.lineWidth=4;x.beginPath();x.moveTo(-27,5);x.lineTo(-31,18);x.moveTo(27,5);x.lineTo(31,18);x.stroke();
-  x.fillStyle='#b92f2a';x.beginPath();x.roundRect(-41,-23+bob,82,35,11);x.fill();x.fillStyle='#ef5548';x.fillRect(-34,-18+bob,68,7);
-  x.fillStyle='#26364d';x.beginPath();x.moveTo(-21,-20+bob);x.lineTo(-10,-34+bob);x.lineTo(18,-32+bob);x.lineTo(29,-20+bob);x.closePath();x.fill();x.fillStyle='#9bdaf0';x.beginPath();x.moveTo(-14,-27+bob);x.lineTo(-7,-30+bob);x.lineTo(5,-29+bob);x.lineTo(9,-21+bob);x.lineTo(-14,-21+bob);x.closePath();x.fill();
-  for(const wh of [{x:-25,rot:car.w1},{x:25,rot:car.w2}]){x.save();x.translate(wh.x,15);x.rotate(wh.rot);x.fillStyle='#11161c';x.beginPath();x.arc(0,0,15,0,7);x.fill();x.fillStyle='#aeb9c5';x.beginPath();x.arc(0,0,7,0,7);x.fill();x.restore()}
+// custom animated Hill Rush buggy — no remote dependency
+const speed=Math.min(1,Math.abs(car.v)/520);
+const bounce=(car.wasGround?Math.sin(performance.now()*.018+car.x*.035)*1.1:0);
+const lean=Math.max(-.18,Math.min(.18,car.va*.035));
+x.save();x.translate(0,bounce);x.rotate(lean);
+function wheel(wx,wy,rot){
+  x.save();x.translate(wx,wy);x.rotate(rot);
+  x.fillStyle='#10151b';x.beginPath();x.arc(0,0,16,0,7);x.fill();
+  x.fillStyle='#26313b';x.beginPath();x.arc(0,0,11,0,7);x.fill();
+  x.fillStyle='#e2a72d';x.beginPath();x.arc(0,0,5.5,0,7);x.fill();
+  x.strokeStyle='#f2d46a';x.lineWidth=2;
+  for(let i=0;i<6;i++){x.rotate(Math.PI/3);x.beginPath();x.moveTo(0,-3);x.lineTo(0,-9);x.stroke()}
+  x.restore();
 }
+const rear=-30,front=30,wy=18;
+wheel(rear,wy+car.sus1,car.w1);wheel(front,wy+car.sus2,car.w2);
+x.strokeStyle='#d3d9df';x.lineWidth=3;
+x.beginPath();x.moveTo(rear,4);x.lineTo(rear,wy+car.sus1-2);x.moveTo(front,4);x.lineTo(front,wy+car.sus2-2);x.stroke();
+x.fillStyle='#151b22';x.strokeStyle='#080b0f';x.lineWidth=3;
+x.beginPath();x.roundRect(-43,-24,86,38,10);x.fill();x.stroke();
+x.fillStyle='#e34a32';x.beginPath();x.roundRect(-40,-25,80,29,9);x.fill();
+x.fillStyle='#f05a3c';x.beginPath();x.moveTo(-35,-21);x.lineTo(-18,-39);x.lineTo(18,-39);x.lineTo(34,-21);x.closePath();x.fill();
+x.fillStyle='#172638';x.strokeStyle='#0c1118';x.lineWidth=2;
+x.beginPath();x.moveTo(-14,-34);x.lineTo(-7,-39);x.lineTo(9,-39);x.lineTo(18,-23);x.lineTo(-16,-23);x.closePath();x.fill();x.stroke();
+x.fillStyle='#79c9e8';x.beginPath();x.moveTo(-10,-34);x.lineTo(-6,-37);x.lineTo(4,-37);x.lineTo(7,-25);x.lineTo(-12,-25);x.closePath();x.fill();
+x.fillStyle='#ffc94d';x.beginPath();x.roundRect(28,-13,7,5,2);x.fill();
+x.fillStyle='#ff7a3d';x.beginPath();x.roundRect(-43,-12,6,7,2);x.fill();
+x.fillStyle='#252d35';x.beginPath();x.roundRect(-29,1,58,7,3);x.fill();
+x.strokeStyle='#f7d36b';x.lineWidth=2;x.beginPath();x.moveTo(-20,8);x.lineTo(-10,13);x.lineTo(12,13);x.lineTo(23,8);x.stroke();
+x.restore();
+// dust / exhaust tied to throttle and speed
+if(k.g&&car.wasGround&&Math.random()<dt*34){
+  particles.push({x:car.x-43,y:car.y+15,vx:-45-Math.random()*90,vy:-20-Math.random()*45,life:.35});
+}
+
 x.restore()}
 function bind(id,key){let e=document.getElementById(id);e.addEventListener('pointerdown',z=>{z.preventDefault();try{e.setPointerCapture(z.pointerId)}catch(_){}k[key]=1});['pointerup','pointercancel','pointerleave'].forEach(v=>e.addEventListener(v,z=>{z.preventDefault();k[key]=0}))}bind('g','g');bind('b','b');bind('l','l');bind('r','r');
 addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='d')k.g=1;if(e.key==='ArrowLeft'||e.key==='a')k.b=1;if(e.key==='ArrowUp'||e.key==='w')k.r=1;if(e.key==='ArrowDown'||e.key==='s')k.l=1});addEventListener('keyup',e=>{if(e.key==='ArrowRight'||e.key==='d')k.g=0;if(e.key==='ArrowLeft'||e.key==='a')k.b=0;if(e.key==='ArrowUp'||e.key==='w')k.r=0;if(e.key==='ArrowDown'||e.key==='s')k.l=0});
