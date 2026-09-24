@@ -9,20 +9,39 @@ function reset(){car={x:100,y:hy(100)-42,v:0,vy:0,a:0,va:0,w1:0,w2:0,sus1:0,sus2
 function ui(){document.getElementById('spd').textContent=Math.max(0,Math.round(Math.abs(car?.v||0)*.12));document.getElementById('warning').classList.toggle('on',fuel<22&&!dead);document.getElementById('menuBest').textContent=Math.floor(stats.best)+' m';document.getElementById('menuCoins').textContent=stats.wallet;document.getElementById('d').textContent=Math.max(0,Math.floor(dist));document.getElementById('co').textContent=stats.wallet;document.getElementById('gc').textContent=stats.wallet;document.getElementById('best').textContent=Math.floor(stats.best);document.getElementById('fuel').style.width=fuel+'%';document.getElementById('fuelText').textContent=Math.ceil(fuel);document.getElementById('engLv').textContent=stats.engine;document.getElementById('tireLv').textContent=stats.tire;document.getElementById('tankLv').textContent=stats.tank;document.getElementById('engCost').textContent=40+stats.engine*30;document.getElementById('tireCost').textContent=40+stats.tire*30;document.getElementById('tankCost').textContent=50+stats.tank*35}
 function end(title){if(dead)return;dead=1;stats.best=Math.max(stats.best,dist);persist();document.getElementById('endTitle').textContent=title;document.getElementById('fd').textContent=Math.max(0,Math.floor(dist));document.getElementById('fc').textContent=got;document.getElementById('fw').textContent=stats.wallet;document.getElementById('o').style.display='grid';ui()}
 function upd(dt){if(dead)return;
-const power=690*(1+stats.engine*.13),maxV=620+stats.engine*55;
+const power=720*(1+stats.engine*.13),maxV=620+stats.engine*55;
 if(k.g)car.v+=power*dt;if(k.b)car.v-=power*.58*dt;
-car.v*=Math.pow(k.g?.992:.982,dt*60);car.v=Math.max(-170,Math.min(maxV,car.v));car.w1+=car.v*dt/.42;car.w2+=car.v*dt/.42;
-if(k.g){fuel-=dt*(2.05-.1*stats.tank);if(Math.random()<dt*24)particles.push({x:car.x-45,y:car.y-2,vx:-35-Math.random()*45,vy:-15-Math.random()*35,life:.55})}
+car.v*=Math.pow(k.g?.993:.982,dt*60);car.v=Math.max(-170,Math.min(maxV,car.v));
+car.w1+=car.v*dt/.42;car.w2+=car.v*dt/.42;
+if(k.g){fuel-=dt*(2.05-.1*stats.tank);if(Math.random()<dt*24)particles.push({x:car.x-45,y:car.y+8,vx:-35-Math.random()*55,vy:-20-Math.random()*35,life:.55})}
 if(fuel<=0){fuel=0;end('Yakıt Bitti ⛽');return}
-const rearX=car.x-27,frontX=car.x+27,rearG=wheelY(rearX),frontG=wheelY(frontX);
+const rearX=car.x-30,frontX=car.x+30,rearG=wheelY(rearX),frontG=wheelY(frontX);
+const rearBottom=car.y+18+car.sus1,frontBottom=car.y+18+car.sus2;
+const rearPen=rearBottom-rearG,frontPen=frontBottom-frontG;
+const grounded=rearPen>=0||frontPen>=0;
 car.vy+=1320*dt;car.x+=car.v*dt;car.y+=car.vy*dt;
-const bodyBottom=car.y+20,ground=Math.min(rearG,frontG);const wheelRear=car.y+24-rearG,wheelFront=car.y+24-frontG;car.sus1=Math.max(-10,Math.min(10,wheelRear));car.sus2=Math.max(-10,Math.min(10,wheelFront));
-if(bodyBottom>=ground){const impact=car.vy;car.y=ground-20;if(car.vy>0)car.vy*=-.16;car.vy+=slopeAt(car.x)*car.v*2.2*dt;if(impact>280)for(let i=0;i<8;i++)particles.push({x:car.x+(Math.random()-.5)*55,y:ground,vx:(Math.random()-.5)*120,vy:-50-Math.random()*90,life:.35});car.wasGround=1}else car.wasGround=0;
-const target=Math.atan2(hy(frontX)-hy(rearX),54);
-if(!ground||Math.abs(car.vy)>30){if(k.l)car.va-=6.5*(1+stats.tire*.06)*dt;if(k.r)car.va+=6.5*(1+stats.tire*.06)*dt}
-car.va+=(target-car.a)*(ground?15+stats.tire*1.0:1.0)*dt;car.va+=slopeAt(car.x)*car.v*.0009*dt;car.a+=car.va*dt;car.va*=Math.pow(.86,dt*60);
+let contacts=0,avgGround=0;
+if(rearPen>=0){contacts++;avgGround+=rearG}
+if(frontPen>=0){contacts++;avgGround+=frontG}
+if(contacts){
+  avgGround/=contacts;
+  const impact=car.vy;
+  car.y=avgGround-18-Math.max(0,Math.min(7,(rearPen+frontPen)*.15));
+  if(car.vy>0)car.vy*=-Math.min(.42,.12+Math.abs(impact)*.00035);
+  car.sus1+=(rearG-(car.y+18))*dt*18;car.sus2+=(frontG-(car.y+18))*dt*18;
+  car.sus1*=Math.pow(.74,dt*60);car.sus2*=Math.pow(.74,dt*60);
+  if(impact>260&&Math.abs(car.v)>180)for(let i=0;i<10;i++)particles.push({x:car.x+(Math.random()-.5)*60,y:avgGround,vx:(Math.random()-.5)*150,vy:-50-Math.random()*110,life:.4});
+}else{
+  car.sus1*=Math.pow(.82,dt*60);car.sus2*=Math.pow(.82,dt*60);
+}
+const target=Math.atan2(hy(frontX)-hy(rearX),60);
+if(!grounded){if(k.l)car.va-=7.8*(1+stats.tire*.06)*dt;if(k.r)car.va+=7.8*(1+stats.tire*.06)*dt}
+else {car.va+=(target-car.a)*(16+stats.tire)*dt;car.va+=(target-car.a)*Math.min(1,Math.abs(car.v)/260)*8*dt}
+if(!grounded){car.va*=Math.pow(.985,dt*60)}else{car.va*=Math.pow(.82,dt*60)}
+car.a+=car.va*dt;
 if(Math.abs(car.a)>Math.PI*1.65){end('Takla attın 😵');return}
-for(const q of coins)if(q.on&&Math.hypot(q.x-car.x,q.y-car.y)<46){q.on=0;got++;stats.wallet++;persist();particles.push({x:q.x,y:q.y,vx:(Math.random()-.5)*80,vy:-100,life:.55})}for(const q of fuelCans)if(q.on&&Math.hypot(q.x-car.x,q.y-car.y)<52){q.on=0;fuel=Math.min(100,fuel+32);for(let i=0;i<12;i++)particles.push({x:q.x,y:q.y,vx:(Math.random()-.5)*130,vy:-70-Math.random()*100,life:.5})}
+for(const q of coins)if(q.on&&Math.hypot(q.x-car.x,q.y-car.y)<46){q.on=0;got++;stats.wallet++;persist();particles.push({x:q.x,y:q.y,vx:(Math.random()-.5)*80,vy:-100,life:.55})}
+for(const q of fuelCans)if(q.on&&Math.hypot(q.x-car.x,q.y-car.y)<52){q.on=0;fuel=Math.min(100,fuel+32);for(let i=0;i<12;i++)particles.push({x:q.x,y:q.y,vx:(Math.random()-.5)*130,vy:-70-Math.random()*100,life:.5})}
 cam+=(car.x-W*.28-cam)*Math.min(1,dt*5);dist=Math.max(0,(car.x-100)/10);ui();
 particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;p.life-=dt});particles=particles.filter(p=>p.life>0)}
 function draw(){
