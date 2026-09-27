@@ -177,10 +177,11 @@ function finishRound(){
  const mine=[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  netAnswers[me]=mine;
  if(isHost){
-   bots.forEach(b=>{b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers});
+   bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
    roundState.phase='voting';showVoting();
    broadcast({type:'answers',round,answers:netAnswers});
  }else{
+   if(!hostPeer||!hostPeer.open){toast('🔴 Oda bağlantısı koptu.');$('finishBtn').disabled=false;return}
    sendNet({type:'answers',round,answers:{[me]:mine}});
    roundState.phase='waiting-votes';
    $('status').textContent='⏳ Cevabın hosta gönderildi. Diğer oyuncular bekleniyor...';
@@ -196,8 +197,10 @@ function voteRow(owner,x,empty=false){
 }
 function showVoting(){
  votedCount=0;
- const mine=[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
- bots.forEach(b=>b.answers=botAnswers());
+ const mine=netAnswers[me]||[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
+ if(!netAnswers[me])netAnswers[me]=mine;
+ bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
+ const playerNames=Object.keys(netAnswers);
  let html='<div class="vote-title">🗳️ Cevapları Değerlendir</div><div class="vote-help">Senin oyun butonlarda. 🤖 Botlar cevapları değerlendirdi; kutuların rengi sonucu gösterir.</div>';
  cats.forEach(cat=>{html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';const mineCat=mine.find(x=>x.cat===cat)||{cat,val:''};html+=voteRow('me',mineCat,!mineCat.val);bots.forEach((bot,bi)=>{const x=(netAnswers[bot.name]||bot.answers||[]).find(a=>a.cat===cat);if(x)html+=voteRow('bot'+bi,x,false)});
  playerNames.filter(n=>n!==me&&!bots.some(b=>b.name===n)).forEach((name,pi)=>{const x=(netAnswers[name]||[]).find(a=>a.cat===cat);if(x)html+=voteRow('player'+pi,{cat,val:x.val},false)});html+='</div></div>'});
