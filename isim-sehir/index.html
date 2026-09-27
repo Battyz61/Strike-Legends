@@ -50,6 +50,43 @@ function enter(name,join){
  setupMultiplayer(join);
 }
 function createRoom(){enter($('hostName').value,false)}function joinRoom(){enter($('guestName').value,true)}
+let reconnectTimer=null, reconnecting=false, disconnectGraceTimers={};
+function reconnectToHost(){
+ if(isHost||!peer||peer.destroyed||!roomId)return;
+ if(hostPeer&&hostPeer.open)return;
+ if(reconnecting)return;
+ reconnecting=true;
+ try{
+   if(peer.disconnected)peer.reconnect();
+   const conn=peer.connect(String(roomId),{reliable:true,serialization:'json'});
+   hostPeer=conn;
+   bindConnection(conn);
+   conn.on('open',()=>{
+     reconnecting=false;
+     if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}
+     const ns=$('netStatus');if(ns)ns.textContent='🟢 Odaya bağlantı yeniden kuruldu';
+     sendNet({type:'join',name:me});
+   });
+   conn.on('error',()=>{reconnecting=false;});
+ }catch(e){
+   reconnecting=false;
+ }
+ reconnectTimer=setTimeout(()=>{reconnectTimer=null;if(!hostPeer||!hostPeer.open)reconnectToHost()},1500);
+}
+function scheduleHostReconnect(){
+ if(isHost||reconnectTimer)return;
+ reconnectTimer=setTimeout(()=>{reconnectTimer=null;reconnectToHost()},700);
+}
+function handleVisibilityConnection(){
+ if(document.visibilityState==='visible'){
+   if(isHost){
+     if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
+   }else{
+     if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
+     reconnectToHost();
+   }
+ }
+}
 function setupMultiplayer(join){
  if(typeof Peer==='undefined'){toast('Çok oyunculu bağlantı kütüphanesi yüklenemedi.');return}
  try{
@@ -78,7 +115,11 @@ function setupMultiplayer(join){
  if(ns)ns.textContent=msg;
  toast(msg.replace('🔴 ',''));
 });
-peer.on('disconnected',()=>{const ns=$('netStatus');if(ns)ns.textContent='🟠 Sunucu bağlantısı kesildi';});
+peer.on('disconnected',()=>{
+ const ns=$('netStatus');if(ns)ns.textContent='🟠 Bağlantı yeniden kuruluyor...';
+ try{peer.reconnect()}catch(e){}
+ if(!isHost)scheduleHostReconnect();
+});
 
  }catch(err){console.error(err);toast('Çok oyunculu bağlantı başlatılamadı.')}
 }
@@ -189,18 +230,27 @@ function bindConnection(conn){
    if(isHost){
      const stale=Object.keys(onlinePlayers).find(n=>onlinePlayers[n]?.conn===conn);
      if(stale&&stale!==me){
-       delete onlinePlayers[stale];
-       delete submittedPlayers[stale];
-       delete votingDone[stale];
-       broadcast({type:'players',players:Object.keys(onlinePlayers)});
-       renderPlayers();
-       updateSubmissionStatus();
+       if(disconnectGraceTimers[stale])clearTimeout(disconnectGraceTimers[stale]);
+       disconnectGraceTimers[stale]=setTimeout(()=>{
+         const current=onlinePlayers[stale];
+         if(!current||current.conn!==conn)return;
+         const replacement=connections.find(cn=>cn&&cn.open&&onlinePlayers[stale]?.conn===cn);
+         if(replacement)return;
+         delete onlinePlayers[stale];
+         delete submittedPlayers[stale];
+         delete votingDone[stale];
+         delete disconnectGraceTimers[stale];
+         broadcast({type:'players',players:Object.keys(onlinePlayers)});
+         renderPlayers();
+         updateSubmissionStatus();
+       },15000);
      }
    }
    const ns=$('netStatus');
    if(ns)ns.textContent=isHost?'🟠 Bir oyuncunun bağlantısı kapandı':'🟠 Host bağlantısı kesildi — yeniden bağlanıyor...';
    if(!isHost && conn===hostPeer){
-     setTimeout(()=>{if(peer&&!peer.destroyed){try{hostPeer=peer.connect(String(roomId),{reliable:true,serialization:'json'});bindConnection(hostPeer);hostPeer.on('open',()=>sendNet({type:'join',name:me}));}catch(e){}}},1000);
+     hostPeer=null;
+     scheduleHostReconnect();
    }
 });
 }
@@ -511,5 +561,18 @@ function nextRound(){
  round++;newRound(null,true)
 }
 function showFinalResults(){const all=[...new Set([...Object.keys(onlinePlayers),...bots.map(b=>b.name),me])].map(name=>({name,score:Number(netScores[name]||0)})).sort((a,b)=>b.score-a.score);$('answers').innerHTML='<div class="result-panel"><div class="result-hero"><div>🏆 OYUN BİTTİ</div><div class="big-score">'+(all[0]?.score||0)+'</div><div style="color:var(--muted)">Toplam puan</div></div><div class="leaderboard">'+all.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+x.score+'</div></div>').join('')+'</div><button class="btn result-next" onclick="location.reload()">Yeni Oyun</button></div>';$('status').textContent='Oyun tamamlandı!';}
-document.addEventListener('DOMContentLoaded',()=>{renderCategories();$('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')})});
+document.addEventListener('DOMContentLoaded',()=>{
+ renderCategories();
+ $('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')});
+ document.addEventListener('visibilitychange',handleVisibilityConnection);
+ window.addEventListener('pageshow',handleVisibilityConnection);
+ setInterval(()=>{
+   if(document.visibilityState!=='visible')return;
+   if(isHost){
+     if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
+   }else if(!hostPeer||!hostPeer.open){
+     reconnectToHost();
+   }
+ },5000);
+});
 </script></body></html>
