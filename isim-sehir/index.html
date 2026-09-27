@@ -95,6 +95,8 @@ function bindConnection(conn){
      renderPlayers();
    }else if(data.type==='roomState'){
      (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
+     if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
+     if(Number(data.totalRounds))totalRounds=Number(data.totalRounds);
      renderPlayers();
    }else if(data.type==='players'){
      (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
@@ -147,9 +149,13 @@ function bindConnection(conn){
      // remains stuck as "Cevap yok".
      if(allPlayersSubmitted() && votingOpenedRound===round)showVoting();
    }else if(data.type==='roundStart'&&!isHost){
-     round=Number(data.round)||1;letterNow=data.letter||letterNow;netAnswers={};submittedPlayers={};votingOpenedRound=0;newRound(letterNow,false);
+     round=Number(data.round)||1;
+     letterNow=data.letter||letterNow;
+     if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
+     netAnswers={};submittedPlayers={};votingOpenedRound=0;newRound(letterNow,false);
    }else if(data.type==='start'&&!isHost){
      totalRounds=data.totalRounds||5;
+     if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      $('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');
      const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyun başladı — host turu senkronize ediyor';
    }
@@ -215,7 +221,7 @@ function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
  clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};localVotes={};remoteVotes={};
  letterNow=forcedLetter||letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';
- if(isHost&&announce)broadcast({type:'roundStart',round,letter:letterNow,duration:selectedDuration(),cats});
+ if(isHost&&announce)broadcast({type:'roundStart',round,letter:letterNow,duration:selectedDuration(),cats:[...cats]});
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
  $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger');$('status').textContent='Harf çarkı dönüyor...';$('finishBtn').disabled=true;$('wheelLabel').textContent='Harf seçiliyor...';
  const wheel=$('wheel');wheel.classList.remove('spinning');void wheel.offsetWidth;
