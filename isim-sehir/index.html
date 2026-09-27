@@ -118,7 +118,11 @@ function bindConnection(conn){
      if(data.answers)Object.assign(netAnswers,data.answers);
      if(data.players)(data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
      if(data.submitted)Object.assign(submittedPlayers,data.submitted);
-     $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
+     // The ACK itself contains the authoritative submission state. Do not
+     // wait for a second packet to transition this client.
+     updateSubmissionStatus();
+     if(allPlayersSubmitted())openVotingForEveryone();
+     else $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
    }else if(data.type==='vote'&&isHost){
      if(Number(data.round)!==round)return;
      registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct);
@@ -280,6 +284,9 @@ function finishRound(){
    if(Object.keys(onlinePlayers).length<=1){submittedPlayers[me]=true;showVoting();}
    else{roundState.phase='waiting-players';updateSubmissionStatus();}
    broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
+ // Re-check after broadcasting the canonical answer snapshot. This is the
+ // authoritative transition point for the host.
+ if(isHost&&allPlayersSubmitted())openVotingForEveryone();
  }else{
    if(!hostPeer||(!hostPeer.open&&!hostPeer.peer)){toast('🔴 Oda bağlantısı koptu, yeniden bağlanıyor...');$('finishBtn').disabled=false;sendNet({type:'answers',round,answers:{[me]:mine}});return}
    const sent=sendNet({type:'answers',round,from:me,answers:{[me]:mine},submitted:{[me]:true},players:Object.keys(onlinePlayers)});
@@ -287,6 +294,7 @@ function finishRound(){
    netAnswers[me]=mine;
    submittedPlayers[me]=true;roundState.phase='waiting-players';$('status').textContent=sent?'📨 Cevabın hosta ulaştırılıyor...':'🟠 Bağlantı bekleniyor, cevap sıraya alındı...';
    $('finishBtn').textContent=sent?'✓ Cevap Gönderildi':'↻ Bağlantı kurulunca gönderilecek';
+   updateSubmissionStatus();
  }
 }
 let votedCount=0;
