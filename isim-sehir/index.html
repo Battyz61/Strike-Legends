@@ -24,59 +24,57 @@ button,input{font:inherit}.wrap{max-width:1080px;margin:auto;padding:20px}.hero{
 <button id="finishBtn" class="btn" onclick="finishRound()">Cevapları Gönder</button><div class="scorebar"><div class="score">Sen<b id="myScore">0</b></div><div class="score">Rakip<b id="enemyScore">0</b></div><div class="score">Tur<b id="roundScore">0</b></div></div></div>
 </section></main><div id="toast" class="toast"></div>
 <script>
-const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
+const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
+let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let timerId,seconds=60,round=1,myScore=0,roomId='',me='',letterNow='',bots=[];
 const $=id=>document.getElementById(id);
-function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function makeCode(){return String(Math.floor(100000+Math.random()*900000))}
-function enter(name,join){if(!cats.length){toast('En az 1 kategori seçmelisin.');return}me=(name||'Oyuncu').trim()||'Oyuncu';roomId=join?($('joinCode').value.trim()||makeCode()):makeCode();$('lobby').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;renderPlayers()}
+function renderCategories(){
+ const box=$('categoryOptions'), selected=$('selectedCats');if(!box||!selected)return;
+ box.innerHTML=allCats.map(cat=>'<button type="button" class="cat-chip '+(cats.includes(cat)?'active':'')+'" onclick="toggleCat('+JSON.stringify(cat)+')">'+esc(cat)+'</button>').join('');
+ selected.innerHTML=cats.map(cat=>'<span class="selected-cat">'+esc(cat)+' <button type="button" onclick="toggleCat('+JSON.stringify(cat)+')">×</button></span>').join('');
+ if(!cats.length)selected.innerHTML='<div class="category-empty">En az 1 kategori seç.</div>';
+}
+function toggleCat(cat){if(cats.includes(cat)){if(cats.length===1){toast('En az 1 kategori seçmelisin.');return}cats=cats.filter(x=>x!==cat)}else cats.push(cat);renderCategories()}
+function shuffleCats(){cats=[...allCats].sort(()=>Math.random()-.5).slice(0,Math.min(6,allCats.length));renderCategories();toast('Kategoriler karıştırıldı!')}
+function enter(name,join){if(!cats.length){toast('En az 1 kategori seçmelisin.');return}me=(name||'Oyuncu').trim()||'Oyuncu';roomId=join?($('joinCode').value.trim()||makeCode()):makeCode();$('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;renderPlayers()}
 function createRoom(){enter($('hostName').value,false)}
 function joinRoom(){enter($('guestName').value,true)}
-function copyRoom(){navigator.clipboard?.writeText(roomId);toast('Oda kodu kopyalandı!')}
+function copyRoom(){if(navigator.clipboard)navigator.clipboard.writeText(roomId);toast('Oda kodu kopyalandı!')}
 function addBot(){if(bots.length>=3){toast('En fazla 3 test botu.');return}bots.push({name:'Bot '+(bots.length+1),score:0,answers:[]});renderPlayers();toast('🤖 Test botu eklendi')}
 function renderPlayers(){$('players').innerHTML='<span class="player">👑 '+esc(me)+'</span>'+bots.map(b=>'<span class="player">🤖 '+esc(b.name)+'</span>').join('')+(bots.length?'':'<span class="player">⏳ Arkadaşın bekleniyor</span>')}
-function startGame(){renderCategories();$('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');newRound()}
-function newRound(){if(!cats.length){toast('Kategori seçilmedi.');return}
- letterNow=letters[Math.floor(Math.random()*letters.length)];
- $('letter').textContent=letterNow;$('roundNo').textContent=round+'. Tur';
- $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+c+'</label><input maxlength="30" data-cat="'+c+'" placeholder="'+c+'..."></div>').join('');
- seconds=60;$('timer').textContent='60 sn';$('timer').classList.remove('danger');$('status').textContent='Cevaplarını '+letterNow+' harfiyle doldur.';
+function startGame(){$('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');newRound()}
+function newRound(){
+ if(!cats.length){toast('Kategori seçilmedi.');return}
+ letterNow=letters[Math.floor(Math.random()*letters.length)];$('letter').textContent=letterNow;$('roundNo').textContent=round+'. Tur';
+ $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
+ seconds=60;$('timer').textContent='60 sn';$('timer').classList.remove('danger');$('status').textContent='Cevaplarını '+letterNow+' harfiyle dold.';
  $('finishBtn').textContent='Cevapları Gönder';$('finishBtn').disabled=false;$('finishBtn').onclick=finishRound;
  clearInterval(timerId);timerId=setInterval(()=>{seconds--;$('timer').textContent=seconds+' sn';if(seconds<=10)$('timer').classList.add('danger');if(seconds<=0)finishRound()},1000);
 }
-function pickForLetter(cat){
- const bank={İsim:{A:'Ahmet',B:'Burak',M:'Mert',S:'Selin'},Şehir:{A:'Ankara',B:'Bursa',T:'Trabzon',İ:'İzmir'},Hayvan:{A:'At',K:'Kedi',M:'Maymun',T:'Tavşan'},Bitki:{A:'Armut',L:'Lale',N:'Nane',Ç:'Çam'},Eşya:{M:'Masa',K:'Kalem',S:'Saat',T:'Telefon'},Ülke:{A:'Almanya',İ:'İtalya',J:'Japonya',T:'Türkiye'}};
- return bank[cat]?.[letterNow]||letterNow+' örnek';
-}
+function pickForLetter(cat){const bank={İsim:{A:'Ahmet',B:'Burak',M:'Mert',S:'Selin'},Şehir:{A:'Ankara',B:'Bursa',T:'Trabzon',İ:'İzmir'},Hayvan:{A:'At',K:'Kedi',M:'Maymun',T:'Tavşan'},Bitki:{A:'Armut',L:'Lale',N:'Nane',Ç:'Çam'},Eşya:{M:'Masa',K:'Kalem',S:'Saat',T:'Telefon'},Ülke:{A:'Almanya',İ:'İtalya',J:'Japonya',T:'Türkiye'}};return bank[cat]?.[letterNow]||letterNow+' örnek'}
 function botAnswers(){return cats.map(c=>({cat:c,val:Math.random()>.25?pickForLetter(c):'Alakasız cevap'}))}
 function finishRound(){if($('finishBtn').disabled)return;$('finishBtn').disabled=true;clearInterval(timerId);$('timer').classList.remove('danger');bots.forEach(b=>b.answers=botAnswers());showVoting()}
-function vote(btn,correct){const row=btn.closest('.vote-row');row.querySelectorAll('.vote').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no'}
-function vote(btn,correct){const row=btn.closest('.vote-player');row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';updateVoteSummary()}
-function voteRow(owner,x,empty=false){
- return '<div class="vote-player" data-owner="'+owner+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👑')+'</div><div class="vote-info"><div class="vote-name">'+esc(owner==='me'?me:'Bot '+(parseInt(owner.replace('bot',''),10)+1))+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Değerlendirilecek cevap')+'</div></div><div class="vote-actions"><button class="vote-circle no '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,false)" aria-label="Yanlış">✕</button><button class="vote-circle yes '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,true)" aria-label="Doğru">✓</button></div></div>'
-}
+function vote(btn,correct){const row=btn.closest('.vote-player');if(!row)return;row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';updateVoteSummary()}
+function voteRow(owner,x,empty=false){return '<div class="vote-player" data-owner="'+owner+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👑')+'</div><div class="vote-info"><div class="vote-name">'+esc(owner==='me'?me:'Bot '+(parseInt(owner.replace('bot',''),10)+1))+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Değerlendirilecek cevap')+'</div></div><div class="vote-actions"><button type="button" class="vote-circle no '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,false)">✕</button><button type="button" class="vote-circle yes '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,true)">✓</button></div></div>'}
 function showVoting(){
  const mine=[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  bots.forEach(b=>b.answers=botAnswers());
  let html='<div class="vote-title">🗳️ Cevapları Değerlendir</div><div class="vote-help">Her kategorideki cevapları kontrol et. ✓ doğru, ✕ yanlış.</div>';
- cats.forEach(cat=>{
-   html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';
-   const mineCat=mine.find(x=>x.cat===cat)||{cat,val:''};
-   html+=voteRow('me',mineCat,!mineCat.val);
-   bots.forEach((bot,bi)=>{const x=bot.answers.find(a=>a.cat===cat);if(x)html+=voteRow('bot'+bi,x,false)});
-   html+='</div></div>';
- });
+ cats.forEach(cat=>{html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';const mineCat=mine.find(x=>x.cat===cat)||{cat,val:''};html+=voteRow('me',mineCat,!mineCat.val);bots.forEach((bot,bi)=>{const x=bot.answers.find(a=>a.cat===cat);if(x)html+=voteRow('bot'+bi,x,false)});html+='</div></div>'});
  html+='<div class="vote-summary"><span>Henüz verilen oy</span><b id="voteCount">0 / '+(cats.length*(bots.length+1))+'</b></div>';
  $('answers').innerHTML=html;$('finishBtn').textContent='Oyları Tamamla';$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları incele ve doğru/yanlış oyunu ver.';
 }
 function updateVoteSummary(){const rows=[...$('answers').querySelectorAll('.vote-player')];const done=rows.filter(r=>r.dataset.vote).length;const el=$('voteCount');if(el)el.textContent=done+' / '+rows.length}
 function completeVoting(){
- const rows=[...$('answers').querySelectorAll('.vote-row')];let missing=0,gained=0;
- rows.forEach(row=>{const disabled=row.querySelector('.vote:not([disabled])')===null;if(!disabled&&!row.dataset.vote)missing++;if(row.dataset.owner==='me'&&row.dataset.vote==='yes')gained+=10});
+ const rows=[...$('answers').querySelectorAll('.vote-player')];let missing=0,gained=0;
+ rows.forEach(row=>{const disabled=!row.querySelector('.vote-circle:not([disabled])');if(!disabled&&!row.dataset.vote)missing++;if(row.dataset.owner==='me'&&row.dataset.vote==='yes')gained+=10});
  if(missing){toast(missing+' cevap için oy eksik.');return}
  myScore+=gained;$('myScore').textContent=myScore;$('roundScore').textContent=gained;$('status').textContent='Tur tamamlandı: +'+gained+' puan';$('finishBtn').disabled=true;
  setTimeout(()=>{round++;newRound()},1500);
 }
-document.addEventListener("DOMContentLoaded",renderCategories);\n</script></body></html>
+document.addEventListener('DOMContentLoaded',renderCategories);
+</script></body></html>
