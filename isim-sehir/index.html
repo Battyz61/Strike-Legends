@@ -83,11 +83,9 @@ function showVoting(){
 }
 function updateVoteSummary(){const rows=$('answers').querySelectorAll('.vote-player');let done=0;rows.forEach(r=>{if(r.dataset.vote)done++});const el=$('voteCount');if(el)el.textContent=done+' / '+rows.length}
 function completeVoting(){
- const rows=$('answers').querySelectorAll('.vote-player');let missing=0;
- rows.filter(r=>r.dataset.owner==='me').forEach(row=>{if(!row.querySelector('.vote-circle')||!row.dataset.vote){}});
- const myRows=[...rows].filter(r=>r.querySelector('[data-vote-action]'));
- if(myRows.some(r=>!r.dataset.vote)){missing=1}
- if(missing){toast('Cevapların için oy vermeyi unutma.');return}
+ const rows=[...$('answers').querySelectorAll('.vote-player')];
+ const myRows=rows.filter(r=>r.querySelector('[data-vote-action]'));
+ if(myRows.some(r=>!r.dataset.vote)){toast('Tüm cevaplara oy vermelisin.');return}
  const gains={};[me,...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
  rows.forEach(row=>{const owner=row.dataset.answer;if(!owner)return;const others=row.querySelectorAll('.player-vote');let yes=0,no=0;others.forEach(x=>x.classList.contains('yes')?yes++:no++);if(row.dataset.vote==='yes')yes++;if(row.dataset.vote==='no')no++;if(yes>no)gains[owner]=(gains[owner]||0)+10});
  const myGain=gains[me]||0;myScore+=myGain;bots.forEach(b=>{b.score=(b.score||0)+(gains[b.name]||0)});$('myScore').textContent=myScore;$('roundScore').textContent=myGain;$('finishBtn').disabled=true;showResults(gains);
