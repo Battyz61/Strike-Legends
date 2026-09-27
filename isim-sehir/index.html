@@ -31,7 +31,7 @@ button,input{font:inherit}.wrap{max-width:1080px;margin:auto;padding:20px}.hero{
 const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
-let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0;
+let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null;
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -48,7 +48,7 @@ function startGame(){$('startBtn').classList.add('hidden');$('botBtn').classList
 function selectedDuration(){return Number($('durationSelect')?.value||120)}
 function newRound(){
  if(!cats.length){toast('Kategori seçilmedi.');return}
- clearInterval(timerId);roundToken++;const token=roundToken;
+ clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};
  letterNow=letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
  $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger');$('status').textContent='Harf çarkı dönüyor...';$('finishBtn').disabled=true;$('wheelLabel').textContent='Harf seçiliyor...';
@@ -63,7 +63,7 @@ function revealRound(token){
 }
 function pickForLetter(cat){const bank={İsim:{A:'Ahmet',B:'Burak',M:'Mert',S:'Selin'},Şehir:{A:'Ankara',B:'Bursa',T:'Trabzon',İ:'İzmir'},Hayvan:{A:'At',K:'Kedi',M:'Maymun',T:'Tavşan'},Bitki:{A:'Armut',L:'Lale',N:'Nane',Ç:'Çam'},Eşya:{M:'Masa',K:'Kalem',S:'Saat',T:'Telefon'},Ülke:{A:'Almanya',İ:'İtalya',J:'Japonya',T:'Türkiye'}};return bank[cat]?.[letterNow]||letterNow+' örnek'}
 function botAnswers(){return cats.map(c=>({cat:c,val:Math.random()>.25?pickForLetter(c):'Alakasız cevap'}))}
-function finishRound(){if($('finishBtn').disabled)return;$('finishBtn').disabled=true;clearInterval(timerId);$('timer').classList.remove('danger');bots.forEach(b=>b.answers=botAnswers());showVoting()}
+function finishRound(){if($('finishBtn').disabled)return;$('finishBtn').disabled=true;clearInterval(timerId);$('timer').classList.remove('danger');bots.forEach(b=>b.answers=botAnswers());roundState.phase='voting';showVoting()}
 function vote(btn,correct){const row=btn.closest('.vote-player');if(!row)return;row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';const squares=row.querySelectorAll('.player-vote');if(squares.length){const myVote=correct?'yes':'no';const first=squares[0];first.classList.remove('yes','no');first.classList.add(myVote);first.dataset.myVote='1'}updateVoteSummary()}
 function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:'Bot '+(parseInt(owner.replace('bot',''),10)+1);
@@ -80,18 +80,18 @@ function showVoting(){
  html+='<div class="vote-summary"><span>Senin verdiğin oylar</span><b id="voteCount">0 / '+(cats.length*bots.length)+'</b></div>';
  $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').textContent='Oyları Tamamla';$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları incele ve doğru/yanlış oyunu ver.';
 }
-function updateVoteSummary(){const rows=[...$('answers').querySelectorAll('.vote-player[data-owner="bot"]')];const done=[...$('answers').querySelectorAll('.vote-player')].filter(r=>r.dataset.vote).length;const el=$('voteCount');if(el)el.textContent=done+' / '+rows.length}
+function updateVoteSummary(){const rows=$('answers').querySelectorAll('.vote-player[data-owner^="bot"]');let done=0;rows.forEach(r=>{if(r.dataset.vote)done++});const el=$('voteCount');if(el)el.textContent=done+' / '+rows.length}
 function completeVoting(){
- const rows=[...$('answers').querySelectorAll('.vote-player')];let missing=0;
+ const rows=$('answers').querySelectorAll('.vote-player');let missing=0;
  rows.filter(r=>r.dataset.owner==='me').forEach(row=>{if(!row.querySelector('.vote-circle')||!row.dataset.vote){}});
- const myRows=rows.filter(r=>r.dataset.owner.startsWith('bot'));
+ const myRows=[...rows].filter(r=>r.dataset.owner.startsWith('bot'));
  if(myRows.some(r=>!r.dataset.vote)){missing=1}
  if(missing){toast('Cevapların için oy vermeyi unutma.');return}
  const gains={};[me,...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
- rows.forEach(row=>{const owner=row.dataset.answer;if(!owner)return;const others=row.querySelectorAll('.player-vote');let yes=[...others].filter(x=>x.classList.contains('yes')).length;let no=[...others].filter(x=>x.classList.contains('no')).length;if(row.dataset.vote==='yes')yes++;if(row.dataset.vote==='no')no++;if(yes>no)gains[owner]=(gains[owner]||0)+10});
+ rows.forEach(row=>{const owner=row.dataset.answer;if(!owner)return;const others=row.querySelectorAll('.player-vote');let yes=0,no=0;others.forEach(x=>x.classList.contains('yes')?yes++:no++);if(row.dataset.vote==='yes')yes++;if(row.dataset.vote==='no')no++;if(yes>no)gains[owner]=(gains[owner]||0)+10});
  const myGain=gains[me]||0;myScore+=myGain;$('myScore').textContent=myScore;$('roundScore').textContent=myGain;$('finishBtn').disabled=true;showResults(gains);
 }
-function showResults(gains){
+function showResults(gains){roundState.phase='results';
  const list=Object.entries(gains).sort((a,b)=>b[1]-a[1]);let html='<div class="result-panel"><div class="result-hero"><div>🏆 Tur Sonucu</div><div class="big-score">+'+(gains[me]||0)+'</div><div style="color:var(--muted)">Bu tur kazandığın puan</div></div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur →</button></div>';
  $('answers').innerHTML=html;$('status').textContent='Tur tamamlandı!';$('finishBtn').classList.add('hidden');
 }
