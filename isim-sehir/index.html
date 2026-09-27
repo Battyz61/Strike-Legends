@@ -22,7 +22,7 @@ button,input{font:inherit}.wrap{max-width:1080px;margin:auto;padding:20px}.hero{
 </div>
 </div><section id="room" class="room">
 <div class="card"><div class="top"><div><small style="color:var(--muted)">ODA KODU</small><div id="roomCode" class="code"></div></div><button class="btn secondary small" onclick="copyRoom()">Kodu Kopyala</button></div>
-<h3>👥 Oyuncular</h3><div id="players" class="players"></div><button id="botBtn" class="btn secondary" onclick="addBot()">🤖 Test Botu Ekle</button><button id="startBtn" class="btn" onclick="startGame()">Oyunu Başlat</button></div>
+<h3>👥 Oyuncular</h3><div id="players" class="players"></div><div class="settings-row"><div class="setting"><label>👥 OYUNCU LİMİTİ</label><select id="playerLimit"><option value="4" selected>4 Oyuncu</option><option value="6">6 Oyuncu</option><option value="8">8 Oyuncu</option><option value="10">10 Oyuncu</option></select></div><div class="setting"><label>🏁 TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div></div><button id="botBtn" class="btn secondary" onclick="addBot()">🤖 Test Botu Ekle</button><button id="startBtn" class="btn" onclick="startGame()">Oyunu Başlat</button></div>
 <div id="game" class="card game hidden"><div class="roundbar"><h2 style="margin:0">🔥 Yarış</h2><span id="roundNo" class="roundnum">1. Tur</span></div>
 <div id="wheelArea" class="wheel-wrap"><div class="wheel-pointer">▼</div><div id="wheel" class="wheel"><div id="letter" class="wheel-center">?</div></div></div><div id="wheelLabel" class="wheel-label">Harf seçiliyor...</div><div id="timer" class="timer">120 sn</div><div id="status" class="status">Cevaplarını seçilen harfle doldur.</div><div id="answers" class="answers"></div>
 <button id="finishBtn" class="btn" onclick="finishRound()">Cevapları Gönder</button><div class="scorebar"><div class="score">Sen<b id="myScore">0</b></div><div class="score">Rakip<b id="enemyScore">0</b></div><div class="score">Tur<b id="roundScore">0</b></div></div></div>
@@ -31,7 +31,7 @@ button,input{font:inherit}.wrap{max-width:1080px;margin:auto;padding:20px}.hero{
 const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
-let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null;
+let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false;
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -42,9 +42,9 @@ function shuffleCats(){cats=[...allCats].sort(()=>Math.random()-.5).slice(0,Math
 function enter(name,join){if(!cats.length){toast('En az 1 kategori seçmelisin.');return}me=(name||'Oyuncu').trim()||'Oyuncu';roomId=join?($('joinCode').value.trim()||makeCode()):makeCode();$('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;renderPlayers()}
 function createRoom(){enter($('hostName').value,false)}function joinRoom(){enter($('guestName').value,true)}
 function copyRoom(){if(navigator.clipboard)navigator.clipboard.writeText(roomId);toast('Oda kodu kopyalandı!')}
-function addBot(){if(bots.length>=3){toast('En fazla 3 test botu.');return}bots.push({name:'Bot '+(bots.length+1),score:0,answers:[]});renderPlayers();toast('🤖 Test botu eklendi')}
+function addBot(){const limit=Number($('playerLimit')?.value||4);if(bots.length+1>=limit){toast('Oyuncu limiti dolu.');return}bots.push({name:'Bot '+(bots.length+1),score:0,answers:[]});renderPlayers();toast('🤖 Test botu eklendi')}
 function renderPlayers(){$('players').innerHTML='<span class="player">👑 '+esc(me)+'</span>'+bots.map(b=>'<span class="player">🤖 '+esc(b.name)+'</span>').join('')+(bots.length?'':'<span class="player">⏳ Arkadaşın bekleniyor</span>')}
-function startGame(){$('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');newRound()}
+function startGame(){totalRounds=Number($('roundLimit')?.value||5);round=1;gameFinished=false;myScore=0;bots.forEach(b=>b.score=0);$('myScore').textContent='0';$('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');newRound()}
 function selectedDuration(){return Number($('durationSelect')?.value||120)}
 function newRound(){
  if(!cats.length){toast('Kategori seçilmedi.');return}
@@ -90,12 +90,13 @@ function completeVoting(){
  if(missing){toast('Cevapların için oy vermeyi unutma.');return}
  const gains={};[me,...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
  rows.forEach(row=>{const owner=row.dataset.answer;if(!owner)return;const others=row.querySelectorAll('.player-vote');let yes=0,no=0;others.forEach(x=>x.classList.contains('yes')?yes++:no++);if(row.dataset.vote==='yes')yes++;if(row.dataset.vote==='no')no++;if(yes>no)gains[owner]=(gains[owner]||0)+10});
- const myGain=gains[me]||0;myScore+=myGain;$('myScore').textContent=myScore;$('roundScore').textContent=myGain;$('finishBtn').disabled=true;showResults(gains);
+ const myGain=gains[me]||0;myScore+=myGain;bots.forEach(b=>{b.score=(b.score||0)+(gains[b.name]||0)});$('myScore').textContent=myScore;$('roundScore').textContent=myGain;$('finishBtn').disabled=true;showResults(gains);
 }
 function showResults(gains){roundState.phase='results';
  const list=Object.entries(gains).sort((a,b)=>b[1]-a[1]);let html='<div class="result-panel"><div class="result-hero"><div>🏆 Tur Sonucu</div><div class="big-score">+'+(gains[me]||0)+'</div><div style="color:var(--muted)">Bu tur kazandığın puan</div></div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur →</button></div>';
  $('answers').innerHTML=html;$('status').textContent='Tur tamamlandı!';$('finishBtn').classList.add('hidden');
 }
-function nextRound(){$('finishBtn').classList.remove('hidden');round++;newRound()}
+function nextRound(){if(gameFinished)return;if(round>=totalRounds){gameFinished=true;showFinalResults();return}$('finishBtn').classList.remove('hidden');round++;newRound()}
+function showFinalResults(){const all=[{name:me,score:myScore},...bots.map(b=>({name:b.name,score:b.score||0}))].sort((a,b)=>b.score-a.score);$('answers').innerHTML='<div class="result-panel"><div class="result-hero"><div>🏆 OYUN BİTTİ</div><div class="big-score">'+(all[0]?.score||0)+'</div><div style="color:var(--muted)">Toplam puan</div></div><div class="leaderboard">'+all.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+x.score+'</div></div>').join('')+'</div><button class="btn result-next" onclick="location.reload()">Yeni Oyun</button></div>';$('status').textContent='Oyun tamamlandı!';}
 document.addEventListener('DOMContentLoaded',()=>{renderCategories();$('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')})});
 </script></body></html>
