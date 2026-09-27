@@ -118,32 +118,15 @@ function completeVoting(){
  if(myRows.some(r=>!r.dataset.vote)){toast('Tüm rakip cevaplara oy vermelisin.');return}
  const gains={};[me,...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
  const details=[];
- const answersByCat={};
  rows.forEach(row=>{
    const owner=row.dataset.answer;if(!owner)return;
-   const catTitle=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent||'';
-   const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
-   const key=(catTitle+'|'+answer.toLocaleLowerCase('tr-TR')).replace(/\\s+/g,' ').trim();
-   if(answer && answer!=='Cevap yok') (answersByCat[catTitle]??={})[key]=(answersByCat[catTitle][key]||0)+1;
- });
- rows.forEach(row=>{
-   const owner=row.dataset.answer;if(!owner)return;
-   const botVotes=row.querySelectorAll('.bot-vote');let yes=0,no=0;
-   botVotes.forEach((x,vi)=>{
-     const ownerKey=row.dataset.owner;const idx=Number(ownerKey.replace('bot',''));const voterIndex=Number(x.dataset.voter||vi);
-     const vote=((idx+voterIndex+row.dataset.answer.length+round)%4)!==0;
-     x.classList.remove('pending','yes','no');x.classList.add(vote?'yes':'no');x.style.display='inline-flex';
-     vote?yes++:no++;
-   });
-   if(row.dataset.vote==='yes')yes++;if(row.dataset.vote==='no')no++;
-   const approved=yes>no;
-   const catTitle=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent||'';
-   const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
-   const key=(catTitle+'|'+answer.toLocaleLowerCase('tr-TR')).replace(/\\s+/g,' ').trim();
-   const duplicate=!!(answer && answer!=='Cevap yok' && answersByCat[catTitle]?.[key]>1);
-   const points=approved?(duplicate?5:10):0;
+   const greenBoxes=row.querySelectorAll('.player-vote.yes').length;
+   const redBoxes=row.querySelectorAll('.player-vote.no').length;
+   const points=greenBoxes*10;
    gains[owner]=(gains[owner]||0)+points;
-   details.push({owner,cat:catTitle.replace(letterNow+' ile ',''),answer,yes,no,approved,duplicate,points});
+   const catTitle=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent||'';
+   const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
+   details.push({owner,cat:catTitle.replace(letterNow+' ile ',''),answer,yes:greenBoxes,no:redBoxes,points});
  });
  const myGain=gains[me]||0;
  myScore+=myGain;
@@ -159,7 +142,7 @@ function showResults(gains,details=[]){
  const leader=cumulative[0]||{name:me,score:myScore};
  const gap=Math.max(0,(leader.score||0)-myScore);
  const myDetails=details.filter(d=>d.owner===me);
- const detailHtml=myDetails.map(d=>'<div class="answer-result '+(d.approved?'ok':'bad')+'"><div><b>'+esc(d.cat)+'</b><span>'+esc(d.answer||'Cevap yok')+'</span></div><strong>'+(d.points?'+'+d.points:'0')+'</strong><small>'+d.yes+' ✓ · '+d.no+' ✕'+(d.duplicate?' · Aynı cevap: 5 puan':' · Doğru: 10 puan')+'</small></div>').join('');
+ const detailHtml=myDetails.map(d=>'<div class="answer-result '+(d.points?'ok':'bad')+'"><div><b>'+esc(d.cat)+'</b><span>'+esc(d.answer||'Cevap yok')+'</span></div><strong>'+(d.points?'+'+d.points:'0')+'</strong><small>'+d.yes+' 🟩 · '+d.no+' 🟥 · '+d.yes+' yeşil kutu × 10 puan</small></div>').join('');
  let html='<div class="result-panel"><div class="result-hero"><div>🏆 Tur Sonucu</div><div class="big-score">+'+(gains[me]||0)+'</div><div style="color:var(--muted)">Bu tur kazandığın puan</div></div><div class="round-details"><div class="detail-title">📋 Cevap dökümü</div>'+detailHtml+'</div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur →</button></div>';
  $('answers').innerHTML=html;
  $('status').textContent=gap===0?'🔥 Lider durumdasın!':'📊 Lider: '+esc(leader.name)+' · Fark: '+gap+' puan';
