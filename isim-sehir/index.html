@@ -32,7 +32,7 @@ const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Mesle
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={};
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={};
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -89,6 +89,7 @@ function bindConnection(conn){
    if(!data)return;
    if(data.type==='join'&&isHost){
      onlinePlayers[data.name]={name:data.name,host:false,conn};
+     submittedPlayers[data.name]=false;
      broadcast({type:'players',players:Object.keys(onlinePlayers)});
      renderPlayers();
    }else if(data.type==='roomState'){
@@ -100,12 +101,23 @@ function bindConnection(conn){
    }else if(data.type==='answers'&&isHost){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
-     showVoting();
-     broadcast({type:'answers',round,answers:netAnswers});
-   }else if(data.type==='answers'&&!isHost){
+     Object.assign(submittedPlayers,data.submitted||{});
+     updateSubmissionStatus();
+     if(allPlayersSubmitted()){showVoting();broadcast({type:'answersReady',round,answers:netAnswers});}
+     else broadcast({type:'submissionStatus',round,submitted:submittedPlayers});
+   }else if(data.type==='answersReady'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
      showVoting();
+   }else if(data.type==='submissionStatus'&&!isHost){
+     if(Number(data.round)!==round)return;
+     Object.assign(submittedPlayers,data.submitted||{});
+     updateSubmissionStatus();
+   }else if(data.type==='answers'&&!isHost){
+     if(Number(data.round)!==round)return;
+     Object.assign(netAnswers,data.answers||{});
+     Object.assign(submittedPlayers,data.submitted||{});
+     updateSubmissionStatus();
    }else if(data.type==='roundStart'&&!isHost){
      round=Number(data.round)||1;letterNow=data.letter||letterNow;netAnswers={};newRound(letterNow,false);
    }else if(data.type==='start'&&!isHost){
@@ -122,6 +134,18 @@ function bindConnection(conn){
      setTimeout(()=>{if(peer&&!peer.destroyed){try{hostPeer=peer.connect(String(roomId),{reliable:true,serialization:'json'});bindConnection(hostPeer);hostPeer.on('open',()=>sendNet({type:'join',name:me}));}catch(e){}}},1000);
    }
 });
+}
+function allPlayersSubmitted(){
+ const names=Object.keys(onlinePlayers);
+ return names.every(n=>submittedPlayers[n]===true);
+}
+function updateSubmissionStatus(){
+ const names=Object.keys(onlinePlayers);
+ const done=names.filter(n=>submittedPlayers[n]).length;
+ const total=Math.max(1,names.length);
+ const status=$('status');
+ if(status)status.textContent='📨 Cevaplar bekleniyor: '+done+'/'+total+' oyuncu gönderdi';
+ if(isHost&&done===total){roundState.phase='voting';}
 }
 function sendNet(data){
  if(!hostPeer)return false;
@@ -193,15 +217,17 @@ function finishRound(){
  const mine=[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  netAnswers[me]=mine;
  if(isHost){
-   bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
-   roundState.phase='voting';showVoting();
-   broadcast({type:'answers',round,answers:netAnswers});
+   submittedPlayers[me]=true;
+   bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers;submittedPlayers[b.name]=true}});
+   if(Object.keys(onlinePlayers).length<=1){submittedPlayers[me]=true;showVoting();}
+   else{roundState.phase='waiting-players';updateSubmissionStatus();}
+   broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers});
  }else{
    if(!hostPeer||(!hostPeer.open&&!hostPeer.peer)){toast('🔴 Oda bağlantısı koptu, yeniden bağlanıyor...');$('finishBtn').disabled=false;sendNet({type:'answers',round,answers:{[me]:mine}});return}
-   const sent=sendNet({type:'answers',round,answers:{[me]:mine}});
+   const sent=sendNet({type:'answers',round,answers:{[me]:mine},submitted:{[me]:true}});
    if(!sent){$('finishBtn').disabled=false;return}
-   roundState.phase='waiting-votes';
-   $('status').textContent='⏳ Cevabın hosta gönderildi. Diğer oyuncular bekleniyor...';
+   submittedPlayers[me]=true;roundState.phase='waiting-players';$('status').textContent='📨 Cevabın hosta ulaştırılıyor...';
+   $('finishBtn').textContent='✓ Cevap Gönderildi';
  }
 }
 let votedCount=0;function vote(btn,correct){const row=btn.closest('.vote-player');if(!row)return;const wasVoted=!!row.dataset.vote;row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';let square=row.querySelector('.my-vote');if(!square){square=document.createElement('span');square.className='player-vote my-vote';const voters=row.querySelector('.vote-voters');if(voters)voters.appendChild(square)}square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex';if(!wasVoted)votedCount++;const el=$('voteCount');if(el)el.textContent=votedCount+' / '+document.querySelectorAll('.vote-player [data-vote-action]').length}
