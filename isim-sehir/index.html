@@ -34,8 +34,10 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 function makeCode(){return String(Math.floor(100000+Math.random()*900000))}
 function renderCategories(){
  const box=$('categoryOptions'), selected=$('selectedCats');if(!box||!selected)return;
- box.innerHTML=allCats.map(cat=>'<button type="button" class="cat-chip '+(cats.includes(cat)?'active':'')+'" onclick="toggleCat('+JSON.stringify(cat)+')">'+esc(cat)+'</button>').join('');
- selected.innerHTML=cats.map(cat=>'<span class="selected-cat">'+esc(cat)+' <button type="button" onclick="toggleCat('+JSON.stringify(cat)+')">×</button></span>').join('');
+ box.innerHTML=allCats.map(cat=>'<button type="button" class="cat-chip '+(cats.includes(cat)?'active':'')+'" data-cat="'+esc(cat)+'">'+esc(cat)+'</button>').join('');
+box.querySelectorAll('.cat-chip').forEach(btn=>btn.addEventListener('click',()=>toggleCat(btn.dataset.cat)));
+selected.innerHTML=cats.map(cat=>'<span class="selected-cat">'+esc(cat)+' <button type="button" class="remove-cat" data-cat="'+esc(cat)+'">×</button></span>').join('');
+selected.querySelectorAll('.remove-cat').forEach(btn=>btn.addEventListener('click',()=>toggleCat(btn.dataset.cat)));
  if(!cats.length)selected.innerHTML='<div class="category-empty">En az 1 kategori seç.</div>';
 }
 function toggleCat(cat){if(cats.includes(cat)){if(cats.length===1){toast('En az 1 kategori seçmelisin.');return}cats=cats.filter(x=>x!==cat)}else cats.push(cat);renderCategories()}
