@@ -50,40 +50,63 @@ function enter(name,join){
  setupMultiplayer(join);
 }
 function createRoom(){enter($('hostName').value,false)}function joinRoom(){enter($('guestName').value,true)}
-let reconnectTimer=null, reconnecting=false, disconnectGraceTimers={};
-function reconnectToHost(){
- if(isHost||!peer||peer.destroyed||!roomId)return;
- if(hostPeer&&hostPeer.open)return;
+let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={};
+function connectFreshToHost(){
+ if(isHost||!roomId)return;
  if(reconnecting)return;
+ if(hostPeer&&hostPeer.open)return;
  reconnecting=true;
+ reconnectAttempts++;
  try{
-   if(peer.disconnected)peer.reconnect();
-   const conn=peer.connect(String(roomId),{reliable:true,serialization:'json'});
-   hostPeer=conn;
-   bindConnection(conn);
-   conn.on('open',()=>{
-     reconnecting=false;
-     if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}
-     const ns=$('netStatus');if(ns)ns.textContent='🟢 Odaya bağlantı yeniden kuruldu';
-     sendNet({type:'join',name:me});
+   if(hostPeer){try{hostPeer.close()}catch(e){}}
+   hostPeer=null;
+   if(peer){try{peer.destroy()}catch(e){}}
+   peer=null;
+   const pid='p'+Math.random().toString(36).slice(2,11);
+   const p=new Peer(pid);
+   peer=p;
+   p.on('open',()=>{
+     const conn=p.connect(String(roomId),{reliable:true,serialization:'json'});
+     hostPeer=conn;
+     bindConnection(conn);
+     conn.on('open',()=>{
+       reconnecting=false;
+       reconnectAttempts=0;
+       if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}
+       const ns=$('netStatus');if(ns)ns.textContent='🟢 Bağlantı yeniden kuruldu';
+       sendNet({type:'join',name:me});
+     });
+     conn.on('error',()=>{
+       reconnecting=false;
+       scheduleHostReconnect();
+     });
    });
-   conn.on('error',()=>{reconnecting=false;});
+   p.on('error',()=>{
+     reconnecting=false;
+     scheduleHostReconnect();
+   });
+   p.on('disconnected',()=>{
+     if(!isHost)scheduleHostReconnect();
+   });
  }catch(e){
    reconnecting=false;
+   scheduleHostReconnect();
  }
- reconnectTimer=setTimeout(()=>{reconnectTimer=null;if(!hostPeer||!hostPeer.open)reconnectToHost()},1500);
 }
 function scheduleHostReconnect(){
  if(isHost||reconnectTimer)return;
- reconnectTimer=setTimeout(()=>{reconnectTimer=null;reconnectToHost()},700);
+ const delay=Math.min(5000,700+reconnectAttempts*500);
+ reconnectTimer=setTimeout(()=>{
+   reconnectTimer=null;
+   if(!hostPeer||!hostPeer.open)connectFreshToHost();
+ },delay);
 }
 function handleVisibilityConnection(){
  if(document.visibilityState==='visible'){
    if(isHost){
      if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
-   }else{
-     if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
-     reconnectToHost();
+   }else if(!hostPeer||!hostPeer.open){
+     connectFreshToHost();
    }
  }
 }
@@ -97,6 +120,7 @@ function setupMultiplayer(join){
     hostPeer=peer.connect(String(roomId),{reliable:true,serialization:'json'});
     bindConnection(hostPeer);
     hostPeer.on('open',()=>{const ns=$('netStatus');if(ns)ns.textContent='🟢 Odaya bağlandın — host başlatınca oyun açılacak';sendNet({type:'join',name:me});});
+    hostPeer.on('error',()=>{scheduleHostReconnect()});
    }else{
     onlinePlayers[me]={name:me,host:true};
     renderPlayers();
@@ -129,10 +153,22 @@ function bindConnection(conn){
  conn.on('open',()=>{if(conn===hostPeer)flushNetQueue();if(isHost){const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyuncu bağlantısı aktif'}}); 
  conn.on('data',data=>{
    if(!data)return;
+   if(data.type==='ping'){
+     if(conn.open)try{conn.send({type:'pong',round})}catch(e){}
+     return;
+   }
+   if(data.type==='pong')return;
    if(data.type==='join'&&isHost){
+     if(disconnectGraceTimers[data.name]){clearTimeout(disconnectGraceTimers[data.name]);delete disconnectGraceTimers[data.name]}
      onlinePlayers[data.name]={name:data.name,host:false,conn};
-     submittedPlayers[data.name]=false;
+     submittedPlayers[data.name]=submittedPlayers[data.name]===true;
+     votingDone[data.name]=votingDone[data.name]===true;
      broadcast({type:'players',players:Object.keys(onlinePlayers)});
+     // Send the current game snapshot immediately after a reconnect so the
+     // player can resume the round instead of only reappearing in the lobby.
+     if(round>0&&roundState?.phase!=='round'){
+       conn.send({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
+     }
      renderPlayers();
    }else if(data.type==='roomState'){
      (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
@@ -570,9 +606,10 @@ document.addEventListener('DOMContentLoaded',()=>{
    if(document.visibilityState!=='visible')return;
    if(isHost){
      if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
+     connections.forEach(cn=>{if(cn&&cn.open){try{cn.send({type:'ping',round})}catch(e){}}});
    }else if(!hostPeer||!hostPeer.open){
-     reconnectToHost();
+     connectFreshToHost();
    }
- },5000);
+ },3000);
 });
 </script></body></html>
