@@ -32,7 +32,7 @@ const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Mesle
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[];
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0;
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -108,7 +108,7 @@ function bindConnection(conn){
      const ack=connections.find(cn=>cn===conn);
      if(ack&&ack.open)ack.send({type:'answerAck',round,player:data.from||Object.keys(data.answers||{})[0]});
      updateSubmissionStatus();
-     if(allPlayersSubmitted()){showVoting();broadcast({type:'answersReady',round,answers:netAnswers});}
+     if(allPlayersSubmitted())openVotingForEveryone();
      else broadcast({type:'submissionStatus',round,submitted:submittedPlayers});
    }else if(data.type==='answerAck'&&!isHost){
      if(Number(data.round)!==round)return;
@@ -127,7 +127,7 @@ function bindConnection(conn){
      Object.assign(submittedPlayers,data.submitted||{});
      updateSubmissionStatus();
    }else if(data.type==='roundStart'&&!isHost){
-     round=Number(data.round)||1;letterNow=data.letter||letterNow;netAnswers={};newRound(letterNow,false);
+     round=Number(data.round)||1;letterNow=data.letter||letterNow;netAnswers={};submittedPlayers={};votingOpenedRound=0;newRound(letterNow,false);
    }else if(data.type==='start'&&!isHost){
      totalRounds=data.totalRounds||5;
      $('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');
@@ -145,15 +145,22 @@ function bindConnection(conn){
 }
 function allPlayersSubmitted(){
  const names=Object.keys(onlinePlayers);
- return names.every(n=>submittedPlayers[n]===true);
+ return names.length>0&&names.every(n=>submittedPlayers[n]===true);
+}
+function openVotingForEveryone(){
+ if(votingOpenedRound===round)return;
+ votingOpenedRound=round;
+ roundState.phase='voting';
+ showVoting();
+ if(isHost)broadcast({type:'answersReady',round,answers:netAnswers});
 }
 function updateSubmissionStatus(){
  const names=Object.keys(onlinePlayers);
- const done=names.filter(n=>submittedPlayers[n]).length;
+ const done=names.filter(n=>submittedPlayers[n]===true).length;
  const total=Math.max(1,names.length);
  const status=$('status');
  if(status)status.textContent='📨 Cevaplar bekleniyor: '+done+'/'+total+' oyuncu gönderdi';
- if(isHost&&done===total){roundState.phase='voting';}
+ if(isHost&&allPlayersSubmitted())openVotingForEveryone();
 }
 function sendNet(data){
  if(!hostPeer){pendingNetMessages.push(data);return false}
@@ -182,7 +189,7 @@ function startGame(){
 function selectedDuration(){return Number($('durationSelect')?.value||120)}
 function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
- clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};
+ clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};
  letterNow=forcedLetter||letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';
  if(isHost&&announce)broadcast({type:'roundStart',round,letter:letterNow,duration:selectedDuration(),cats});
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
