@@ -43,7 +43,7 @@ function shuffleCats(){cats=[...allCats].sort(()=>Math.random()-.5).slice(0,Math
 function enter(name,join){
  if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
  me=(name||'Oyuncu').trim()||'Oyuncu';
- roomId=join?($('joinCode').value.trim()||makeCode()):makeCode();
+ roomId=join?($('joinCode').value.trim().replace(/\s/g,'')||makeCode()):makeCode();
  isHost=!join;
  $('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;
  renderPlayers();
@@ -57,7 +57,7 @@ function setupMultiplayer(join){
   peer=new Peer(peerId);
   peer.on('open',id=>{
    if(join){
-    hostPeer=peer.connect(roomId,{reliable:true});
+    hostPeer=peer.connect(String(roomId),{reliable:true,serialization:'json'});
     bindConnection(hostPeer);
     hostPeer.on('open',()=>{const ns=$('netStatus');if(ns)ns.textContent='🟢 Odaya bağlandın — host başlatınca oyun açılacak';sendNet({type:'join',name:me});});
    }else{
@@ -69,9 +69,17 @@ function setupMultiplayer(join){
   peer.on('connection',conn=>{
    if(!isHost)return;
    bindConnection(conn);
-   conn.on('open',()=>sendNet({type:'roomState',players:Object.keys(onlinePlayers),roomId,totalRounds,cats}));
+   conn.on('open',()=>{conn.send({type:'roomState',players:Object.keys(onlinePlayers),roomId,totalRounds,cats});});
   });
-  peer.on('error',err=>{console.warn(err);const ns=$('netStatus');if(ns)ns.textContent='🔴 Bağlantı kurulamadı';toast('Bağlantı kurulamadı. Kodu kontrol et.')});
+  peer.on('error',err=>{
+ console.warn('PeerJS:',err);
+ const ns=$('netStatus');
+ const msg=err&&err.type==='peer-unavailable'?'🔴 Bu oda bulunamadı veya host bağlantıyı kapattı':err&&err.type==='unavailable-id'?'🔴 Bu oda kodu zaten kullanımda':'🔴 Bağlantı kurulamadı';
+ if(ns)ns.textContent=msg;
+ toast(msg.replace('🔴 ',''));
+});
+peer.on('disconnected',()=>{const ns=$('netStatus');if(ns)ns.textContent='🟠 Sunucu bağlantısı kesildi';});
+
  }catch(err){console.error(err);toast('Çok oyunculu bağlantı başlatılamadı.')}
 }
 function bindConnection(conn){
