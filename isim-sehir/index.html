@@ -32,7 +32,7 @@ const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Mesle
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={};
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[];
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -84,7 +84,8 @@ peer.on('disconnected',()=>{const ns=$('netStatus');if(ns)ns.textContent='🟠 S
 }
 function bindConnection(conn){
  if(!conn)return;
- connections.push(conn);
+ if(!connections.includes(conn))connections.push(conn);
+ conn.on('open',()=>{if(conn===hostPeer)flushNetQueue();if(isHost){const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyuncu bağlantısı aktif'}}); 
  conn.on('data',data=>{
    if(!data)return;
    if(data.type==='join'&&isHost){
@@ -102,9 +103,16 @@ function bindConnection(conn){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
      Object.assign(submittedPlayers,data.submitted||{});
+     Object.keys(data.submitted||{}).forEach(n=>{if(data.submitted[n]===true)submittedPlayers[n]=true});
+     if(data.from)submittedPlayers[data.from]=true;
+     const ack=connections.find(cn=>cn===conn);
+     if(ack&&ack.open)ack.send({type:'answerAck',round,player:data.from||Object.keys(data.answers||{})[0]});
      updateSubmissionStatus();
      if(allPlayersSubmitted()){showVoting();broadcast({type:'answersReady',round,answers:netAnswers});}
      else broadcast({type:'submissionStatus',round,submitted:submittedPlayers});
+   }else if(data.type==='answerAck'&&!isHost){
+     if(Number(data.round)!==round)return;
+     $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
    }else if(data.type==='answersReady'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
@@ -148,15 +156,13 @@ function updateSubmissionStatus(){
  if(isHost&&done===total){roundState.phase='voting';}
 }
 function sendNet(data){
- if(!hostPeer)return false;
- if(!hostPeer.open){
-   try{hostPeer.open=true}catch(e){}
-   const ns=$('netStatus');if(ns)ns.textContent='🟠 Oda bağlantısı yeniden kuruluyor...';
-   try{hostPeer.reconnect()}catch(e){}
-   setTimeout(()=>{if(hostPeer&&hostPeer.open)hostPeer.send(data);else{const ns=$('netStatus');if(ns)ns.textContent='🔴 Oda bağlantısı kapalı';}},700);
-   return false;
- }
- hostPeer.send(data);return true;
+ if(!hostPeer){pendingNetMessages.push(data);return false}
+ if(!hostPeer.open){pendingNetMessages.push(data);const ns=$('netStatus');if(ns)ns.textContent='🟠 Oda bağlantısı yeniden kuruluyor...';try{hostPeer.reconnect()}catch(e){}return false}
+ try{hostPeer.send(data);return true}catch(e){pendingNetMessages.push(data);return false}
+}
+function flushNetQueue(){
+ if(!hostPeer||!hostPeer.open)return;
+ const q=pendingNetMessages.splice(0);q.forEach(d=>{try{hostPeer.send(d)}catch(e){pendingNetMessages.unshift(d)}})
 }
 function broadcast(data){
  connections=connections.filter(cn=>cn&&!cn.destroyed);
@@ -224,10 +230,9 @@ function finishRound(){
    broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers});
  }else{
    if(!hostPeer||(!hostPeer.open&&!hostPeer.peer)){toast('🔴 Oda bağlantısı koptu, yeniden bağlanıyor...');$('finishBtn').disabled=false;sendNet({type:'answers',round,answers:{[me]:mine}});return}
-   const sent=sendNet({type:'answers',round,answers:{[me]:mine},submitted:{[me]:true}});
-   if(!sent){$('finishBtn').disabled=false;return}
-   submittedPlayers[me]=true;roundState.phase='waiting-players';$('status').textContent='📨 Cevabın hosta ulaştırılıyor...';
-   $('finishBtn').textContent='✓ Cevap Gönderildi';
+   const sent=sendNet({type:'answers',round,from:me,answers:{[me]:mine},submitted:{[me]:true}});
+   submittedPlayers[me]=true;roundState.phase='waiting-players';$('status').textContent=sent?'📨 Cevabın hosta ulaştırılıyor...':'🟠 Bağlantı bekleniyor, cevap sıraya alındı...';
+   $('finishBtn').textContent=sent?'✓ Cevap Gönderildi':'↻ Bağlantı kurulunca gönderilecek';
  }
 }
 let votedCount=0;function vote(btn,correct){const row=btn.closest('.vote-player');if(!row)return;const wasVoted=!!row.dataset.vote;row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';let square=row.querySelector('.my-vote');if(!square){square=document.createElement('span');square.className='player-vote my-vote';const voters=row.querySelector('.vote-voters');if(voters)voters.appendChild(square)}square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex';if(!wasVoted)votedCount++;const el=$('voteCount');if(el)el.textContent=votedCount+' / '+document.querySelectorAll('.vote-player [data-vote-action]').length}
