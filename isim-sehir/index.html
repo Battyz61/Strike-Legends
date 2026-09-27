@@ -186,6 +186,17 @@ function bindConnection(conn){
  });
  conn.on('close',()=>{
    connections=connections.filter(x=>x!==conn);
+   if(isHost){
+     const stale=Object.keys(onlinePlayers).find(n=>onlinePlayers[n]?.conn===conn);
+     if(stale&&stale!==me){
+       delete onlinePlayers[stale];
+       delete submittedPlayers[stale];
+       delete votingDone[stale];
+       broadcast({type:'players',players:Object.keys(onlinePlayers)});
+       renderPlayers();
+       updateSubmissionStatus();
+     }
+   }
    const ns=$('netStatus');
    if(ns)ns.textContent=isHost?'🟠 Bir oyuncunun bağlantısı kapandı':'🟠 Host bağlantısı kesildi — yeniden bağlanıyor...';
    if(!isHost && conn===hostPeer){
@@ -295,6 +306,9 @@ function finishRound(){
    if(Object.keys(onlinePlayers).length<=1){submittedPlayers[me]=true;showVoting();}
    else{roundState.phase='waiting-players';updateSubmissionStatus();}
    broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
+   // Keep the host UI responsive after its own submission; if every
+   // currently connected player has submitted, transition immediately.
+   updateSubmissionStatus();
  // Re-check after broadcasting the canonical answer snapshot. This is the
  // authoritative transition point for the host.
  if(isHost&&allPlayersSubmitted())openVotingForEveryone();
