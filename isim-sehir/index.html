@@ -208,7 +208,7 @@ function completeVoting(){
 function showResults(gains,details=[]){
  roundState.phase='results';
  const list=Object.entries(gains).sort((a,b)=>b[1]-a[1]);
- const cumulative=[{name:me,score:myScore},...bots.map(b=>({name:b.name,score:b.score||0}))].sort((a,b)=>b.score-a.score);
+ const cumulative=[{name:me,score:myScore},...bots.map(b=>({name:b.name,score:Number(b.score)||0}))].sort((a,b)=>b.score-a.score);
  const leader=cumulative[0]||{name:me,score:myScore};
  const gap=Math.max(0,(leader.score||0)-myScore);
  const myDetails=details.filter(d=>d.owner===me);
@@ -216,10 +216,10 @@ function showResults(gains,details=[]){
  let html='<div class="result-panel"><div class="result-hero"><div>🏆 Tur Sonucu</div><div class="big-score">+'+(gains[me]||0)+'</div><div style="color:var(--muted)">Bu tur kazandığın puan</div></div><div class="round-details"><div class="detail-title">📋 Cevap dökümü</div>'+detailHtml+'</div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur →</button></div>';
  $('answers').innerHTML=html;
  $('status').textContent=leader.name===me?'🔥 Lider sensin · 2. oyuncuyla fark: '+gap+' puan':'📊 Lider: '+esc(leader.name)+' · Liderle fark: '+gap+' puan';
- $('enemyScore').textContent=second.score||0;$('roundScore').textContent=gap;
- $('finishBtn').classList.add('hidden');
+ $('enemyScore').textContent=second.score||0;$('roundScore').textContent=gap;$('finishBtn').style.display='none';
+ $('finishBtn').classList.add('hidden');$('finishBtn').style.display='none';
 }
-function nextRound(){if(gameFinished)return;if(round>=totalRounds){gameFinished=true;showFinalResults();return}$('finishBtn').classList.remove('hidden');round++;newRound()}
+function nextRound(){if(gameFinished)return;if(round>=totalRounds){gameFinished=true;showFinalResults();return}$('finishBtn').classList.remove('hidden');$('finishBtn').style.display='';round++;newRound()}
 function showFinalResults(){const all=[{name:me,score:myScore},...bots.map(b=>({name:b.name,score:b.score||0}))].sort((a,b)=>b.score-a.score);$('answers').innerHTML='<div class="result-panel"><div class="result-hero"><div>🏆 OYUN BİTTİ</div><div class="big-score">'+(all[0]?.score||0)+'</div><div style="color:var(--muted)">Toplam puan</div></div><div class="leaderboard">'+all.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+x.score+'</div></div>').join('')+'</div><button class="btn result-next" onclick="location.reload()">Yeni Oyun</button></div>';$('status').textContent='Oyun tamamlandı!';}
 document.addEventListener('DOMContentLoaded',()=>{renderCategories();$('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')})});
 </script></body></html>
