@@ -354,7 +354,7 @@ function updateVoteSummary(){
      if(!x.classList.contains('pending'))done++;
    });
  });
- const el=$('voteCount');if(el)el.textContent=done+' / '+required;
+ const el=$('voteCount');if(el)el.textContent=localDone+' / '+localRequired;
  const btn=$('finishBtn');
  if(btn&&!btn.classList.contains('hidden')){
    btn.textContent='Oyları Tamamla · '+localDone+'/'+localRequired;
@@ -362,8 +362,7 @@ function updateVoteSummary(){
  const status=$('status');
  if(status){
    if(localDone<localRequired) status.textContent='🗳️ Kendi oyların: '+localDone+'/'+localRequired+' · Cevapları değerlendir.';
-   else if(done<required) status.textContent='⏳ Kendi oyların tamamlandı. Diğer oyuncuların oyları bekleniyor...';
-   else status.textContent='✅ Tüm oylar tamamlandı. Sonucu görmek için devam et.';
+   else status.textContent='✅ Kendi oyların tamamlandı. Sonucu görmek için devam et.';
  }
 }
 function allHumanVotesPresent(){
@@ -386,7 +385,9 @@ function completeVoting(){
  const rows=[...$('answers').querySelectorAll('.vote-player')];
  const myRows=rows.filter(r=>r.querySelector('[data-vote-action]'));
  if(myRows.some(r=>!r.dataset.vote)){toast('Tüm cevaplara oy vermelisin.');return}
- if(!allHumanVotesPresent()){toast('⏳ Diğer oyuncuların oyları bekleniyor.');return}
+ // Her oyuncu kendi oylarını tamamladığında sonucu görebilir. Diğer
+ // oyuncunun oyları ağ üzerinden arka planda senkronize edilmeye devam eder;
+ // burada beklemek multiplayer akışını kilitliyordu.
  const gains={};[me,...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
  const details=[];
  rows.forEach(row=>{
