@@ -264,6 +264,7 @@ function vote(btn,correct){
  if(square){square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex'}
  const cat=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')||'';
  localVotes[row.dataset.answer+'|'+cat]=correct?'yes':'no';
+ netVotes[me+'|'+row.dataset.answer+'|'+cat]=correct?'yes':'no';
  if(!wasVoted)votedCount++;
  updateVoteSummary();
  if(!isHost){
@@ -274,7 +275,9 @@ function vote(btn,correct){
 }
 function registerNetworkVote(voter,answer,cat,correct){
  const key=voter+'|'+answer+'|'+cat;
- remoteVotes[key]=correct?'yes':'no';
+ const value=correct?'yes':'no';
+ remoteVotes[key]=value;
+ netVotes[key]=value;
  const row=[...$('answers').querySelectorAll('.vote-player')].find(r=>r.dataset.answer===answer&&r.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')===cat);
  if(row){
    const square=[...row.querySelectorAll('.remote-vote')].find(x=>x.dataset.voter===voter);
@@ -294,7 +297,7 @@ function voteRow(owner,x,empty=false){
  return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👤')+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
 function showVoting(){
- votedCount=0;localVotes={};
+ votedCount=0;localVotes={};netVotes={};
  const mine=netAnswers[me]||[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  if(!netAnswers[me])netAnswers[me]=mine;
  bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
@@ -343,8 +346,19 @@ function updateVoteSummary(){
  }
 }
 function allHumanVotesPresent(){
- return ![...$('answers').querySelectorAll('.remote-vote.pending')].length &&
-        ![...$('answers').querySelectorAll('.vote-player')].some(r=>r.querySelector('[data-vote-action]')&&!r.dataset.vote);
+ const humans=Object.keys(onlinePlayers);
+ if(!humans.length)return true;
+ const rows=[...$('answers').querySelectorAll('.vote-player')];
+ for(const row of rows){
+   const owner=row.dataset.answer;
+   const cat=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')||'';
+   for(const voter of humans){
+     if(voter===owner)continue;
+     const key=voter+'|'+owner+'|'+cat;
+     if(!netVotes[key])return false;
+   }
+ }
+ return true;
 }
 function completeVoting(){
  const rows=[...$('answers').querySelectorAll('.vote-player')];
