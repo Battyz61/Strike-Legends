@@ -32,7 +32,7 @@ const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Mesle
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={};
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={};
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -123,6 +123,10 @@ function bindConnection(conn){
      updateSubmissionStatus();
      if(allPlayersSubmitted())openVotingForEveryone();
      else $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
+   }else if(data.type==='votingDone'&&isHost){
+     if(Number(data.round)!==round)return;
+     votingDone[data.player]=true;
+     finalizeVoting();
    }else if(data.type==='vote'&&isHost){
      if(Number(data.round)!==round)return;
      registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct);
@@ -135,7 +139,14 @@ function bindConnection(conn){
      netScores=Object.assign({},data.scores||{});
      myScore=Number(netScores[me]||0);
      $('myScore').textContent=myScore;
-     if(roundState?.phase==='results')showResults(data.gains||{},data.details||[],netScores);
+   }else if(data.type==='votingResult'&&!isHost){
+     if(Number(data.round)!==round)return;
+     netScores=Object.assign({},data.scores||{});
+     myScore=Number(netScores[me]||0);
+     bots.forEach(b=>b.score=Number(netScores[b.name]||0));
+     $('myScore').textContent=myScore;
+     $('finishBtn').disabled=true;
+     showResults(data.gains||{},data.details||[],netScores);
    }else if(data.type==='answersReady'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
@@ -232,7 +243,7 @@ function startGame(){
 function selectedDuration(){return Number($('durationSelect')?.value||120)}
 function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
- clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};localVotes={};remoteVotes={};
+ clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};votingDone={};localVotes={};remoteVotes={};
  letterNow=forcedLetter||letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';
  if(isHost&&announce)broadcast({type:'roundStart',round,letter:letterNow,duration:selectedDuration(),cats:[...cats]});
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
@@ -341,7 +352,7 @@ function voteRow(owner,x,empty=false){
  return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👤')+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
 function showVoting(){
- votedCount=0;localVotes={};netVotes={};
+ votedCount=0;localVotes={};netVotes={};votingDone={};
  const mine=netAnswers[me]||[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  if(!netAnswers[me])netAnswers[me]=mine;
  bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
@@ -409,10 +420,8 @@ function allHumanVotesPresent(){
  }
  return true;
 }
-function completeVoting(){
+function calculateVotingResult(){
  const rows=[...$('answers').querySelectorAll('.vote-player')];
- const myRows=rows.filter(r=>r.querySelector('[data-vote-action]'));
- if(myRows.some(r=>!r.dataset.vote)){toast('Tüm cevaplara oy vermelisin.');return}
  const gains={};
  [...Object.keys(onlinePlayers),...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
  const details=[];
@@ -426,16 +435,38 @@ function completeVoting(){
    const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
    details.push({owner,cat:catTitle.replace(letterNow+' ile ',''),answer,yes:greenBoxes,no:redBoxes,points});
  });
- // Start from the authoritative cumulative scores if available.
  const scores=Object.assign({},netScores);
  Object.keys(gains).forEach(n=>{scores[n]=Number(scores[n]||0)+Number(gains[n]||0)});
- netScores=scores;
- myScore=Number(scores[me]||0);
- bots.forEach(b=>b.score=Number(scores[b.name]||0));
+ return {gains,details,scores};
+}
+function allVotingDone(){
+ const names=Object.keys(onlinePlayers);
+ return names.length>0&&names.every(n=>votingDone[n]===true);
+}
+function finalizeVoting(){
+ if(!isHost||!allVotingDone())return;
+ const result=calculateVotingResult();
+ netScores=result.scores;
+ myScore=Number(netScores[me]||0);
+ bots.forEach(b=>b.score=Number(netScores[b.name]||0));
  $('myScore').textContent=myScore;
  $('finishBtn').disabled=true;
- showResults(gains,details,scores);
- if(isHost)broadcast({type:'scores',round,gains,details,scores});
+ showResults(result.gains,result.details,netScores);
+ broadcast({type:'votingResult',round,gains:result.gains,details:result.details,scores:netScores});
+}
+function completeVoting(){
+ const rows=[...$('answers').querySelectorAll('.vote-player')];
+ const myRows=rows.filter(r=>r.querySelector('[data-vote-action]'));
+ if(myRows.some(r=>!r.dataset.vote)){toast('Tüm cevaplara oy vermelisin.');return}
+ votingDone[me]=true;
+ $('finishBtn').disabled=true;
+ if(isHost){
+   if(allVotingDone())finalizeVoting();
+   else $('status').textContent='⏳ Diğer oyuncu da oylarını tamamlıyor...';
+ }else{
+   const sent=sendNet({type:'votingDone',round,player:me});
+   $('status').textContent=sent?'⏳ Oyların kaydedildi. Diğer oyuncu bekleniyor...':'🟠 Oy sonucu bağlantı kurulunca gönderilecek...';
+ }
 }
 function showResults(gains,details=[],scoresOverride=null){
  roundState.phase='results';
