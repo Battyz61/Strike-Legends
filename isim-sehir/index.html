@@ -69,7 +69,7 @@ function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:'Bot '+(parseInt(owner.replace('bot',''),10)+1);
  const voterButtons=empty?'':'<button type="button" class="vote-circle no" data-vote-action="no">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes">✓</button>';
  let botVotes='';
- bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const yes=Math.random()>.28;botVotes+='<span class="player-vote '+(yes?'yes':'no')+'">'+(yes?'':'')+'</span>'});
+ bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const yes=Math.random()>.28;botVotes+='<span class="player-vote bot-vote '+(yes?'yes':'no')+'"></span>'});
  return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👑')+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+'<span class="player-vote my-vote '+(Math.random()>.5?'yes':'no')+'"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
 function showVoting(){
@@ -87,7 +87,7 @@ function completeVoting(){
  const myRows=rows.filter(r=>r.querySelector('[data-vote-action]'));
  if(myRows.some(r=>!r.dataset.vote)){toast('Tüm cevaplara oy vermelisin.');return}
  const gains={};[me,...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
- rows.forEach(row=>{const owner=row.dataset.answer;if(!owner)return;const others=row.querySelectorAll('.player-vote');let yes=0,no=0;others.forEach(x=>x.classList.contains('yes')?yes++:no++);if(row.dataset.vote==='yes')yes++;if(row.dataset.vote==='no')no++;if(yes>no)gains[owner]=(gains[owner]||0)+10});
+ rows.forEach(row=>{const owner=row.dataset.answer;if(!owner)return;const botVotes=row.querySelectorAll('.bot-vote');let yes=0,no=0;botVotes.forEach(x=>x.classList.contains('yes')?yes++:no++);if(row.dataset.vote==='yes')yes++;if(row.dataset.vote==='no')no++;if(yes>no)gains[owner]=(gains[owner]||0)+10});
  const myGain=gains[me]||0;myScore+=myGain;bots.forEach(b=>{b.score=(b.score||0)+(gains[b.name]||0)});$('myScore').textContent=myScore;$('roundScore').textContent=myGain;$('finishBtn').disabled=true;showResults(gains);
 }
 function showResults(gains){roundState.phase='results';
