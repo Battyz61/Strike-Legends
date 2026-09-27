@@ -168,8 +168,18 @@ function bindConnection(conn){
      // player can resume the round instead of only reappearing in the lobby.
      if(round>0){
        // Reconnects must restore the exact phase the host is currently in.
-       // Never send only answers when the round has already reached voting/results.
-       if(roundState?.phase==='results'&&lastVotingResult){
+       // The previous snapshot skipped the active "round" phase, so a player
+       // reconnecting during round 2 could remain on the previous screen.
+       if(roundState?.phase==='round'){
+         conn.send({
+           type:'roundResume',
+           round,
+           letter:letterNow,
+           cats:[...cats],
+           seconds:Math.max(0,Number(seconds)||0),
+           duration:selectedDuration()
+         });
+       }else if(roundState?.phase==='results'&&lastVotingResult){
          conn.send({type:'votingResult',round,gains:lastVotingResult.gains||{},details:lastVotingResult.details||[],scores:lastVotingResult.scores||netScores});
        }else if(roundState?.phase==='voting'){
          conn.send({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers});
@@ -260,6 +270,13 @@ function bindConnection(conn){
      }else if(roundState?.phase!=='results'){
        updateSubmissionStatus();
      }
+   }else if(data.type==='roundResume'&&!isHost){
+     if(Number(data.round)!==Number(round)&&Number(data.round)<Number(round))return;
+     round=Number(data.round)||1;
+     letterNow=data.letter||letterNow;
+     if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
+     netAnswers={};submittedPlayers={};votingOpenedRound=0;votingDone={};localVotes={};remoteVotes={};netVotes={};
+     resumeActiveRound(data);
    }else if(data.type==='roundStart'&&!isHost){
      round=Number(data.round)||1;
      letterNow=data.letter||letterNow;
@@ -352,6 +369,35 @@ function startGame(){
  if(isHost){broadcast({type:'start',totalRounds,cats,scores:netScores});newRound(null,true)}
 }
 function selectedDuration(){return Number($('durationSelect')?.value||120)}
+function resumeActiveRound(data){
+ clearInterval(timerId);
+ roundState={token:++roundToken,phase:'round'};
+ votingOpenedRound=0;
+ const token=roundToken;
+ const duration=Math.max(1,Number(data.duration)||selectedDuration());
+ seconds=Math.max(1,Number(data.seconds)||duration);
+ $('roundNo').textContent=round+'. Tur';
+ $('letter').textContent=letterNow;
+ $('wheel').classList.remove('spinning');
+ $('wheelLabel').textContent='Seçilen harf';
+ $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
+ $('answers').classList.remove('hidden-answers');
+ $('timer').classList.remove('danger');
+ $('timer').textContent=seconds+' sn';
+ $('status').textContent='Cevaplarını '+letterNow+' harfiyle doldur.';
+ $('finishBtn').style.display='';
+ $('finishBtn').classList.remove('hidden');
+ $('finishBtn').textContent='Cevapları Gönder';
+ $('finishBtn').disabled=false;
+ $('finishBtn').onclick=finishRound;
+ timerId=setInterval(()=>{
+   if(token!==roundToken)return;
+   seconds--;
+   $('timer').textContent=seconds+' sn';
+   if(seconds<=10)$('timer').classList.add('danger');
+   if(seconds<=0)finishRound();
+ },1000);
+}
 function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
  clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};votingDone={};localVotes={};remoteVotes={};
