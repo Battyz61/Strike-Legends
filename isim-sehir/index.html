@@ -22,7 +22,7 @@ button,input{font:inherit}.wrap{max-width:1080px;margin:auto;padding:20px}.hero{
 </div>
 </div><section id="room" class="room">
 <div class="card"><div class="top"><div><small style="color:var(--muted)">ODA KODU</small><div id="roomCode" class="code"></div></div><button class="btn secondary small" onclick="copyRoom()">Kodu Kopyala</button></div>
-<h3>👥 Oyuncular</h3><div id="players" class="players"></div><div class="settings-row"><div class="setting"><label>👥 OYUNCU LİMİTİ</label><select id="playerLimit"><option value="4" selected>4 Oyuncu</option><option value="6">6 Oyuncu</option><option value="8">8 Oyuncu</option><option value="10">10 Oyuncu</option></select></div><div class="setting"><label>🏁 TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div></div><button id="botBtn" class="btn secondary" onclick="addBot()">🤖 Test Botu Ekle</button><button id="startBtn" class="btn" onclick="startGame()">Oyunu Başlat</button></div>
+<h3>👥 Oyuncular</h3><div id="players" class="players"></div><div id="netStatus" class="status" style="margin:8px 0">🌐 Oda bağlantısı hazırlanıyor...</div><div class="settings-row"><div class="setting"><label>👥 OYUNCU LİMİTİ</label><select id="playerLimit"><option value="4" selected>4 Oyuncu</option><option value="6">6 Oyuncu</option><option value="8">8 Oyuncu</option><option value="10">10 Oyuncu</option></select></div><div class="setting"><label>🏁 TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div></div><button id="botBtn" class="btn secondary" onclick="addBot()">🤖 Test Botu Ekle</button><button id="startBtn" class="btn" onclick="startGame()">Oyunu Başlat</button></div>
 <div id="game" class="card game hidden"><div class="roundbar"><h2 style="margin:0">🔥 Yarış</h2><span id="roundNo" class="roundnum">1. Tur</span></div>
 <div id="wheelArea" class="wheel-wrap"><div class="wheel-pointer">▼</div><div id="wheel" class="wheel"><div id="letter" class="wheel-center">?</div></div></div><div id="wheelLabel" class="wheel-label">Harf seçiliyor...</div><div id="timer" class="timer">120 sn</div><div id="status" class="status">Cevaplarını seçilen harfle doldur.</div><div id="answers" class="answers"></div>
 <button id="finishBtn" class="btn" onclick="finishRound()">Cevapları Gönder</button><div class="scorebar"><div class="score"><span>Toplam Puan</span><b id="myScore">0</b></div><div class="score"><span>🏆 Lider</span><b id="enemyScore">0</b></div><div class="score"><span>📊 Lider Farkı</span><b id="roundScore">0</b></div></div></div>
@@ -59,11 +59,11 @@ function setupMultiplayer(join){
    if(join){
     hostPeer=peer.connect(roomId,{reliable:true});
     bindConnection(hostPeer);
-    hostPeer.on('open',()=>sendNet({type:'join',name:me}));
+    hostPeer.on('open',()=>{const ns=$('netStatus');if(ns)ns.textContent='🟢 Odaya bağlandın — host başlatınca oyun açılacak';sendNet({type:'join',name:me});});
    }else{
     onlinePlayers[me]={name:me,host:true};
     renderPlayers();
-    toast('🌐 Oda hazır — arkadaşların kodla katılabilir');
+    const ns=$('netStatus');if(ns)ns.textContent='🟢 Oda çevrimiçi — kodu arkadaşlarınla paylaş';toast('🌐 Oda hazır — arkadaşların kodla katılabilir');
    }
   });
   peer.on('connection',conn=>{
@@ -71,7 +71,7 @@ function setupMultiplayer(join){
    bindConnection(conn);
    conn.on('open',()=>sendNet({type:'roomState',players:Object.keys(onlinePlayers),roomId,totalRounds,cats}));
   });
-  peer.on('error',err=>{console.warn(err);toast('Bağlantı kurulamadı. Kodu kontrol et.')});
+  peer.on('error',err=>{console.warn(err);const ns=$('netStatus');if(ns)ns.textContent='🔴 Bağlantı kurulamadı';toast('Bağlantı kurulamadı. Kodu kontrol et.')});
  }catch(err){console.error(err);toast('Çok oyunculu bağlantı başlatılamadı.')}
 }
 function bindConnection(conn){
@@ -107,7 +107,7 @@ function copyRoom(){if(navigator.clipboard)navigator.clipboard.writeText(roomId)
 function addBot(){const limit=Number($('playerLimit')?.value||4);if(bots.length+1>=limit){toast('Oyuncu limiti dolu.');return}bots.push({name:'Bot '+(bots.length+1),score:0,answers:[]});renderPlayers();toast('🤖 Test botu eklendi')}
 function renderPlayers(){
  const online=[...new Set([me,...Object.keys(onlinePlayers).filter(n=>n!==me)])];
- $('players').innerHTML=online.map(n=>'<span class="player">'+(n===me?'👑 ':'👤 ')+esc(n)+'</span>').join('')+bots.map(b=>'<span class="player">🤖 '+esc(b.name)+'</span>').join('')+(online.length===1&&!bots.length?'<span class="player">⏳ Arkadaşın bekleniyor</span>':'');
+ $('players').innerHTML=online.map(n=>'<span class="player">'+(n===me?'👑 ':'👤 ')+esc(n)+'</span>').join('')+bots.map(b=>'<span class="player">🤖 '+esc(b.name)+'</span>').join('')+(online.length===1&&!bots.length?'<span class="player">⏳ Arkadaşın bekleniyor</span>':'');const start=$('startBtn');if(start)start.disabled=!isHost;
 }
 function startGame(){
  totalRounds=Number($('roundLimit')?.value||5);round=1;gameFinished=false;myScore=0;bots.forEach(b=>b.score=0);$('myScore').textContent='0';
