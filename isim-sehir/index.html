@@ -127,7 +127,7 @@ function bindConnection(conn){
      (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
      Object.assign(submittedPlayers,data.submitted||{});
      renderPlayers();
-     remoteVotes={};localVotes={};showVoting();
+     remoteVotes={};localVotes={};netVotes={};showVoting();
    }else if(data.type==='submissionStatus'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(submittedPlayers,data.submitted||{});
@@ -139,6 +139,10 @@ function bindConnection(conn){
      Object.assign(submittedPlayers,data.submitted||{});
      renderPlayers();
      updateSubmissionStatus();
+     // A guest can receive the final answer packet just after the
+     // submission-status packet. Rebuild the voting screen so no answer
+     // remains stuck as "Cevap yok".
+     if(allPlayersSubmitted() && votingOpenedRound===round)showVoting();
    }else if(data.type==='roundStart'&&!isHost){
      round=Number(data.round)||1;letterNow=data.letter||letterNow;netAnswers={};submittedPlayers={};votingOpenedRound=0;newRound(letterNow,false);
    }else if(data.type==='start'&&!isHost){
@@ -301,7 +305,7 @@ function registerNetworkVote(voter,answer,cat,correct){
 function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:owner.startsWith('bot')?'Bot '+(parseInt(owner.replace('bot',''),10)+1):owner.startsWith('human:')?owner.slice(6):owner;
  const isMine=owner==='me';
- const voterButtons=(empty||isMine)?'<span class="own-answer-label">👑 Kendi cevabın</span>':'<button type="button" class="vote-circle no" data-vote-action="no">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes">✓</button>';
+ const voterButtons=isMine?'<span class="own-answer-label">👑 Kendi cevabın</span>':'<button type="button" class="vote-circle no" data-vote-action="no">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes">✓</button>';
  let botVotes='';
  bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const val=remoteVotes['Bot '+(bi+1)+'|'+answerOwner+'|'+x.cat];botVotes+='<span class="player-vote bot-vote '+(val?'':'pending')+'" data-voter="Bot '+(bi+1)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
  let humanVotes='';
@@ -369,6 +373,7 @@ function allHumanVotesPresent(){
  for(const row of rows){
    const owner=row.dataset.answer;
    const cat=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')||'';
+   if(!owner||!cat)continue;
    for(const voter of humans){
      if(voter===owner)continue;
      const key=voter+'|'+owner+'|'+cat;
