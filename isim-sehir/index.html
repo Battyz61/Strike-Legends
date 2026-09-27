@@ -32,7 +32,7 @@ const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Mesle
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0;
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={};
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -113,10 +113,17 @@ function bindConnection(conn){
    }else if(data.type==='answerAck'&&!isHost){
      if(Number(data.round)!==round)return;
      $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
+   }else if(data.type==='vote'&&isHost){
+     if(Number(data.round)!==round)return;
+     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct);
+   }else if(data.type==='voteUpdate'&&!isHost){
+     if(Number(data.round)!==round)return;
+     remoteVotes[data.voter+'|'+data.answer+'|'+data.cat]=data.correct?'yes':'no';
+     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct);
    }else if(data.type==='answersReady'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
-     showVoting();
+     remoteVotes={};localVotes={};showVoting();
    }else if(data.type==='submissionStatus'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(submittedPlayers,data.submitted||{});
@@ -189,7 +196,7 @@ function startGame(){
 function selectedDuration(){return Number($('durationSelect')?.value||120)}
 function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
- clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};
+ clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};localVotes={};remoteVotes={};
  letterNow=forcedLetter||letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';
  if(isHost&&announce)broadcast({type:'roundStart',round,letter:letterNow,duration:selectedDuration(),cats});
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
@@ -242,16 +249,47 @@ function finishRound(){
    $('finishBtn').textContent=sent?'✓ Cevap Gönderildi':'↻ Bağlantı kurulunca gönderilecek';
  }
 }
-let votedCount=0;function vote(btn,correct){const row=btn.closest('.vote-player');if(!row)return;const wasVoted=!!row.dataset.vote;row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';let square=row.querySelector('.my-vote');if(!square){square=document.createElement('span');square.className='player-vote my-vote';const voters=row.querySelector('.vote-voters');if(voters)voters.appendChild(square)}square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex';if(!wasVoted)votedCount++;const el=$('voteCount');if(el)el.textContent=votedCount+' / '+document.querySelectorAll('.vote-player [data-vote-action]').length}
+let votedCount=0;
+function vote(btn,correct){
+ const row=btn.closest('.vote-player');if(!row)return;
+ const wasVoted=!!row.dataset.vote;
+ row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));
+ btn.classList.add('selected');
+ row.dataset.vote=correct?'yes':'no';
+ const square=row.querySelector('.my-vote');
+ if(square){square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex'}
+ const cat=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')||'';
+ localVotes[row.dataset.answer+'|'+cat]=correct?'yes':'no';
+ if(!wasVoted)votedCount++;
+ const el=$('voteCount');if(el)el.textContent=votedCount+' / '+document.querySelectorAll('.vote-player [data-vote-action]').length;
+ if(!isHost){
+   sendNet({type:'vote',round,voter:me,answer:row.dataset.answer,cat,correct});
+ }else{
+   registerNetworkVote(me,row.dataset.answer,cat,correct);
+ }
+}
+function registerNetworkVote(voter,answer,cat,correct){
+ const key=voter+'|'+answer+'|'+cat;
+ remoteVotes[key]=correct?'yes':'no';
+ const row=[...$('answers').querySelectorAll('.vote-player')].find(r=>r.dataset.answer===answer&&r.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')===cat);
+ if(row){
+   const square=[...row.querySelectorAll('.remote-vote')].find(x=>x.dataset.voter===voter);
+   if(square){square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex'}
+ }
+ if(isHost)broadcast({type:'voteUpdate',round,voter,answer,cat,correct});
+}
 function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:owner.startsWith('bot')?'Bot '+(parseInt(owner.replace('bot',''),10)+1):Object.keys(netAnswers).filter(n=>n!==me&&!bots.some(b=>b.name===n))[parseInt(owner.replace('player',''),10)]||owner;
- const isMine=owner==='me';const voterButtons=(empty||isMine)?'<span class="own-answer-label">👑 Kendi cevabın</span>':'<button type="button" class="vote-circle no" data-vote-action="no">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes">✓</button>';
+ const isMine=owner==='me';
+ const voterButtons=(empty||isMine)?'<span class="own-answer-label">👑 Kendi cevabın</span>':'<button type="button" class="vote-circle no" data-vote-action="no">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes">✓</button>';
  let botVotes='';
- bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;botVotes+='<span class="player-vote bot-vote pending"></span>'});
- return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👑')+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
+ bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const val=remoteVotes['Bot '+(bi+1)+'|'+answerOwner+'|'+x.cat];botVotes+='<span class="player-vote bot-vote '+(val?'':'pending')+'" data-voter="Bot '+(bi+1)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
+ let humanVotes='';
+ Object.keys(onlinePlayers).filter(n=>n!==answerOwner&&n!==me).forEach(n=>{const val=remoteVotes[n+'|'+answerOwner+'|'+x.cat];humanVotes+='<span class="player-vote remote-vote '+(val?'':'pending')+'" data-voter="'+esc(n)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
+ return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👤')+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
 function showVoting(){
- votedCount=0;
+ votedCount=0;localVotes={};
  const mine=netAnswers[me]||[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  if(!netAnswers[me])netAnswers[me]=mine;
  bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
