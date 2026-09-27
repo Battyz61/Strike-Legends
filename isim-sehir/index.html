@@ -114,13 +114,29 @@ function bindConnection(conn){
      const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyun başladı — host turu senkronize ediyor';
    }
  });
- conn.on('close',()=>{});
+ conn.on('close',()=>{
+   connections=connections.filter(x=>x!==conn);
+   const ns=$('netStatus');
+   if(ns)ns.textContent=isHost?'🟠 Bir oyuncunun bağlantısı kapandı':'🟠 Host bağlantısı kesildi — yeniden bağlanıyor...';
+   if(!isHost && conn===hostPeer){
+     setTimeout(()=>{if(peer&&!peer.destroyed){try{hostPeer=peer.connect(String(roomId),{reliable:true,serialization:'json'});bindConnection(hostPeer);hostPeer.on('open',()=>sendNet({type:'join',name:me}));}catch(e){}}},1000);
+   }
+});
 }
 function sendNet(data){
- if(hostPeer&&hostPeer.open)hostPeer.send(data);
+ if(!hostPeer)return false;
+ if(!hostPeer.open){
+   try{hostPeer.open=true}catch(e){}
+   const ns=$('netStatus');if(ns)ns.textContent='🟠 Oda bağlantısı yeniden kuruluyor...';
+   try{hostPeer.reconnect()}catch(e){}
+   setTimeout(()=>{if(hostPeer&&hostPeer.open)hostPeer.send(data);else{const ns=$('netStatus');if(ns)ns.textContent='🔴 Oda bağlantısı kapalı';}},700);
+   return false;
+ }
+ hostPeer.send(data);return true;
 }
 function broadcast(data){
- connections.forEach(cn=>{if(cn&&cn.open)cn.send(data)});
+ connections=connections.filter(cn=>cn&&!cn.destroyed);
+ connections.forEach(cn=>{if(cn.open)cn.send(data)});
 }
 function copyRoom(){if(navigator.clipboard)navigator.clipboard.writeText(roomId);toast('Oda kodu kopyalandı!')}
 function addBot(){const limit=Number($('playerLimit')?.value||4);if(bots.length+1>=limit){toast('Oyuncu limiti dolu.');return}bots.push({name:'Bot '+(bots.length+1),score:0,answers:[]});renderPlayers();toast('🤖 Test botu eklendi')}
@@ -181,8 +197,9 @@ function finishRound(){
    roundState.phase='voting';showVoting();
    broadcast({type:'answers',round,answers:netAnswers});
  }else{
-   if(!hostPeer||!hostPeer.open){toast('🔴 Oda bağlantısı koptu.');$('finishBtn').disabled=false;return}
-   sendNet({type:'answers',round,answers:{[me]:mine}});
+   if(!hostPeer||(!hostPeer.open&&!hostPeer.peer)){toast('🔴 Oda bağlantısı koptu, yeniden bağlanıyor...');$('finishBtn').disabled=false;sendNet({type:'answers',round,answers:{[me]:mine}});return}
+   const sent=sendNet({type:'answers',round,answers:{[me]:mine}});
+   if(!sent){$('finishBtn').disabled=false;return}
    roundState.phase='waiting-votes';
    $('status').textContent='⏳ Cevabın hosta gönderildi. Diğer oyuncular bekleniyor...';
  }
