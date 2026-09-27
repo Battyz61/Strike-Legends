@@ -89,10 +89,12 @@ function bindConnection(conn){
    }else if(data.type==='players'){
      (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
      renderPlayers();
+   }else if(data.type==='roundStart'&&!isHost){
+     round=Number(data.round)||1;letterNow=data.letter||letterNow;newRound(letterNow,false);
    }else if(data.type==='start'&&!isHost){
      totalRounds=data.totalRounds||5;
      $('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');
-     newRound();
+     const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyun başladı — host turu senkronize ediyor';
    }
  });
  conn.on('close',()=>{});
@@ -112,14 +114,14 @@ function renderPlayers(){
 function startGame(){
  totalRounds=Number($('roundLimit')?.value||5);round=1;gameFinished=false;myScore=0;bots.forEach(b=>b.score=0);$('myScore').textContent='0';
  $('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');
- if(isHost)broadcast({type:'start',totalRounds,cats});
- newRound();
+ if(isHost){broadcast({type:'start',totalRounds,cats});newRound(null,true)}
 }
 function selectedDuration(){return Number($('durationSelect')?.value||120)}
-function newRound(){
+function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
  clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};
- letterNow=letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';
+ letterNow=forcedLetter||letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';
+ if(isHost&&announce)broadcast({type:'roundStart',round,letter:letterNow,duration:selectedDuration(),cats});
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
  $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger');$('status').textContent='Harf çarkı dönüyor...';$('finishBtn').disabled=true;$('wheelLabel').textContent='Harf seçiliyor...';
  const wheel=$('wheel');wheel.classList.remove('spinning');void wheel.offsetWidth;
@@ -214,13 +216,19 @@ function showResults(gains,details=[]){
  const gap=leader.name===me?Math.max(0,myScore-(second.score||0)):Math.max(0,(leader.score||0)-myScore);
  const myDetails=details.filter(d=>d.owner===me);
  const detailHtml=myDetails.map(d=>'<div class="answer-result '+(d.points?'ok':'bad')+'"><div><b>'+esc(d.cat)+'</b><span>'+esc(d.answer||'Cevap yok')+'</span></div><strong>'+(d.points?'+'+d.points:'0')+'</strong><small>'+d.yes+' 🟩 · '+d.no+' 🟥 · '+d.yes+' yeşil kutu × 10 puan</small></div>').join('');
- let html='<div class="result-panel"><div class="result-hero"><div>🏆 Tur Sonucu</div><div class="big-score">+'+(gains[me]||0)+'</div><div style="color:var(--muted)">Bu tur kazandığın puan</div></div><div class="round-details"><div class="detail-title">📋 Cevap dökümü</div>'+detailHtml+'</div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur →</button></div>';
+ let html='<div class="result-panel"><div class="result-hero"><div>🏆 Tur Sonucu</div><div class="big-score">+'+(gains[me]||0)+'</div><div style="color:var(--muted)">Bu tur kazandığın puan</div></div><div class="round-details"><div class="detail-title">📋 Cevap dökümü</div>'+detailHtml+'</div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound">Sonraki Tur →</button></div>';
  $('answers').innerHTML=html;
  $('status').textContent=leader.name===me?'🔥 Lider sensin · 2. oyuncuyla fark: '+gap+' puan':'📊 Lider: '+esc(leader.name)+' · Liderle fark: '+gap+' puan';
  $('enemyScore').textContent=second.score||0;$('roundScore').textContent=gap;$('finishBtn').style.display='none';
  $('finishBtn').classList.add('hidden');$('finishBtn').style.display='none';
 }
-function nextRound(){if(gameFinished)return;if(round>=totalRounds){gameFinished=true;showFinalResults();return}$('finishBtn').classList.remove('hidden');$('finishBtn').style.display='';round++;newRound()}
+function nextRound(){
+ if(gameFinished)return;
+ if(!isHost){toast('⏳ Host sonraki turu başlatacak.');return}
+ if(round>=totalRounds){gameFinished=true;showFinalResults();return}
+ $('finishBtn').classList.remove('hidden');$('finishBtn').style.display='';
+ round++;newRound(null,true)
+}
 function showFinalResults(){const all=[{name:me,score:myScore},...bots.map(b=>({name:b.name,score:b.score||0}))].sort((a,b)=>b.score-a.score);$('answers').innerHTML='<div class="result-panel"><div class="result-hero"><div>🏆 OYUN BİTTİ</div><div class="big-score">'+(all[0]?.score||0)+'</div><div style="color:var(--muted)">Toplam puan</div></div><div class="leaderboard">'+all.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+x.score+'</div></div>').join('')+'</div><button class="btn result-next" onclick="location.reload()">Yeni Oyun</button></div>';$('status').textContent='Oyun tamamlandı!';}
 document.addEventListener('DOMContentLoaded',()=>{renderCategories();$('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')})});
 </script></body></html>
