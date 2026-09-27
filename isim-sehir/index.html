@@ -78,8 +78,19 @@ function showVoting(){
  bots.forEach(b=>b.answers=botAnswers());
  let html='<div class="vote-title">🗳️ Cevapları Değerlendir</div><div class="vote-help">Senin oyun butonlarda, diğer oyuncuların oyları cevapların altında görünür.</div>';
  cats.forEach(cat=>{html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';const mineCat=mine.find(x=>x.cat===cat)||{cat,val:''};html+=voteRow('me',mineCat,!mineCat.val);bots.forEach((bot,bi)=>{const x=bot.answers.find(a=>a.cat===cat);if(x)html+=voteRow('bot'+bi,x,false)});html+='</div></div>'});
- html+='<div class="vote-summary"><span>Senin verdiğin oylar</span><b id="voteCount">0 / '+(cats.length*bots.length)+'</b></div>';
- $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').textContent='Oyları Tamamla';$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları incele ve doğru/yanlış oyunu ver.';
+ html+='<div class="vote-summary"><span>🤖 Bot oyları otomatik verildi</span><b id="voteCount">0 / '+document.querySelectorAll('#answers .answer input').length+'</b></div>';
+ $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').textContent='Oyları Tamamla';$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='🤖 Botlar oylarını verdi. Sen de cevapları değerlendir.';revealBotVotes();
+}
+function revealBotVotes(){
+ const boxes=[...$('answers').querySelectorAll('.bot-vote')];
+ boxes.forEach((x,i)=>{
+   const row=x.closest('.vote-player');if(!row)return;
+   const owner=row.dataset.owner;const idx=Number(owner.replace('bot',''));const voterIndex=Number(x.dataset.voter||0);
+   const yes=((idx+voterIndex+row.dataset.answer.length+round)%4)!==0;
+   x.classList.remove('pending','yes','no');x.classList.add(yes?'yes':'no');x.style.display='inline-flex';
+ });
+ const botTotal=bots.reduce((n,b)=>n+1,0);
+ const status=$('status');if(status&&botTotal)status.textContent='🤖 '+botTotal+' bot oyunu otomatik kullandı. Şimdi sen oyla.';
 }
 function updateVoteSummary(){const rows=$('answers').querySelectorAll('.vote-player');let done=0;rows.forEach(r=>{if(r.dataset.vote)done++});const el=$('voteCount');if(el)el.textContent=done+' / '+rows.length}
 function completeVoting(){
