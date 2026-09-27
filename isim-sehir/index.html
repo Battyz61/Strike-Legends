@@ -32,7 +32,7 @@ const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Mesle
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={};
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null;
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -166,8 +166,16 @@ function bindConnection(conn){
      broadcast({type:'players',players:Object.keys(onlinePlayers)});
      // Send the current game snapshot immediately after a reconnect so the
      // player can resume the round instead of only reappearing in the lobby.
-     if(round>0&&roundState?.phase!=='round'){
-       conn.send({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
+     if(round>0){
+       // Reconnects must restore the exact phase the host is currently in.
+       // Never send only answers when the round has already reached voting/results.
+       if(roundState?.phase==='results'&&lastVotingResult){
+         conn.send({type:'votingResult',round,gains:lastVotingResult.gains||{},details:lastVotingResult.details||[],scores:lastVotingResult.scores||netScores});
+       }else if(roundState?.phase==='voting'){
+         conn.send({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers});
+       }else if(roundState?.phase==='waiting-players'){
+         conn.send({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
+       }
      }
      renderPlayers();
    }else if(data.type==='roomState'){
@@ -223,6 +231,7 @@ function bindConnection(conn){
      bots.forEach(b=>b.score=Number(netScores[b.name]||0));
      $('myScore').textContent=myScore;
      $('finishBtn').disabled=true;
+     lastVotingResult={gains:data.gains||{},details:data.details||[],scores:netScores};
      showResults(data.gains||{},data.details||[],netScores);
    }else if(data.type==='answersReady'&&!isHost){
      if(Number(data.round)!==round)return;
@@ -241,11 +250,16 @@ function bindConnection(conn){
      (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
      Object.assign(submittedPlayers,data.submitted||{});
      renderPlayers();
-     updateSubmissionStatus();
-     // A guest can receive the final answer packet just after the
-     // submission-status packet. Rebuild the voting screen so no answer
-     // remains stuck as "Cevap yok".
-     if(allPlayersSubmitted() && votingOpenedRound===round)showVoting();
+     // Only rebuild the voting screen when the host says this round is
+     // actually in voting. A reconnect after voting/results must stay there.
+     if(roundState?.phase==='voting'){
+       if(votingOpenedRound!==round){
+         votingOpenedRound=round;
+         remoteVotes={};localVotes={};netVotes={};showVoting();
+       }
+     }else if(roundState?.phase!=='results'){
+       updateSubmissionStatus();
+     }
    }else if(data.type==='roundStart'&&!isHost){
      round=Number(data.round)||1;
      letterNow=data.letter||letterNow;
@@ -552,6 +566,7 @@ function allVotingDone(){
 function finalizeVoting(){
  if(!isHost||!allVotingDone())return;
  const result=calculateVotingResult();
+ lastVotingResult={gains:result.gains,details:result.details,scores:result.scores};
  netScores=result.scores;
  myScore=Number(netScores[me]||0);
  bots.forEach(b=>b.score=Number(netScores[b.name]||0));
