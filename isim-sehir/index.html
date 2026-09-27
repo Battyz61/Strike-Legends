@@ -119,7 +119,7 @@ function bindConnection(conn){
    }else if(data.type==='voteUpdate'&&!isHost){
      if(Number(data.round)!==round)return;
      remoteVotes[data.voter+'|'+data.answer+'|'+data.cat]=data.correct?'yes':'no';
-     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct);
+     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct);updateVoteSummary();
    }else if(data.type==='answersReady'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
@@ -277,6 +277,7 @@ function registerNetworkVote(voter,answer,cat,correct){
    if(square){square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex'}
  }
  if(isHost)broadcast({type:'voteUpdate',round,voter,answer,cat,correct});
+ updateVoteSummary();
 }
 function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:owner.startsWith('bot')?'Bot '+(parseInt(owner.replace('bot',''),10)+1):Object.keys(netAnswers).filter(n=>n!==me&&!bots.some(b=>b.name===n))[parseInt(owner.replace('player',''),10)]||owner;
@@ -311,11 +312,24 @@ function revealBotVotes(){
  const botTotal=bots.reduce((n,b)=>n+1,0);
  const status=$('status');if(status&&botTotal)status.textContent='🤖 '+botTotal+' bot oyunu otomatik kullandı. Şimdi sen oyla.';
 }
-function updateVoteSummary(){const rows=$('answers').querySelectorAll('.vote-player');let done=0;rows.forEach(r=>{if(r.dataset.vote)done++});const el=$('voteCount');if(el)el.textContent=done+' / '+rows.length}
+function updateVoteSummary(){
+ const rows=[...$('answers').querySelectorAll('.vote-player')];
+ let required=0,done=0;
+ rows.forEach(r=>{
+   if(r.querySelector('[data-vote-action]')){required++;if(r.dataset.vote)done}
+   r.querySelectorAll('.remote-vote').forEach(x=>{required++;if(!x.classList.contains('pending'))done++});
+ });
+ const el=$('voteCount');if(el)el.textContent=done+' / '+required;
+}
+function allHumanVotesPresent(){
+ return ![...$('answers').querySelectorAll('.remote-vote.pending')].length &&
+        ![...$('answers').querySelectorAll('.vote-player')].some(r=>r.querySelector('[data-vote-action]')&&!r.dataset.vote);
+}
 function completeVoting(){
  const rows=[...$('answers').querySelectorAll('.vote-player')];
  const myRows=rows.filter(r=>r.querySelector('[data-vote-action]'));
- if(myRows.some(r=>!r.dataset.vote)){toast('Tüm rakip cevaplara oy vermelisin.');return}
+ if(myRows.some(r=>!r.dataset.vote)){toast('Tüm cevaplara oy vermelisin.');return}
+ if(!allHumanVotesPresent()){toast('⏳ Diğer oyuncuların oyları bekleniyor.');return}
  const gains={};[me,...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
  const details=[];
  rows.forEach(row=>{
