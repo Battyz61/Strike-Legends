@@ -64,15 +64,16 @@ function revealRound(token){
 function pickForLetter(cat){const bank={İsim:{A:'Ahmet',B:'Burak',M:'Mert',S:'Selin'},Şehir:{A:'Ankara',B:'Bursa',T:'Trabzon',İ:'İzmir'},Hayvan:{A:'At',K:'Kedi',M:'Maymun',T:'Tavşan'},Bitki:{A:'Armut',L:'Lale',N:'Nane',Ç:'Çam'},Eşya:{M:'Masa',K:'Kalem',S:'Saat',T:'Telefon'},Ülke:{A:'Almanya',İ:'İtalya',J:'Japonya',T:'Türkiye'}};return bank[cat]?.[letterNow]||letterNow+' örnek'}
 function botAnswers(){return cats.map(c=>({cat:c,val:Math.random()>.25?pickForLetter(c):'Alakasız cevap'}))}
 function finishRound(){if($('finishBtn').disabled)return;$('finishBtn').disabled=true;clearInterval(timerId);$('timer').classList.remove('danger');bots.forEach(b=>b.answers=botAnswers());roundState.phase='voting';showVoting()}
-function vote(btn,correct){const row=btn.closest('.vote-player');if(!row)return;row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';const squares=row.querySelectorAll('.player-vote');if(squares.length){const myVote=correct?'yes':'no';const first=squares[0];first.classList.remove('yes','no');first.classList.add(myVote);first.dataset.myVote='1'}updateVoteSummary()}
+let votedCount=0;function vote(btn,correct){const row=btn.closest('.vote-player');if(!row)return;const wasVoted=!!row.dataset.vote;row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';const square=row.querySelector('.player-vote.my-vote');if(square){square.classList.remove('yes','no');square.classList.add(correct?'yes':'no')}if(!wasVoted)votedCount++;const el=$('voteCount');if(el)el.textContent=votedCount+' / '+document.querySelectorAll('.vote-player[data-owner^="bot"]').length}
 function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:'Bot '+(parseInt(owner.replace('bot',''),10)+1);
- const voterButtons=owner==='me'?'':'<button type="button" class="vote-circle no '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,false)">✕</button><button type="button" class="vote-circle yes '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,true)">✓</button>';
+ const voterButtons=owner==='me'?'':'<button type="button" class="vote-circle no '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' data-vote-action="no">✕</button><button type="button" class="vote-circle yes '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' data-vote-action="yes">✓</button>';
  let botVotes='';
- bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const yes=Math.random()>.28;botVotes+='<span class="player-vote '+(yes?'yes':'no')+'">'+(yes?'✓ DOĞRU':'✕ YANLIŞ')+'</span>'});
- return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👑')+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+'</div></div><div class="vote-actions">'+voterButtons+'</div></div>'
+ bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const yes=Math.random()>.28;botVotes+='<span class="player-vote '+(yes?'yes':'no')+'">'+(yes?'':'')+'</span>'});
+ return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👑')+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+'<span class="player-vote my-vote '+(Math.random()>.5?'yes':'no')+'"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
 function showVoting(){
+ votedCount=0;
  const mine=[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  bots.forEach(b=>b.answers=botAnswers());
  let html='<div class="vote-title">🗳️ Cevapları Değerlendir</div><div class="vote-help">Senin oyun butonlarda, diğer oyuncuların oyları cevapların altında görünür.</div>';
@@ -96,5 +97,5 @@ function showResults(gains){roundState.phase='results';
  $('answers').innerHTML=html;$('status').textContent='Tur tamamlandı!';$('finishBtn').classList.add('hidden');
 }
 function nextRound(){$('finishBtn').classList.remove('hidden');round++;newRound()}
-document.addEventListener('DOMContentLoaded',renderCategories);
+document.addEventListener('DOMContentLoaded',()=>{renderCategories();$('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')})});
 </script></body></html>
