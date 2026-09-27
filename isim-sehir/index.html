@@ -125,6 +125,7 @@ function bindConnection(conn){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
      (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
+     Object.assign(submittedPlayers,data.submitted||{});
      renderPlayers();
      remoteVotes={};localVotes={};showVoting();
    }else if(data.type==='submissionStatus'&&!isHost){
@@ -164,7 +165,7 @@ function openVotingForEveryone(){
  votingOpenedRound=round;
  roundState.phase='voting';
  showVoting();
- if(isHost)broadcast({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers)});
+ if(isHost)broadcast({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers});
 }
 function updateSubmissionStatus(){
  const names=Object.keys(onlinePlayers);
@@ -172,7 +173,11 @@ function updateSubmissionStatus(){
  const total=Math.max(1,names.length);
  const status=$('status');
  if(status)status.textContent='📨 Cevaplar bekleniyor: '+done+'/'+total+' oyuncu gönderdi';
- if(isHost&&allPlayersSubmitted())openVotingForEveryone();
+ // The host normally opens voting, but guests must also be able to
+ // transition locally when the final synchronized submission arrives.
+ // This prevents a lost/delayed answersReady packet from leaving a guest
+ // stuck forever on "waiting for players".
+ if(allPlayersSubmitted())openVotingForEveryone();
 }
 function sendNet(data){
  if(!hostPeer){pendingNetMessages.push(data);return false}
