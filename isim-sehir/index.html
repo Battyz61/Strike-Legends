@@ -50,14 +50,14 @@ function finishRound(){if($('finishBtn').disabled)return;$('finishBtn').disabled
 function vote(btn,correct){const row=btn.closest('.vote-row');row.querySelectorAll('.vote').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no'}
 function vote(btn,correct){const row=btn.closest('.vote-player');row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');row.dataset.vote=correct?'yes':'no';updateVoteSummary()}
 function voteRow(owner,x,empty=false){
- return '<div class="vote-player" data-owner="'+owner+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👑')+'</div><div class="vote-info"><div class="vote-name">'+esc(owner==='me'?me:owner.replace('bot','Bot '))+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Değerlendirilecek cevap')+'</div></div><div class="vote-actions"><button class="vote-circle no '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,false)" aria-label="Yanlış">✕</button><button class="vote-circle yes '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,true)" aria-label="Doğru">✓</button></div></div>'
+ return '<div class="vote-player" data-owner="'+owner+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+(owner.startsWith('bot')?'🤖':'👑')+'</div><div class="vote-info"><div class="vote-name">'+esc(owner==='me'?me:'Bot '+(parseInt(owner.replace('bot',''),10)+1))+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Değerlendirilecek cevap')+'</div></div><div class="vote-actions"><button class="vote-circle no '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,false)" aria-label="Yanlış">✕</button><button class="vote-circle yes '+(empty?'disabled':'')+'" '+(empty?'disabled':'')+' onclick="vote(this,true)" aria-label="Doğru">✓</button></div></div>'
 }
 function showVoting(){
  const mine=[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  bots.forEach(b=>b.answers=botAnswers());
  let html='<div class="vote-title">🗳️ Cevapları Değerlendir</div><div class="vote-help">Her kategorideki cevapları kontrol et. ✓ doğru, ✕ yanlış.</div>';
  cats.forEach(cat=>{
-   html+='<div class="vote-category"><div class="vote-category-title">M ile '+esc(cat)+'</div><div class="vote-card">';
+   html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';
    const mineCat=mine.find(x=>x.cat===cat)||{cat,val:''};
    html+=voteRow('me',mineCat,!mineCat.val);
    bots.forEach((bot,bi)=>{const x=bot.answers.find(a=>a.cat===cat);if(x)html+=voteRow('bot'+bi,x,false)});
