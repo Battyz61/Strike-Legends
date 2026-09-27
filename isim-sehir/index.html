@@ -265,7 +265,7 @@ function vote(btn,correct){
  const cat=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')||'';
  localVotes[row.dataset.answer+'|'+cat]=correct?'yes':'no';
  if(!wasVoted)votedCount++;
- const el=$('voteCount');if(el)el.textContent=votedCount+' / '+document.querySelectorAll('.vote-player [data-vote-action]').length;
+ updateVoteSummary();
  if(!isHost){
    sendNet({type:'vote',round,voter:me,answer:row.dataset.answer,cat,correct});
  }else{
@@ -304,7 +304,7 @@ function showVoting(){
  cats.forEach(cat=>{html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';const mineCat=mine.find(x=>x.cat===cat)||{cat,val:''};html+=voteRow('me',mineCat,!mineCat.val);bots.forEach((bot,bi)=>{const x=(netAnswers[bot.name]||bot.answers||[]).find(a=>a.cat===cat);if(x)html+=voteRow('bot'+bi,x,false)});
  playerNames.filter(n=>n!==me&&!bots.some(b=>b.name===n)).forEach(name=>{const x=(netAnswers[name]||[]).find(a=>a.cat===cat)||{cat,val:'Cevap yok'};html+=voteRow('human:'+name,x,!netAnswers[name])});html+='</div></div>'});
  html+='<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+document.querySelectorAll('#answers .answer input').length+'</b></div>';
- $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').textContent='Oyları Tamamla';$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='🤖 Botlar oylarını verdi. Sen de cevapları değerlendir.';revealBotVotes();
+ $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').textContent='Oyları Tamamla';$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='🤖 Botlar oylarını verdi. Sen de cevapları değerlendir.';revealBotVotes();updateVoteSummary();
 }
 function revealBotVotes(){
  const boxes=[...$('answers').querySelectorAll('.bot-vote')];
@@ -319,12 +319,28 @@ function revealBotVotes(){
 }
 function updateVoteSummary(){
  const rows=[...$('answers').querySelectorAll('.vote-player')];
- let required=0,done=0;
+ let required=0,done=0,localRequired=0,localDone=0;
  rows.forEach(r=>{
-   if(r.querySelector('[data-vote-action]')){required++;if(r.dataset.vote)done}
-   r.querySelectorAll('.remote-vote').forEach(x=>{required++;if(!x.classList.contains('pending'))done++});
+   if(r.querySelector('[data-vote-action]')){
+     required++;localRequired++;
+     if(r.dataset.vote){done++;localDone++}
+   }
+   r.querySelectorAll('.remote-vote').forEach(x=>{
+     required++;
+     if(!x.classList.contains('pending'))done++;
+   });
  });
  const el=$('voteCount');if(el)el.textContent=done+' / '+required;
+ const btn=$('finishBtn');
+ if(btn&&!btn.classList.contains('hidden')){
+   btn.textContent='Oyları Tamamla · '+localDone+'/'+localRequired;
+ }
+ const status=$('status');
+ if(status){
+   if(localDone<localRequired) status.textContent='🗳️ Kendi oyların: '+localDone+'/'+localRequired+' · Cevapları değerlendir.';
+   else if(done<required) status.textContent='⏳ Kendi oyların tamamlandı. Diğer oyuncuların oyları bekleniyor...';
+   else status.textContent='✅ Tüm oylar tamamlandı. Sonucu görmek için devam et.';
+ }
 }
 function allHumanVotesPresent(){
  return ![...$('answers').querySelectorAll('.remote-vote.pending')].length &&
