@@ -84,7 +84,7 @@ function updateVoteSummary(){const rows=[...$('answers').querySelectorAll('.vote
 function completeVoting(){
  const rows=[...$('answers').querySelectorAll('.vote-player')];let missing=0;
  rows.filter(r=>r.dataset.owner==='me').forEach(row=>{if(!row.querySelector('.vote-circle')||!row.dataset.vote){}});
- const myRows=rows.filter(r=>r.dataset.owner==='bot' || r.dataset.owner==='me' && r.querySelector('.vote-circle'));
+ const myRows=rows.filter(r=>r.dataset.owner.startsWith('bot'));
  if(myRows.some(r=>!r.dataset.vote)){missing=1}
  if(missing){toast('Cevapların için oy vermeyi unutma.');return}
  const gains={};[me,...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
