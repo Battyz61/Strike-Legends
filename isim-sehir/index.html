@@ -344,14 +344,20 @@ function newRound(forcedLetter=null,announce=true){
  letterNow=forcedLetter||letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';
  if(isHost&&announce)broadcast({type:'roundStart',round,letter:letterNow,duration:selectedDuration(),cats:[...cats]});
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
- $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger');$('status').textContent='Harf çarkı dönüyor...';$('finishBtn').disabled=true;$('wheelLabel').textContent='Harf seçiliyor...';
+ $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger');$('status').textContent='Harf çarkı dönüyor...';
+ // A previous results screen hides this button. Every new round must restore it,
+ // including rounds reached after a reconnect on a guest device.
+ $('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').textContent='Cevapları Gönder';$('finishBtn').disabled=true;$('finishBtn').onclick=finishRound;
+ $('wheelLabel').textContent='Harf seçiliyor...';
  const wheel=$('wheel');wheel.classList.remove('spinning');void wheel.offsetWidth;
  if($('wheelSelect')?.value==='off'){revealRound(token);return}
  wheel.classList.add('spinning');setTimeout(()=>revealRound(token),2250);
 }
 function revealRound(token){
  if(token!==roundToken)return;$('wheel').classList.remove('spinning');$('letter').textContent=letterNow;$('wheelLabel').textContent='Seçilen harf';$('answers').classList.remove('hidden-answers');$('status').textContent='Cevaplarını '+letterNow+' harfiyle doldur.';
- seconds=selectedDuration();$('timer').textContent=seconds+' sn';$('finishBtn').textContent='Cevapları Gönder';$('finishBtn').disabled=false;$('finishBtn').onclick=finishRound;
+ seconds=selectedDuration();$('timer').textContent=seconds+' sn';
+ // Always make the submission button visible again after wheel/reconnect.
+ $('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').textContent='Cevapları Gönder';$('finishBtn').disabled=false;$('finishBtn').onclick=finishRound;
  timerId=setInterval(()=>{seconds--;$('timer').textContent=seconds+' sn';if(seconds<=10)$('timer').classList.add('danger');if(seconds<=0)finishRound()},1000);
 }
 function pickForLetter(cat){const bank={İsim:{A:'Ahmet',B:'Burak',M:'Mert',S:'Selin'},Şehir:{A:'Ankara',B:'Bursa',T:'Trabzon',İ:'İzmir'},Hayvan:{A:'At',K:'Kedi',M:'Maymun',T:'Tavşan'},Bitki:{A:'Armut',L:'Lale',N:'Nane',Ç:'Çam'},Eşya:{M:'Masa',K:'Kalem',S:'Saat',T:'Telefon'},Ülke:{A:'Almanya',İ:'İtalya',J:'Japonya',T:'Türkiye'}};return bank[cat]?.[letterNow]||letterNow+' örnek'}
