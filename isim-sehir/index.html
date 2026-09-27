@@ -106,13 +106,16 @@ function bindConnection(conn){
      Object.keys(data.submitted||{}).forEach(n=>{if(data.submitted[n]===true)submittedPlayers[n]=true});
      if(data.from)submittedPlayers[data.from]=true;
      const ack=connections.find(cn=>cn===conn);
-     if(ack&&ack.open)ack.send({type:'answerAck',round,player:data.from||Object.keys(data.answers||{})[0]});
+     if(ack&&ack.open)ack.send({type:'answerAck',round,player:data.from||Object.keys(data.answers||{})[0],answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers});
      broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
      updateSubmissionStatus();
      if(allPlayersSubmitted())openVotingForEveryone();
      else broadcast({type:'submissionStatus',round,submitted:submittedPlayers});
    }else if(data.type==='answerAck'&&!isHost){
      if(Number(data.round)!==round)return;
+     if(data.answers)Object.assign(netAnswers,data.answers);
+     if(data.players)(data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
+     if(data.submitted)Object.assign(submittedPlayers,data.submitted);
      $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
    }else if(data.type==='vote'&&isHost){
      if(Number(data.round)!==round)return;
@@ -264,7 +267,9 @@ function finishRound(){
    broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
  }else{
    if(!hostPeer||(!hostPeer.open&&!hostPeer.peer)){toast('🔴 Oda bağlantısı koptu, yeniden bağlanıyor...');$('finishBtn').disabled=false;sendNet({type:'answers',round,answers:{[me]:mine}});return}
-   const sent=sendNet({type:'answers',round,from:me,answers:{[me]:mine},submitted:{[me]:true}});
+   const sent=sendNet({type:'answers',round,from:me,answers:{[me]:mine},submitted:{[me]:true},players:Object.keys(onlinePlayers)});
+   // Keep our local canonical copy while the host distributes the full map.
+   netAnswers[me]=mine;
    submittedPlayers[me]=true;roundState.phase='waiting-players';$('status').textContent=sent?'📨 Cevabın hosta ulaştırılıyor...':'🟠 Bağlantı bekleniyor, cevap sıraya alındı...';
    $('finishBtn').textContent=sent?'✓ Cevap Gönderildi':'↻ Bağlantı kurulunca gönderilecek';
  }
@@ -320,7 +325,7 @@ function showVoting(){
  const humanPlayers=Object.keys(onlinePlayers).filter(n=>n!==me&&!bots.some(b=>b.name===n));
  const playerNames=[...new Set([...Object.keys(netAnswers),...humanPlayers])];
  let html='<div class="vote-title">🗳️ Cevapları Değerlendir</div><div class="vote-help">Senin oyun butonlarda. 🤖 Botlar cevapları değerlendirdi; kutuların rengi sonucu gösterir.</div>';
- cats.forEach(cat=>{html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';const mineCat=mine.find(x=>x.cat===cat)||{cat,val:''};html+=voteRow('me',mineCat,!mineCat.val);bots.forEach((bot,bi)=>{const x=answerForCategory(netAnswers[bot.name]||bot.answers||[],cat);if(x)html+=voteRow('bot'+bi,x,false)});
+ cats.forEach(cat=>{html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';const mineCat=answerForCategory(mine,cat)||{cat,val:''};html+=voteRow('me',mineCat,!mineCat.val);bots.forEach((bot,bi)=>{const x=answerForCategory(netAnswers[bot.name]||bot.answers||[],cat);if(x)html+=voteRow('bot'+bi,x,false)});
  playerNames.filter(n=>n!==me&&!bots.some(b=>b.name===n)).forEach(name=>{
  const list=netAnswers[name]||[];
  const found=answerForCategory(list,cat);
