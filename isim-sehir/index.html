@@ -925,3 +925,31 @@ document.addEventListener('DOMContentLoaded',()=>{
  .vote-category{margin:14px 0 16px}
 }
 </style>
+<style>
+/* Results Arena */
+.result-panel{animation:resultIn .45s cubic-bezier(.2,.85,.2,1)}
+.result-hero{position:relative;padding:14px 0 20px}
+.result-hero>div:first-child{font-size:14px;letter-spacing:1.4px;color:#aebdff;text-transform:uppercase}
+.big-score{font-size:54px;text-shadow:0 0 28px #6d5dfc55;animation:scorePop .65s cubic-bezier(.2,.9,.2,1)}
+.answer-results-grid{display:grid;gap:8px}
+.answer-result{position:relative;overflow:hidden;transition:transform .16s,border-color .16s}
+.answer-result:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#6d5dfc0c,transparent 55%);pointer-events:none}
+.answer-result.ok{animation:resultCardIn .35s ease both}
+.answer-result.bad{animation:resultCardIn .35s ease both}
+.answer-points{font-size:20px;font-weight:1000}
+.answer-points.correct{color:#39e58c;text-shadow:0 0 14px #39e58c44}
+.answer-points.wrong{color:#ff7893}
+.vote-stat{font-weight:800}
+.vote-stat.yes-stat{color:#5ee6a0}
+.vote-stat.no-stat{color:#ff7b96}
+.leaderboard{gap:7px}
+.leader-row{transition:transform .16s,border-color .16s;animation:leaderIn .4s ease both}
+.leader-row:hover{transform:translateX(3px)}
+.leader-row:first-child{box-shadow:0 0 28px #f5c54212}
+.result-next{box-shadow:0 10px 30px #6d5dfc22}
+@keyframes resultIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes scorePop{0%{opacity:0;transform:scale(.72)}55%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes resultCardIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes leaderIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@media(max-width:700px){.big-score{font-size:46px}}
+</style>
