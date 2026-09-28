@@ -309,6 +309,18 @@ function bindConnection(conn){
  conn.on('open',()=>{if(conn===hostPeer)flushNetQueue();if(isHost){const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyuncu bağlantısı aktif'}}); 
  conn.on('data',data=>{
    if(!data)return;
+   if(data.type==='nameAssigned'&&!isHost){
+     const assigned=String(data.name||'').trim();
+     if(assigned){
+       me=assigned;
+       rememberName(me);
+       const hint=$('guestRecent');if(hint)hint.textContent='Oyuncu adın: '+me;
+       const ns=$('netStatus');if(ns)ns.textContent='🟢 Odaya katıldın — adın '+me;
+       renderPlayers();
+       toast('👤 Aynı isim kullanıldığı için adın '+me+' olarak ayarlandı');
+     }
+     return;
+   }
    if(data.type==='ping'){
      if(conn.open)try{conn.send({type:'pong',round})}catch(e){}
      return;
@@ -329,11 +341,19 @@ function bindConnection(conn){
      return;
    }
    if(data.type==='join'&&isHost){
-     if(disconnectGraceTimers[data.name]){clearTimeout(disconnectGraceTimers[data.name]);delete disconnectGraceTimers[data.name]}
-     onlinePlayers[data.name]={name:data.name,host:false,conn,avatar:Number(data.avatar)||0};
-     submittedPlayers[data.name]=submittedPlayers[data.name]===true;
-     votingDone[data.name]=votingDone[data.name]===true;
-     broadcast({type:'players',players:Object.keys(onlinePlayers)});
+     const baseName=String(data.name||'Oyuncu').trim().slice(0,18)||'Oyuncu';
+     let assignedName=baseName;
+     let suffix=2;
+     while(onlinePlayers[assignedName]&&onlinePlayers[assignedName].conn!==conn){
+       assignedName=baseName+' '+suffix++;
+       if(assignedName.length>18)assignedName=(baseName.slice(0,Math.max(1,18-(String(suffix).length+1)))+' '+suffix);
+     }
+     if(disconnectGraceTimers[assignedName]){clearTimeout(disconnectGraceTimers[assignedName]);delete disconnectGraceTimers[assignedName]}
+     onlinePlayers[assignedName]={name:assignedName,host:false,conn,avatar:Number(data.avatar)||0};
+     submittedPlayers[assignedName]=submittedPlayers[assignedName]===true;
+     votingDone[assignedName]=votingDone[assignedName]===true;
+     if(assignedName!==baseName&&conn.open)conn.send({type:'nameAssigned',name:assignedName});
+     broadcast({type:'players',players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))});
      // Send the current game snapshot immediately after a reconnect so the
      // player can resume the round instead of only reappearing in the lobby.
      if(round>0){
