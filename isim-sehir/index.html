@@ -50,12 +50,13 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 /* Answer breakdown redesign */
 .round-details{margin:18px 0 12px;padding:16px;border:1px solid #252d49;border-radius:18px;background:linear-gradient(145deg,#0b0f1c,#070910);box-shadow:inset 0 1px #ffffff05}.detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}.detail-kicker{font-size:9px;letter-spacing:1.5px;color:#727da0;font-weight:900;margin-bottom:3px}.detail-title{font-size:18px;margin:0}.detail-total{padding:5px 9px;border:1px solid #30385b;border-radius:999px;color:#9ea8c5;font-size:10px;font-weight:800}.answer-results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.answer-result{display:block;padding:12px 13px;margin:0;border-radius:15px;background:linear-gradient(145deg,#101528,#090c15);border:1px solid #292f49;transition:.18s}.answer-result:hover{transform:translateY(-1px);border-color:#3b4470}.answer-result.correct{border-color:#1d664b;box-shadow:inset 3px 0 #39e58c}.answer-result.wrong{border-color:#663047;box-shadow:inset 3px 0 #ff5577}.answer-result-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.answer-cat{font-size:10px;color:#8d98b7;text-transform:uppercase;letter-spacing:.45px;font-weight:800}.answer-points{font-size:15px;font-weight:950}.answer-points.correct{color:#5af0a2}.answer-points.wrong{color:#ff7892}.answer-text{font-size:16px;font-weight:800;color:#f4f6ff;margin:7px 0 10px;overflow-wrap:anywhere}.answer-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.vote-stat{font-size:9px;font-weight:800;padding:4px 7px;border-radius:6px}.yes-stat{color:#62e9a7;background:#123528}.no-stat{color:#ff8299;background:#351521}.vote-rule{margin-left:auto;font-size:9px;color:#6f7a98}.result-next{margin-top:12px}
 @media(max-width:700px){.round-details{padding:13px;margin:14px 0 10px}.answer-results-grid{grid-template-columns:1fr}.answer-result{padding:11px 12px}.answer-text{font-size:15px}.vote-rule{margin-left:auto}}
-</style><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script></head>
+/* Player avatar system */
+.avatar-picker-label{margin:10px 0 7px;color:#7f8aaa;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px}.avatar-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:9px}.avatar-choice{border:1px solid #252d49;background:#080b14;border-radius:11px;padding:3px;cursor:pointer;transition:.16s}.avatar-choice:hover{transform:translateY(-2px);border-color:#6258bc}.avatar-choice.selected{border-color:#8c7cff;box-shadow:0 0 0 2px #6d5dfc25,0 0 18px #6d5dfc22;background:#171437}.avatar-svg{width:44px;height:44px;display:block}.avatar-svg.small{width:25px;height:25px}.avatar-choice .avatar-svg{width:100%;height:auto}.player{align-items:center}.avatar{width:44px;height:44px;border:0;background:transparent;overflow:visible;display:grid;place-items:center}.avatar .avatar-svg{width:44px;height:44px}.avatar.bot{background:transparent}.vote-player .avatar{width:44px;height:44px}.vote-player .avatar .avatar-svg{width:42px;height:42px}@media(max-width:700px){.avatar-grid{grid-template-columns:repeat(8,1fr);gap:5px}.avatar-choice{border-radius:9px}.avatar-svg{width:36px;height:36px}.avatar-svg.small{width:23px;height:23px}.vote-player .avatar .avatar-svg{width:38px;height:38px}}</style><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script></head>
 <body><main class="wrap">
 <section class="hero main-menu"><span class="hero-logo-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M37 4 13 36h16l-4 24 26-35H35z"/></svg></span><div class="hero-badge"><span class="badge-mark">+</span> ARKADAŞLARLA OYNA <i></i> TÜRKÇE</div><h1>İsim Şehir</h1><p class="hero-sub">Harfini seç, cevaplarını doldur, arkadaşlarının cevaplarını değerlendir ve en yüksek puanı topla.</p></section>
 <section id="lobby" class="grid">
-<div class="card menu-card"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6v10M24 32v10M6 24h10M32 24h10M11 11l7 7M30 30l7 7M37 11l-7 7M18 30l-7 7"/><circle cx="24" cy="24" r="8"/></svg></div><h2>Oda Kur</h2><p>Sen host ol, ayarları belirle ve oda kodunu arkadaşlarınla paylaş.</p><div class="name-hint"><span>Oyuncu adı</span><span id="hostRecent"></span></div><input id="hostName" class="input" maxlength="18" placeholder="Adını yaz"><button class="btn" onclick="createRoom()">Oda Oluştur <span class="button-arrow">→</span></button></div>
-<div class="card menu-card join"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 9h18v30H19M29 24H6m0 0 9-9m-9 9 9 9"/></svg></div><h2>Odaya Katıl</h2><p>Arkadaşından aldığın 6 haneli kodu gir ve yarışa katıl.</p><div class="name-hint"><span>Oyuncu adı</span><span id="guestRecent"></span></div><input id="guestName" class="input" maxlength="18" placeholder="Adını yaz"><input id="joinCode" class="input" maxlength="6" placeholder="6 haneli oda kodu" inputmode="numeric"><button class="btn secondary" onclick="joinRoom()">Odaya Katıl <span class="button-arrow">→</span></button></div>
+<div class="card menu-card"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6v10M24 32v10M6 24h10M32 24h10M11 11l7 7M30 30l7 7M37 11l-7 7M18 30l-7 7"/><circle cx="24" cy="24" r="8"/></svg></div><h2>Oda Kur</h2><p>Sen host ol, ayarları belirle ve oda kodunu arkadaşlarınla paylaş.</p><div class="name-hint"><span>Oyuncu adı</span><span id="hostRecent"></span></div><input id="hostName" class="input" maxlength="18" placeholder="Adını yaz"><div class="avatar-picker-label">Avatarını seç</div><div id="hostAvatarGrid" class="avatar-grid"></div><button class="btn" onclick="createRoom()">Oda Oluştur <span class="button-arrow">→</span></button></div>
+<div class="card menu-card join"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 9h18v30H19M29 24H6m0 0 9-9m-9 9 9 9"/></svg></div><h2>Odaya Katıl</h2><p>Arkadaşından aldığın 6 haneli kodu gir ve yarışa katıl.</p><div class="name-hint"><span>Oyuncu adı</span><span id="guestRecent"></span></div><input id="guestName" class="input" maxlength="18" placeholder="Adını yaz"><input id="joinCode" class="input" maxlength="6" placeholder="6 haneli oda kodu" inputmode="numeric"><div class="avatar-picker-label">Avatarını seç</div><div id="guestAvatarGrid" class="avatar-grid"></div><button class="btn secondary" onclick="joinRoom()">Odaya Katıl <span class="button-arrow">→</span></button></div>
 </section>
 <div class="quick-info"><div class="quick-item"><b>Puan</b><span>Yeşil oy = +10</span></div><div class="quick-item"><b>Harf</b><span>Her tur yeni harf</span></div><div class="quick-item"><b>Çoklu</b><span>Arkadaşlarınla oyna</span></div></div>
 <div id="categoryPanel" class="card category-panel" style="margin-top:16px">
@@ -78,9 +79,23 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
-let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false;
+let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false,myAvatar=0;
 let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null;
 const $=id=>document.getElementById(id);
+const AVATARS=[
+{name:'Nova',bg:'#6d5dfc',fg:'#d9d5ff',shape:'M24 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm-11 28c1-7 5-10 11-10s10 3 11 10'},
+{name:'Pulse',bg:'#14b8a6',fg:'#bffcf2',shape:'M24 7l3 11 10 3-10 3-3 12-3-12-10-3 10-3z'},
+{name:'Vega',bg:'#f97316',fg:'#ffe0c2',shape:'M24 7l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z'},
+{name:'Orbit',bg:'#06b6d4',fg:'#c8f8ff',shape:'M24 7a17 17 0 1 0 0 34 17 17 0 0 0-0-34Zm0 7a10 10 0 1 1 0 20 10 10 0 0 1 0-20Z'},
+{name:'Flux',bg:'#e11d48',fg:'#ffd0db',shape:'M14 13h20l-3 22H17zM18 9h12M20 18h8M20 24h8'},
+{name:'Echo',bg:'#8b5cf6',fg:'#e9ddff',shape:'M11 24c0-8 6-14 13-14s13 6 13 14-6 14-13 14-13-6-13-14Zm7 0h12M24 17v14'},
+{name:'Lumen',bg:'#eab308',fg:'#fff2ad',shape:'M24 6l3 12 11 6-11 6-3 12-3-12-11-6 11-6z'},
+{name:'Astra',bg:'#3b82f6',fg:'#d9e9ff',shape:'M24 7l3 8 8 3-8 3-3 8-3-8-8-3 8-3z'}];
+function avatarSvg(id,small=false){const a=AVATARS[(Number(id)||0)%AVATARS.length];return '<svg class="avatar-svg'+(small?' small':'')+'" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="'+a.bg+'"/><path d="'+a.shape+'" fill="none" stroke="'+a.fg+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
+function avatarIdFor(name){return Number(onlinePlayers[name]?.avatar||0)}
+function rememberAvatar(id){localStorage.setItem('isimSehirAvatar',String(id))}
+function restoreAvatar(){const n=Number(localStorage.getItem('isimSehirAvatar'));if(Number.isFinite(n))myAvatar=((n%AVATARS.length)+AVATARS.length)%AVATARS.length}
+function renderAvatarPickers(){['hostAvatarGrid','guestAvatarGrid'].forEach(id=>{const el=$(id);if(!el)return;el.innerHTML=AVATARS.map((a,i)=>'<button type="button" class="avatar-choice '+(i===myAvatar?'selected':'')+'" data-avatar="'+i+'" aria-label="'+a.name+'">'+avatarSvg(i)+'</button>').join('');el.querySelectorAll('[data-avatar]').forEach(b=>b.onclick=()=>{myAvatar=Number(b.dataset.avatar);rememberAvatar(myAvatar);renderAvatarPickers()});});}
 function openGameMenu(){const m=$('gameMenu');if(m)m.classList.add('show')}
 function closeGameMenu(){const m=$('gameMenu');if(m)m.classList.remove('show')}
 function resetLocalGameState(){
@@ -120,7 +135,7 @@ function restoreRememberedName(){
 }
 function enter(name,join){
  if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
- me=(name||'Oyuncu').trim()||'Oyuncu';rememberName(me);
+ me=(name||'Oyuncu').trim()||'Oyuncu';rememberName(me);rememberAvatar(myAvatar);
  roomId=join?($('joinCode').value.trim().replace(/\s/g,'')||makeCode()):makeCode();
  isHost=!join;
  $('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;
@@ -152,7 +167,7 @@ function connectFreshToHost(){
        reconnectAttempts=0;
        if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}
        const ns=$('netStatus');if(ns)ns.textContent='🟢 Bağlantı yeniden kuruldu';
-       sendNet({type:'join',name:me});
+       sendNet({type:'join',name:me,avatar:myAvatar});
      });
      conn.on('error',()=>{
        reconnecting=false;
@@ -252,7 +267,7 @@ function bindConnection(conn){
    }
    if(data.type==='join'&&isHost){
      if(disconnectGraceTimers[data.name]){clearTimeout(disconnectGraceTimers[data.name]);delete disconnectGraceTimers[data.name]}
-     onlinePlayers[data.name]={name:data.name,host:false,conn};
+     onlinePlayers[data.name]={name:data.name,host:false,conn,avatar:Number(data.avatar)||0};
      submittedPlayers[data.name]=submittedPlayers[data.name]===true;
      votingDone[data.name]=votingDone[data.name]===true;
      broadcast({type:'players',players:Object.keys(onlinePlayers)});
@@ -281,7 +296,7 @@ function bindConnection(conn){
      }
      renderPlayers();
    }else if(data.type==='roomState'){
-     (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
+     (data.players||[]).forEach(n=>onlinePlayers[n]={name:n,avatar:Number(data.avatars?.[n])||0});
      if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      applyGameSettings(data);
      renderPlayers();
@@ -472,13 +487,13 @@ async function copyRoom(){
    if(navigator.clipboard){try{await navigator.clipboard.writeText(text);toast('📋 Davet mesajı kopyalandı!')}catch(_){}}
  }
 }
-function addBot(){const limit=Number($('playerLimit')?.value||4);if(bots.length+1>=limit){toast('Oyuncu limiti dolu.');return}bots.push({name:'Bot '+(bots.length+1),score:0,answers:[]});renderPlayers();toast('🤖 Test botu eklendi')}
+function addBot(){const limit=Number($('playerLimit')?.value||4);if(bots.length+1>=limit){toast('Oyuncu limiti dolu.');return}bots.push({name:'Bot '+(bots.length+1),score:0,answers:[],avatar:(bots.length+4)%AVATARS.length});renderPlayers();toast('🤖 Test botu eklendi')}
 function renderPlayers(){
  const online=[...new Set([me,...Object.keys(onlinePlayers).filter(n=>n!==me)])];
  const all=[...online,...bots.map(b=>b.name)];
  const limit=Number($('playerLimit')?.value||4);
- const playerHtml=online.map(n=>'<span class="player '+(n===me&&isHost?'host':'')+'">'+(n===me?(isHost?'👑 ':'👤 '):'👤 ')+esc(n)+(n===me&&isHost?' <small style="color:#8fc9ff">HOST</small>':'')+'</span>').join('');
- const botHtml=bots.map(b=>'<span class="player">🤖 '+esc(b.name)+' <small style="color:#8fa1b8">BOT</small></span>').join('');
+ const playerHtml=online.map(n=>'<span class="player '+(n===me&&isHost?'host':'')+'">'+avatarSvg(avatarIdFor(n),true)+'<span>'+esc(n)+(n===me&&isHost?' <small style="color:#8fc9ff">HOST</small>':'')+'</span></span>').join('');
+ const botHtml=bots.map((b,i)=>'<span class="player">'+avatarSvg((i+4)%AVATARS.length,true)+'<span>'+esc(b.name)+' <small style="color:#8fa1b8">BOT</small></span></span>').join('');
  $('players').innerHTML=playerHtml+botHtml;
  if($('playerCount'))$('playerCount').textContent=all.length+' / '+limit+' kişi';
  if(!all.length)$('players').innerHTML='<div class="waiting-card">⏳ Oyuncular bekleniyor...</div>';
@@ -672,7 +687,7 @@ function registerNetworkVote(voter,answer,cat,correct){
 }
 function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:owner.startsWith('bot')?'Bot '+(parseInt(owner.replace('bot',''),10)+1):owner.startsWith('human:')?owner.slice(6):owner;
- const isMine=owner==='me';
+ const isMine=owner==='me'; const ownerAvatar=isMine?myAvatar:(owner.startsWith('bot')?((Number(owner.replace('bot',''))+4)%AVATARS.length):avatarIdFor(answerOwner));
  const voterButtons=isMine?'<span class="own-answer-label">👑 Kendi cevabın</span>':'<button type="button" class="vote-circle no" data-vote-action="no">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes">✓</button>';
  let botVotes='';
  bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const val=remoteVotes['Bot '+(bi+1)+'|'+answerOwner+'|'+x.cat];botVotes+='<span class="player-vote bot-vote '+(val?'':'pending')+'" data-voter="Bot '+(bi+1)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
@@ -868,7 +883,7 @@ function showFinalResults(announce=true){
 }
 document.addEventListener('DOMContentLoaded',()=>{
  renderCategories();
- restoreRememberedName();
+ restoreRememberedName();restoreAvatar();renderAvatarPickers();
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGameMenu()});
  bindGameSettingSync();
  $('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')});
