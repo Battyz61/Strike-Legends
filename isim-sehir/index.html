@@ -376,7 +376,7 @@ function renderAvatarPickers(){['hostAvatarGrid','guestAvatarGrid'].forEach(id=>
 function openGameMenu(){const m=$('gameMenu');if(m)m.classList.add('show')}
 function closeGameMenu(){const m=$('gameMenu');if(m)m.classList.remove('show')}
 function resetLocalGameState(){
- clearInterval(timerId);clearHostSession();
+ clearInterval(timerId);clearHostSession();clearGuestSession();
  if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}
  try{if(hostPeer)hostPeer.close()}catch(e){}
  try{if(peer)peer.destroy()}catch(e){}
@@ -417,6 +417,7 @@ function enter(name,join){
  const requestedCode=join?$('joinCode').value.trim().replace(/\s/g,''):'';
  if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');$('joinCode')?.focus();return}
  me=(name||'Oyuncu').trim()||'Oyuncu';rememberName(me);rememberAvatar(myAvatar);
+ if(join){try{sessionStorage.removeItem(GUEST_SESSION_KEY)}catch(e){}}
  roomId=join?requestedCode:makeCode();
  isHost=!join;
  $('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;
@@ -424,8 +425,9 @@ function enter(name,join){
  renderRoomSettingsSummary();
  setupMultiplayer(join);
 }
-function createRoom(){try{sessionStorage.removeItem(HOST_SESSION_KEY)}catch(e){}enter($('hostName').value,false)}function joinRoom(){try{sessionStorage.removeItem(HOST_SESSION_KEY)}catch(e){}enter($('guestName').value,true)}
+function createRoom(){try{sessionStorage.removeItem(HOST_SESSION_KEY);sessionStorage.removeItem(GUEST_SESSION_KEY)}catch(e){}enter($('hostName').value,false)}function joinRoom(){try{sessionStorage.removeItem(HOST_SESSION_KEY)}catch(e){}enter($('guestName').value,true)}
 const HOST_SESSION_KEY='isimSehirHostSessionV2';
+const GUEST_SESSION_KEY='isimSehirGuestSessionV2';
 let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={},roomRejected=false,hostRestoreRetryTimer=null;
 function persistHostSession(){
  if(!isHost||!roomId)return;
@@ -440,6 +442,45 @@ function persistHostSession(){
  }catch(e){}
 }
 function clearHostSession(){try{sessionStorage.removeItem(HOST_SESSION_KEY)}catch(e){}}
+function persistGuestSession(){
+ if(isHost||!roomId||!me)return;
+ try{
+  sessionStorage.setItem(GUEST_SESSION_KEY,JSON.stringify({
+   savedAt:Date.now(),roomId,me,myAvatar,letterNow,cats:[...cats],round,totalRounds,
+   netAnswers,submittedPlayers,netScores,myScore,roundState:roundState?{phase:roundState.phase}:null,
+   settings:currentGameSettings()
+  }));
+ }catch(e){}
+}
+function clearGuestSession(){try{sessionStorage.removeItem(GUEST_SESSION_KEY)}catch(e){}}
+function restoreGuestSession(){
+ let data=null;try{data=JSON.parse(sessionStorage.getItem(GUEST_SESSION_KEY)||'null')}catch(e){}
+ if(!data||!data.roomId||!data.me)return false;
+ if(Date.now()-Number(data.savedAt||0)>30*60*1000){clearGuestSession();return false}
+ isHost=false;roomId=String(data.roomId);me=String(data.me);myAvatar=Number(data.myAvatar)||0;
+ letterNow=data.letterNow||'';round=Number(data.round)||1;totalRounds=Number(data.totalRounds)||5;
+ cats=Array.isArray(data.cats)&&data.cats.length?[...data.cats]:cats;
+ netAnswers=data.netAnswers||{};submittedPlayers=data.submittedPlayers||{};netScores=data.netScores||{};
+ myScore=Number(data.myScore)||0;roundState=data.roundState?{token:++roundToken,phase:data.roundState.phase}:null;
+ applyGameSettings(data.settings||{});
+ $('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';
+ $('roomCode').textContent=roomId;renderPlayers();renderRoomSettingsSummary();
+ setupMultiplayer(true);
+ setTimeout(()=>{
+  if(isHost)return;
+  const phase=roundState?.phase||'lobby';
+  if(phase==='round'){
+   resumeActiveRound({duration:Number(data.settings?.duration)||selectedDuration(),seconds:Math.max(1,Number(data.seconds||selectedDuration()))});
+  }else if(phase==='waiting-players'){
+   const mine=netAnswers[me]||[];
+   $('roundNo').textContent=round+'. Tur';$('letter').textContent=letterNow;$('wheelLabel').textContent='Seçilen harf';
+   $('answers').innerHTML=cats.map(c=>{const x=answerForCategory(mine,c)||{val:''};return '<div class="answer answer-filled"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" value="'+esc(x.val||'')+'" disabled></div>'}).join('');
+   $('answers').classList.remove('hidden-answers');$('status').textContent='📨 Cevapların korunuyor — host bağlantısı bekleniyor...';
+   $('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').disabled=true;$('finishBtn').textContent='✓ Cevapların kaydedildi';$('finishBtn').classList.add('waiting');
+  }
+ },180);
+ return true;
+}
 function restoreHostSession(){
  let data=null;try{data=JSON.parse(sessionStorage.getItem(HOST_SESSION_KEY)||'null')}catch(e){}
  if(!data||!data.roomId||!data.me)return false;
@@ -529,6 +570,7 @@ function handleVisibilityConnection(){
      if(roomId)persistHostSession();
      if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
    }else if(!hostPeer||!hostPeer.open){
+     persistGuestSession();
      connectFreshToHost();
    }
  }
@@ -715,6 +757,7 @@ function bindConnection(conn){
    }else if(data.type==='answers'&&isHost){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
+     persistHostSession();
      Object.assign(submittedPlayers,data.submitted||{});
      Object.keys(data.submitted||{}).forEach(n=>{if(data.submitted[n]===true)submittedPlayers[n]=true});
      if(data.from)submittedPlayers[data.from]=true;
@@ -727,6 +770,7 @@ function bindConnection(conn){
    }else if(data.type==='answerAck'&&!isHost){
      if(Number(data.round)!==round)return;
      if(data.answers)Object.assign(netAnswers,data.answers);
+     persistGuestSession();
      if(data.players)applyPlayerSnapshot(data.players,data.avatars);
      if(data.submitted)Object.assign(submittedPlayers,data.submitted);
      // The ACK itself contains the authoritative submission state. Do not
@@ -1128,7 +1172,7 @@ function finishRound(){
    if(!hostPeer||(!hostPeer.open&&!hostPeer.peer)){toast('🔴 Oda bağlantısı koptu, yeniden bağlanıyor...');$('finishBtn').disabled=false;sendNet({type:'answers',round,answers:{[me]:mine}});return}
    const sent=sendNet({type:'answers',round,from:me,answers:{[me]:mine},submitted:{[me]:true},players:Object.keys(onlinePlayers)});
    // Keep our local canonical copy while the host distributes the full map.
-   netAnswers[me]=mine;submittedPlayers[me]=true;roundState.phase='waiting-players';
+   netAnswers[me]=mine;submittedPlayers[me]=true;roundState.phase='waiting-players';persistGuestSession();
    if(sent){
      markSubmittedButton('✓ Cevabın kaydedildi',true);
      $('status').textContent='✅ Cevabın hosta ulaştı. Diğer oyuncular bekleniyor...';
@@ -1138,6 +1182,7 @@ function finishRound(){
    }
    updateSubmissionStatus();
  }
+ persistGuestSession();
 }
 let votedCount=0;
 function canonicalAnswerOwner(row){
