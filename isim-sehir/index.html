@@ -1061,7 +1061,7 @@ function registerNetworkVote(voter,answer,cat,correct,owner=null){
    const square=[...row.querySelectorAll('.remote-vote')].find(x=>x.dataset.voter===voter);
    if(square){square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex'}
  }
- if(isHost)broadcast({type:'voteUpdate',round,voter,answer,cat,correct});
+ if(isHost)broadcast({type:'voteUpdate',round,voter,answer,cat,correct,owner});
  if(voter===me)updateVoteSummary();
 }
 function voteRow(owner,x,empty=false){
@@ -1249,11 +1249,11 @@ function resetRoundVisuals(){
  const timer=$('timer');
  if(timer)timer.classList.remove('danger','critical');
 }
-function nextRound(){
+function nextRound(ev){
  if(gameFinished)return;
  if(!isHost){toast('⏳ Host sonraki turu başlatacak.');return}
  if(round>=totalRounds){showFinalResults(true);return}
- const btn=event?.currentTarget;
+ const btn=ev?.currentTarget;
  if(btn){btn.disabled=true;btn.textContent='Yeni tur hazırlanıyor…';}
  resetRoundVisuals();
  round++;
@@ -1287,12 +1287,13 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script><script>
 function playUiSound(kind='tick'){
  try{
+  if(document.visibilityState==='hidden')return;
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   if(!window.__uiAudio)window.__uiAudio=new AC();
   const ac=window.__uiAudio;if(ac.state==='suspended')ac.resume();
   const o=ac.createOscillator(),g=ac.createGain(),now=ac.currentTime;
-  const cfg=kind==='success'?[520,760,.09]:kind==='danger'?[180,120,.13]:kind==='start'?[280,620,.18]:[360,430,.055];
-  o.type=kind==='danger'?'sawtooth':'sine';o.frequency.setValueAtTime(cfg[0],now);o.frequency.exponentialRampToValueAtTime(Math.max(60,cfg[1]),now+cfg[2]);
+  const cfg=kind==='success'?[520,760,.09]:kind==='danger'?[180,120,.13]:kind==='start'?[280,620,.18]:kind==='vote'?[460,640,.07]:[360,430,.055];
+  o.type=(kind==='danger'?'sawtooth':'sine');o.frequency.setValueAtTime(cfg[0],now);o.frequency.exponentialRampToValueAtTime(Math.max(60,cfg[1]),now+cfg[2]);
   g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.045,now+.008);g.gain.exponentialRampToValueAtTime(.0001,now+cfg[2]);
   o.connect(g);g.connect(ac.destination);o.start(now);o.stop(now+cfg[2]+.02);
  }catch(e){}
