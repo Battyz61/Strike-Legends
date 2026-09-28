@@ -257,6 +257,11 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 @media(max-width:700px){.wheel-wrap{height:225px!important}.wheel{width:164px!important;height:164px!important}.wheel-center{width:70px;height:70px;font-size:43px!important}.wheel-wrap:before{width:208px;height:208px}.wheel-wrap:after{width:178px;height:178px}}
 @media(prefers-reduced-motion:reduce){.wheel-wrap:before,.wheel-wrap:after{animation:none!important}}
 </style><style>
+/* REMOVE FOCUS STRIPE FROM ANSWER CARDS */
+.answer:focus-within{box-shadow:0 12px 30px rgba(0,0,0,.22)!important;border-color:rgba(52,211,153,.55)!important}
+.answer input:focus{outline:none!important;border:0!important;border-top:0!important;box-shadow:none!important}
+.answer label{border:0!important;border-bottom:0!important;box-shadow:none!important}
+.answer label:after{content:none!important;display:none!important}
 /* === ANSWER ARENA v5 === */
 .answers{display:grid;gap:10px}
 .answer{position:relative;padding:0!important;border:1px solid rgba(52,67,96,.65);border-radius:15px;background:linear-gradient(145deg,rgba(15,22,36,.9),rgba(7,11,19,.95));overflow:hidden;transition:border-color .18s,transform .18s,box-shadow .18s}
