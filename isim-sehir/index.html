@@ -436,7 +436,7 @@ function bindConnection(conn){
      finalizeVoting();
    }else if(data.type==='vote'&&isHost){
      if(Number(data.round)!==round)return;
-     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct);
+     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct,data.owner);
    }else if(data.type==='voteUpdate'&&!isHost){
      if(Number(data.round)!==round)return;
      remoteVotes[data.voter+'|'+data.answer+'|'+data.cat]=data.correct?'yes':'no';
@@ -767,17 +767,17 @@ function vote(btn,correct){
  if(!wasVoted)votedCount++;
  updateVoteSummary();
  if(!isHost){
-   sendNet({type:'vote',round,voter:me,answer:row.dataset.answer,cat,correct});
+   sendNet({type:'vote',round,voter:me,answer:row.dataset.answer,cat,correct,owner:row.dataset.owner});
  }else{
-   registerNetworkVote(me,row.dataset.answer,cat,correct);
+   registerNetworkVote(me,row.dataset.answer,cat,correct,row.dataset.owner);
  }
 }
-function registerNetworkVote(voter,answer,cat,correct){
- const key=voter+'|'+answer+'|'+cat;
+function registerNetworkVote(voter,answer,cat,correct,owner=null){
+ const key=voter+'|'+(owner||answer)+'|'+cat;
  const value=correct?'yes':'no';
  remoteVotes[key]=value;
  netVotes[key]=value;
- const row=[...$('answers').querySelectorAll('.vote-player')].find(r=>r.dataset.answer===answer&&r.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')===cat);
+ const row=[...$('answers').querySelectorAll('.vote-player')].find(r=>r.dataset.answer===answer&&(!owner||r.dataset.owner===owner)&&r.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')===cat);
  if(row){
    const square=[...row.querySelectorAll('.remote-vote')].find(x=>x.dataset.voter===voter);
    if(square){square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex'}
@@ -792,7 +792,7 @@ function voteRow(owner,x,empty=false){
  let botVotes='';
  bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const val=remoteVotes['Bot '+(bi+1)+'|'+answerOwner+'|'+x.cat];botVotes+='<span class="player-vote bot-vote '+(val?'':'pending')+'" data-voter="Bot '+(bi+1)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
  let humanVotes='';
- Object.keys(onlinePlayers).filter(n=>n!==answerOwner&&n!==me).forEach(n=>{const val=remoteVotes[n+'|'+answerOwner+'|'+x.cat];humanVotes+='<span class="player-vote remote-vote '+(val?'':'pending')+'" data-voter="'+esc(n)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
+ Object.keys(onlinePlayers).filter(n=>n!==answerOwner&&n!==me).forEach(n=>{const val=remoteVotes[n+'|'+owner+'|'+x.cat]||remoteVotes[n+'|'+answerOwner+'|'+x.cat];humanVotes+='<span class="player-vote remote-vote '+(val?'':'pending')+'" data-voter="'+esc(n)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
  return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+avatarSvg(ownerAvatar,true)+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
 function showVoting(){
