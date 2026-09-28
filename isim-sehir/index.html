@@ -1080,32 +1080,7 @@ function voteRow(owner,x,empty=false){
  Object.keys(onlinePlayers).filter(n=>n!==answerOwner&&n!==me).forEach(n=>{const val=remoteVotes[n+'|'+owner+'|'+x.cat]||remoteVotes[n+'|'+answerOwner+'|'+x.cat];humanVotes+='<span class="player-vote remote-vote '+(val?'':'pending')+'" data-voter="'+esc(n)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
  return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+avatarSvg(ownerAvatar,true)+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
-function stopVotingCountdown(){if(votingTimerId){clearInterval(votingTimerId);votingTimerId=0}}
-function startVotingCountdown(){
- stopVotingCountdown();
- votingSeconds=45;
- const tick=()=>{
-  if(roundState?.phase!=='voting'){stopVotingCountdown();return}
-  const left=Math.max(0,votingSeconds);
-  const status=$('status');
-  if(status&&!votingDone[me])status.textContent='⏱️ Oylama süresi: '+left+' sn · Değerlendirmen: '+[...$('answers').querySelectorAll('.vote-player [data-vote-action]')].filter(r=>r.closest('.vote-player')?.dataset.vote).length+'/'+[...$('answers').querySelectorAll('.vote-player [data-vote-action]')].length;
-  if(left<=0){
-   stopVotingCountdown();
-   if(isHost){
-    Object.keys(onlinePlayers).forEach(n=>{if(!votingDone[n])votingDone[n]=true});
-    finalizeVoting();
-   }else if(!votingDone[me]){
-    $('status').textContent='⏱️ Oylama süresi doldu. Host sonuçları hesaplıyor...';
-   }
-   return;
-  }
-  votingSeconds--;
- };
- tick();
- votingTimerId=setInterval(tick,1000);
-}
 function showVoting(){
- stopVotingCountdown();
  votedCount=0;localVotes={};netVotes={};votingDone={};
  const mine=netAnswers[me]||[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  if(!netAnswers[me])netAnswers[me]=mine;
