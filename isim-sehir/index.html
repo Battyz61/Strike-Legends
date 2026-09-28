@@ -648,7 +648,8 @@ function bindConnection(conn){
      // Previously we treated the fresh connection as a second player and
      // renamed it to "Battyz 2", "Battyz 2 2", etc.
      const existingPlayer=onlinePlayers[baseName];
-     const isReconnect=!!existingPlayer;
+     // Never replace the host slot just because a guest uses the same name.
+     const isReconnect=!!existingPlayer&&!existingPlayer.host;
      if(Object.keys(onlinePlayers).length>=limit&&!isReconnect){
        if(conn.open)conn.send({type:'roomFull',limit});
        try{conn.close()}catch(e){}
