@@ -92,7 +92,7 @@ const AVATARS=[
 {name:'Lumen',bg:'#eab308',fg:'#fff2ad',shape:'M24 6l3 12 11 6-11 6-3 12-3-12-11-6 11-6z'},
 {name:'Astra',bg:'#3b82f6',fg:'#d9e9ff',shape:'M24 7l3 8 8 3-8 3-3 8-3-8-8-3 8-3z'}];
 function avatarSvg(id,small=false){const a=AVATARS[(Number(id)||0)%AVATARS.length];return '<svg class="avatar-svg'+(small?' small':'')+'" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="'+a.bg+'"/><path d="'+a.shape+'" fill="none" stroke="'+a.fg+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
-function avatarIdFor(name){return Number(onlinePlayers[name]?.avatar||0)}
+function avatarIdFor(name){return name===me?Number(myAvatar)||0:Number(onlinePlayers[name]?.avatar||0)}
 function rememberAvatar(id){localStorage.setItem('isimSehirAvatar',String(id))}
 function restoreAvatar(){const n=Number(localStorage.getItem('isimSehirAvatar'));if(Number.isFinite(n))myAvatar=((n%AVATARS.length)+AVATARS.length)%AVATARS.length}
 function renderAvatarPickers(){['hostAvatarGrid','guestAvatarGrid'].forEach(id=>{const el=$(id);if(!el)return;el.innerHTML=AVATARS.map((a,i)=>'<button type="button" class="avatar-choice '+(i===myAvatar?'selected':'')+'" data-avatar="'+i+'" aria-label="'+a.name+'">'+avatarSvg(i)+'</button>').join('');el.querySelectorAll('[data-avatar]').forEach(b=>b.onclick=()=>{myAvatar=Number(b.dataset.avatar);rememberAvatar(myAvatar);renderAvatarPickers()});});}
