@@ -1161,12 +1161,28 @@ function showResults(gains,details=[],scoresOverride=null){
  $('finishBtn').style.display='none';
  $('finishBtn').classList.add('hidden');
 }
+function resetRoundVisuals(){
+ clearInterval(timerId);stopWheelSpin();
+ const wheel=$('wheel');
+ if(wheel){wheel.classList.remove('spinning','reveal-pop');wheel.style.transform='';}
+ const answers=$('answers');
+ if(answers){answers.classList.remove('answers-live');answers.classList.add('hidden-answers');}
+ const finish=$('finishBtn');
+ if(finish){finish.classList.remove('finish-pulse');finish.disabled=true;finish.style.display='';finish.classList.remove('hidden');}
+ const timerHud=$('timerHud');
+ if(timerHud)timerHud.classList.remove('danger','critical');
+ const timer=$('timer');
+ if(timer)timer.classList.remove('danger','critical');
+}
 function nextRound(){
  if(gameFinished)return;
  if(!isHost){toast('⏳ Host sonraki turu başlatacak.');return}
  if(round>=totalRounds){showFinalResults(true);return}
- $('finishBtn').classList.remove('hidden');$('finishBtn').style.display='';
- round++;newRound(null,true)
+ const btn=event?.currentTarget;
+ if(btn){btn.disabled=true;btn.textContent='Yeni tur hazırlanıyor…';}
+ resetRoundVisuals();
+ round++;
+ requestAnimationFrame(()=>{newRound(null,true)});
 }
 function showFinalResults(announce=true){
  gameFinished=true;roundState=roundState||{};roundState.phase='results';
