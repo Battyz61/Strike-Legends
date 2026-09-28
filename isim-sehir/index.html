@@ -621,8 +621,8 @@ function bindConnection(conn){
      Object.keys(data.submitted||{}).forEach(n=>{if(data.submitted[n]===true)submittedPlayers[n]=true});
      if(data.from)submittedPlayers[data.from]=true;
      const ack=connections.find(cn=>cn===conn);
-     if(ack&&ack.open)ack.send({type:'answerAck',round,player:data.from||Object.keys(data.answers||{})[0],answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers});
-     broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
+     if(ack&&ack.open)ack.send({type:'answerAck',round,player:data.from||Object.keys(data.answers||{})[0],answers:netAnswers,players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0])),submitted:submittedPlayers});
+     broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))});
      updateSubmissionStatus();
      if(allPlayersSubmitted())openVotingForEveryone();
      else broadcast({type:'submissionStatus',round,submitted:submittedPlayers});
@@ -645,8 +645,8 @@ function bindConnection(conn){
      registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct,data.owner);
    }else if(data.type==='voteUpdate'&&!isHost){
      if(Number(data.round)!==round)return;
-     remoteVotes[data.voter+'|'+data.answer+'|'+data.cat]=data.correct?'yes':'no';
-     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct);updateVoteSummary();
+     remoteVotes[data.voter+'|'+(data.owner||data.answer)+'|'+data.cat]=data.correct?'yes':'no';
+     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct,data.owner);updateVoteSummary();
    }else if(data.type==='scores'&&!isHost){
      if(Number(data.round)!==round)return;
      netScores=Object.assign({},data.scores||{});
@@ -733,7 +733,7 @@ function bindConnection(conn){
          delete submittedPlayers[stale];
          delete votingDone[stale];
          delete disconnectGraceTimers[stale];
-         broadcast({type:'players',players:Object.keys(onlinePlayers)});
+         broadcast({type:'players',...playerSnapshot()});
          renderPlayers();
          updateSubmissionStatus();
        },15000);
@@ -1038,6 +1038,7 @@ function localAnswerOwner(canonical){
 }
 function vote(btn,correct){
  const row=btn.closest('.vote-player');if(!row)return;
+ playUiSound('vote');
  const wasVoted=!!row.dataset.vote;
  row.querySelectorAll('.vote-circle').forEach(x=>x.classList.remove('selected'));
  btn.classList.add('selected');
