@@ -412,8 +412,10 @@ function restoreRememberedName(){
 }
 function enter(name,join){
  if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
+ const requestedCode=join?$('joinCode').value.trim().replace(/\s/g,''):'';
+ if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');$('joinCode')?.focus();return}
  me=(name||'Oyuncu').trim()||'Oyuncu';rememberName(me);rememberAvatar(myAvatar);
- roomId=join?($('joinCode').value.trim().replace(/\s/g,'')||makeCode()):makeCode();
+ roomId=join?requestedCode:makeCode();
  isHost=!join;
  $('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;
  renderPlayers();
@@ -825,7 +827,13 @@ async function copyRoom(){
    toast('Oda kodu: '+code);
  }
 }
-function addBot(){const limit=Number($('playerLimit')?.value||4);if(bots.length+1>=limit){toast('Oyuncu limiti dolu.');return}bots.push({name:'Bot '+(bots.length+1),score:0,answers:[],avatar:(bots.length+4)%AVATARS.length});renderPlayers();toast('🤖 Test botu eklendi')}
+function addBot(){
+ const limit=Number($('playerLimit')?.value||4);
+ const humanCount=Object.keys(onlinePlayers).length||1;
+ if(humanCount+bots.length>=limit){toast('Oyuncu limiti dolu.');return}
+ bots.push({name:'Bot '+(bots.length+1),score:0,answers:[],avatar:(bots.length+4)%AVATARS.length});
+ renderPlayers();toast('🤖 Test botu eklendi')
+}
 function renderPlayers(){
  const online=[...new Set([me,...Object.keys(onlinePlayers).filter(n=>n!==me)])];
  const all=[...online,...bots.map(b=>b.name)];
@@ -867,7 +875,14 @@ function markSubmittedButton(label,waiting=false){
  btn.textContent=label;
 }
 function bindGameSettingSync(){
- ['durationSelect','wheelSelect','playerLimit','roundLimit'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{renderRoomSettingsSummary();if(isHost)broadcastGameSettings()})});
+ ['durationSelect','wheelSelect','playerLimit','roundLimit'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{
+   if(id==='playerLimit'){
+     const limit=Number(el.value||4),humanCount=Object.keys(onlinePlayers).length||1;
+     while(humanCount+bots.length>limit)bots.pop();
+     renderPlayers();
+   }
+   renderRoomSettingsSummary();if(isHost)broadcastGameSettings()
+ })});
 }
 
 function focusWheelOnScreen(){const el=$('wheelArea');if(!el)return;requestAnimationFrame(()=>setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'}),80));}
