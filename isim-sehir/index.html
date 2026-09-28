@@ -643,15 +643,31 @@ function bindConnection(conn){
        return;
      }
      const baseName=existingName;
-     let assignedName=baseName;
-     let suffix=2;
-     while(onlinePlayers[assignedName]&&onlinePlayers[assignedName].conn!==conn){
-       assignedName=baseName+' '+suffix++;
-       if(assignedName.length>18)assignedName=(baseName.slice(0,Math.max(1,18-(String(suffix).length+1)))+' '+suffix);
+     // A reconnect from another browser/tab uses a fresh PeerJS connection.
+     // Keep the same player slot when the requested name already exists.
+     // Previously we treated the fresh connection as a second player and
+     // renamed it to "Battyz 2", "Battyz 2 2", etc.
+     const existingPlayer=onlinePlayers[baseName];
+     const isReconnect=!!existingPlayer;
+     if(Object.keys(onlinePlayers).length>=limit&&!isReconnect){
+       if(conn.open)conn.send({type:'roomFull',limit});
+       try{conn.close()}catch(e){}
+       return;
      }
-     if(disconnectGraceTimers[assignedName]){clearTimeout(disconnectGraceTimers[assignedName]);delete disconnectGraceTimers[assignedName]}
-     const previousConn=onlinePlayers[assignedName]?.conn;
+     let assignedName=baseName;
+     if(disconnectGraceTimers[assignedName]){
+       clearTimeout(disconnectGraceTimers[assignedName]);
+       delete disconnectGraceTimers[assignedName];
+     }
+     const previousConn=existingPlayer?.conn;
      if(previousConn&&previousConn!==conn){try{previousConn.close()}catch(e){}}
+     if(!isReconnect){
+       let suffix=2;
+       while(onlinePlayers[assignedName]){
+         assignedName=baseName+' '+suffix++;
+         if(assignedName.length>18)assignedName=(baseName.slice(0,Math.max(1,18-(String(suffix).length+1)))+' '+suffix);
+       }
+     }
      onlinePlayers[assignedName]={name:assignedName,host:false,conn,avatar:Number(data.avatar)||0};
      submittedPlayers[assignedName]=submittedPlayers[assignedName]===true;
      votingDone[assignedName]=votingDone[assignedName]===true;
