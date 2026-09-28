@@ -416,6 +416,7 @@ function bindConnection(conn){
      $('myScore').textContent=myScore;
      if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      $('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');
+     focusWheelOnScreen();
      const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyun başladı — host turu senkronize ediyor';
    }
  });
@@ -539,10 +540,12 @@ function bindGameSettingSync(){
  ['durationSelect','wheelSelect','playerLimit','roundLimit'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{renderRoomSettingsSummary();if(isHost)broadcastGameSettings()})});
 }
 
+function focusWheelOnScreen(){const el=$('wheelArea');if(!el)return;requestAnimationFrame(()=>setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'}),80));}
 function startGame(){
  const settings=currentGameSettings();
  totalRounds=settings.totalRounds;round=1;gameFinished=false;myScore=0;netScores={[me]:0};bots.forEach(b=>{b.score=0;netScores[b.name]=0});$('myScore').textContent='0';
  $('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');
+ focusWheelOnScreen();
  if(isHost){broadcast({type:'start',...settings,cats,scores:netScores});newRound(null,true)}
 }
 function selectedDuration(){return Number($('durationSelect')?.value||120)}
