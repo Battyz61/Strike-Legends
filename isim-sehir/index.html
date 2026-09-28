@@ -199,8 +199,8 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .wheel-center{font-size:46px!important;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#17233a,#090d17 72%);border:1px solid rgba(167,139,250,.55);box-shadow:0 0 0 5px rgba(124,92,255,.06),0 0 28px rgba(124,92,255,.25),inset 0 0 18px rgba(0,0,0,.65);text-shadow:0 0 22px rgba(103,232,249,.65)}
 .wheel-pointer{top:7px!important;border-left-width:11px!important;border-right-width:11px!important;border-top:21px solid #67e8f9!important;filter:drop-shadow(0 0 5px #22d3ee) drop-shadow(0 0 14px #22d3ee)!important;z-index:10!important}
 .wheel-pointer:after{content:"";position:absolute;left:-4px;top:-20px;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 12px #fff,0 0 20px #22d3ee}
-.wheel.spinning{animation:wheelSpinPro 2.65s cubic-bezier(.08,.72,.12,1)!important}
-@keyframes wheelSpinPro{0%{transform:rotate(0deg)}12%{transform:rotate(150deg)}34%{transform:rotate(570deg)}62%{transform:rotate(1030deg)}82%{transform:rotate(1280deg)}94%{transform:rotate(1395deg)}100%{transform:rotate(1440deg)}}
+.wheel.spinning{will-change:transform}
+
 .wheel.reveal-pop{animation:wheelRevealPro .7s cubic-bezier(.16,1,.3,1)!important}
 @keyframes wheelRevealPro{0%{transform:scale(.9);filter:brightness(.9)}35%{transform:scale(1.11);filter:brightness(1.9);box-shadow:0 0 0 5px rgba(124,92,255,.08),0 0 55px rgba(124,92,255,.55),0 0 100px rgba(34,211,238,.2)}70%{transform:scale(.98)}100%{transform:scale(1);filter:brightness(1)}}
 .wheel-label{font-size:11px!important;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:#7f92ae!important;margin-top:-1px!important}
@@ -241,7 +241,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
-let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false,myAvatar=0;
+let wheelSpinFrame=0,wheelSpinStart=0;let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false,myAvatar=0;
 let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null;
 const $=id=>document.getElementById(id);
 const AVATARS=[
@@ -811,12 +811,31 @@ function newRound(forcedLetter=null,announce=true){
  // including rounds reached after a reconnect on a guest device.
  $('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').textContent='Cevapları Gönder';$('finishBtn').disabled=true;$('finishBtn').onclick=finishRound;
  $('wheelLabel').textContent='Harf seçiliyor...';
- const wheel=$('wheel');wheel.classList.remove('spinning');void wheel.offsetWidth;
+ stopWheelSpin();
  if($('wheelSelect')?.value==='off'){revealRound(token);return}
- wheel.classList.add('spinning');setTimeout(()=>revealRound(token),2650);
+ startWheelSpin(token);
+}
+function stopWheelSpin(){
+ if(wheelSpinFrame){cancelAnimationFrame(wheelSpinFrame);wheelSpinFrame=0}
+ const wheel=$('wheel');if(wheel){wheel.classList.remove('spinning');wheel.style.transform=''}
+}
+function startWheelSpin(token){
+ stopWheelSpin();
+ const wheel=$('wheel');if(!wheel)return;
+ wheel.classList.add('spinning');
+ const duration=2650,start=performance.now(),turns=5+Math.random()*1.25;
+ const ease=t=>1-Math.pow(1-t,4);
+ function frame(now){
+  if(token!==roundToken){stopWheelSpin();return}
+  const t=Math.min(1,(now-start)/duration);
+  wheel.style.transform='rotate('+(ease(t)*turns*360)+'deg)';
+  if(t<1){wheelSpinFrame=requestAnimationFrame(frame)}
+  else{wheelSpinFrame=0;wheel.classList.remove('spinning');wheel.style.transform='rotate('+(turns*360)+'deg)';revealRound(token)}
+ }
+ wheelSpinFrame=requestAnimationFrame(frame);
 }
 function revealRound(token){
- if(token!==roundToken)return;$('wheel').classList.remove('spinning');$('wheel').classList.remove('reveal-pop');void $('wheel').offsetWidth;$('wheel').classList.add('reveal-pop');$('letter').textContent=letterNow;$('wheelLabel').textContent='Seçilen harf';$('answers').classList.remove('hidden-answers');playUiSound('success');$('status').textContent='Cevaplarını '+letterNow+' harfiyle doldur.';
+ if(token!==roundToken)return;stopWheelSpin();$('wheel').classList.remove('reveal-pop');void $('wheel').offsetWidth;$('wheel').classList.add('reveal-pop');$('letter').textContent=letterNow;$('wheelLabel').textContent='Seçilen harf';$('answers').classList.remove('hidden-answers');playUiSound('success');$('status').textContent='Cevaplarını '+letterNow+' harfiyle doldur.';
  const burst=$('wheelBurst');if(burst){burst.textContent='HARF: '+letterNow;burst.classList.remove('show');void burst.offsetWidth;burst.classList.add('show');}
  seconds=selectedDuration();$('timer').textContent=seconds+' sn';$('timer').classList.remove('critical');
  // Always make the submission button visible again after wheel/reconnect.
