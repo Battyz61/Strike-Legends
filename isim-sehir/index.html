@@ -736,6 +736,7 @@ function bindConnection(conn){
          broadcast({type:'players',...playerSnapshot()});
          renderPlayers();
          updateSubmissionStatus();
+         if(roundState?.phase==='voting')finalizeVoting();
        },15000);
      }
    }
