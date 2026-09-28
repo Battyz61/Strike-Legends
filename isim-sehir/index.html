@@ -1409,6 +1409,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  setInterval(()=>{
    if(document.visibilityState!=='visible')return;
    if(isHost){
+     if(roomId)persistHostSession();
      if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
      connections.forEach(cn=>{if(cn&&cn.open){try{cn.send({type:'ping',round})}catch(e){}}});
    }else if(!hostPeer||!hostPeer.open){
