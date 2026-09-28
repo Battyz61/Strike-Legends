@@ -770,9 +770,9 @@ function bindConnection(conn){
    }else if(data.type==='answerAck'&&!isHost){
      if(Number(data.round)!==round)return;
      if(data.answers)Object.assign(netAnswers,data.answers);
-     persistGuestSession();
      if(data.players)applyPlayerSnapshot(data.players,data.avatars);
      if(data.submitted)Object.assign(submittedPlayers,data.submitted);
+     persistGuestSession();
      // The ACK itself contains the authoritative submission state. Do not
      // wait for a second packet to transition this client.
      updateSubmissionStatus();
@@ -808,6 +808,7 @@ function bindConnection(conn){
      Object.assign(netAnswers,data.answers||{});
      applyPlayerSnapshot(data.players,data.avatars);
      Object.assign(submittedPlayers,data.submitted||{});
+     persistGuestSession();
      // Reconnect packets carry the authoritative voting state. Preserve it
      // instead of rebuilding the screen with empty votes.
      showVoting({
@@ -1467,7 +1468,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  document.addEventListener('visibilitychange',handleVisibilityConnection);
  window.addEventListener('pageshow',handleVisibilityConnection);
  window.addEventListener('beforeunload',()=>{if(isHost&&roomId)persistHostSession()});
- restoreHostSession();
+ if(!restoreHostSession())restoreGuestSession();
  setInterval(()=>{
    if(document.visibilityState!=='visible')return;
    if(isHost){
