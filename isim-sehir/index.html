@@ -541,6 +541,14 @@ function bindConnection(conn){
  conn.on('open',()=>{if(conn===hostPeer)flushNetQueue();if(isHost){const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyuncu bağlantısı aktif'}}); 
  conn.on('data',data=>{
    if(!data)return;
+   if(data.type==='roomFull'&&!isHost){
+     const limit=Number(data.limit||4);
+     const ns=$('netStatus');if(ns)ns.textContent='🔴 Oda dolu — maksimum '+limit+' oyuncu';
+     toast('Oda dolu. Maksimum '+limit+' oyuncu.');
+     try{if(hostPeer)hostPeer.close()}catch(e){}
+     hostPeer=null;
+     return;
+   }
    if(data.type==='nameAssigned'&&!isHost){
      const assigned=String(data.name||'').trim();
      if(assigned){
@@ -573,7 +581,14 @@ function bindConnection(conn){
      return;
    }
    if(data.type==='join'&&isHost){
-     const baseName=String(data.name||'Oyuncu').trim().slice(0,18)||'Oyuncu';
+     const limit=Number($('playerLimit')?.value||4);
+     const existingName=String(data.name||'Oyuncu').trim().slice(0,18)||'Oyuncu';
+     if(Object.keys(onlinePlayers).length>=limit&&!onlinePlayers[existingName]){
+       if(conn.open)conn.send({type:'roomFull',limit});
+       try{conn.close()}catch(e){}
+       return;
+     }
+     const baseName=existingName;
      let assignedName=baseName;
      let suffix=2;
      while(onlinePlayers[assignedName]&&onlinePlayers[assignedName].conn!==conn){
