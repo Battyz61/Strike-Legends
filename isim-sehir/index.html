@@ -347,7 +347,7 @@ const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Mesle
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let wheelSpinFrame=0,wheelSpinStart=0;let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false,myAvatar=0;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null,votingTimerId=0,votingSeconds=45;
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null;
 const $=id=>document.getElementById(id);
 const AVATARS=[
 {name:'Nova',bg:'#6d5dfc',fg:'#d9d5ff',shape:'M24 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm-11 28c1-7 5-10 11-10s10 3 11 10'},
@@ -736,7 +736,6 @@ function bindConnection(conn){
          broadcast({type:'players',...playerSnapshot()});
          renderPlayers();
          updateSubmissionStatus();
-         if(roundState?.phase==='voting')finalizeVoting();
        },15000);
      }
    }
@@ -1122,7 +1121,7 @@ function showVoting(){
  html+=voteRow('human:'+name,x,!found);
 });html+='</div></div>'});
  html+='<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+document.querySelectorAll('#answers .answer input').length+'</b></div>';
- $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';revealBotVotes();updateVoteSummary();startVotingCountdown();
+ $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';revealBotVotes();updateVoteSummary();
 }
 function revealBotVotes(){
  const boxes=[...$('answers').querySelectorAll('.bot-vote')];
@@ -1193,7 +1192,6 @@ function allVotingDone(){
 }
 function finalizeVoting(){
  if(!isHost||!allVotingDone())return;
- stopVotingCountdown();
  const result=calculateVotingResult();
  lastVotingResult={gains:result.gains,details:result.details,scores:result.scores};
  netScores=result.scores;
@@ -1270,7 +1268,7 @@ function showResults(gains,details=[],scoresOverride=null){
  $('finishBtn').classList.add('hidden');
 }
 function resetRoundVisuals(){
- clearInterval(timerId);stopVotingCountdown();stopWheelSpin();
+ clearInterval(timerId);stopWheelSpin();
  const wheel=$('wheel');
  if(wheel){wheel.classList.remove('spinning','reveal-pop');wheel.style.transform='';}
  const answers=$('answers');
