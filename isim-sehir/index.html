@@ -303,6 +303,20 @@ peer.on('disconnected',()=>{
 
  }catch(err){console.error(err);toast('Çok oyunculu bağlantı başlatılamadı.')}
 }
+function playerSnapshot(){
+ return {
+  players:Object.keys(onlinePlayers),
+  avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))
+ };
+}
+function applyPlayerSnapshot(players,avatars={}){
+ const list=new Set(Array.isArray(players)?players:[]);
+ Object.keys(onlinePlayers).forEach(n=>{if(!list.has(n))delete onlinePlayers[n]});
+ list.forEach(n=>{
+  const prev=onlinePlayers[n]||{};
+  onlinePlayers[n]={...prev,name:n,avatar:Number(avatars?.[n])||Number(prev.avatar)||0};
+ });
+}
 function bindConnection(conn){
  if(!conn)return;
  if(!connections.includes(conn))connections.push(conn);
@@ -337,7 +351,7 @@ function bindConnection(conn){
    }
    if(data.type==='leave'&&isHost){
      const leaving=data.player;
-     if(leaving&&onlinePlayers[leaving]){delete onlinePlayers[leaving];delete submittedPlayers[leaving];delete votingDone[leaving];renderPlayers();broadcast({type:'players',players:Object.keys(onlinePlayers)});}
+     if(leaving&&onlinePlayers[leaving]){delete onlinePlayers[leaving];delete submittedPlayers[leaving];delete votingDone[leaving];renderPlayers();broadcast({type:'players',...playerSnapshot()});}
      return;
    }
    if(data.type==='join'&&isHost){
@@ -349,6 +363,8 @@ function bindConnection(conn){
        if(assignedName.length>18)assignedName=(baseName.slice(0,Math.max(1,18-(String(suffix).length+1)))+' '+suffix);
      }
      if(disconnectGraceTimers[assignedName]){clearTimeout(disconnectGraceTimers[assignedName]);delete disconnectGraceTimers[assignedName]}
+     const previousConn=onlinePlayers[assignedName]?.conn;
+     if(previousConn&&previousConn!==conn){try{previousConn.close()}catch(e){}}
      onlinePlayers[assignedName]={name:assignedName,host:false,conn,avatar:Number(data.avatar)||0};
      submittedPlayers[assignedName]=submittedPlayers[assignedName]===true;
      votingDone[assignedName]=votingDone[assignedName]===true;
@@ -379,7 +395,7 @@ function bindConnection(conn){
      }
      renderPlayers();
    }else if(data.type==='roomState'){
-     (data.players||[]).forEach(n=>onlinePlayers[n]={name:n,avatar:Number(data.avatars?.[n])||0});
+     applyPlayerSnapshot(data.players,data.avatars);
      if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      applyGameSettings(data);
      renderPlayers();
@@ -390,7 +406,7 @@ function bindConnection(conn){
      const wsel=$('wheelSelect');if(wsel)wsel.classList.add('synced');
      const plsel=$('playerLimit');if(plsel)plsel.classList.add('synced');
    }else if(data.type==='players'){
-     (data.players||[]).forEach(n=>onlinePlayers[n]={name:n,avatar:Number(data.avatars?.[n])||Number(onlinePlayers[n]?.avatar)||0});
+     applyPlayerSnapshot(data.players,data.avatars);
      renderPlayers();
    }else if(data.type==='answers'&&isHost){
      if(Number(data.round)!==round)return;
@@ -407,7 +423,7 @@ function bindConnection(conn){
    }else if(data.type==='answerAck'&&!isHost){
      if(Number(data.round)!==round)return;
      if(data.answers)Object.assign(netAnswers,data.answers);
-     if(data.players)(data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
+     if(data.players)applyPlayerSnapshot(data.players,data.avatars);
      if(data.submitted)Object.assign(submittedPlayers,data.submitted);
      // The ACK itself contains the authoritative submission state. Do not
      // wait for a second packet to transition this client.
@@ -442,7 +458,7 @@ function bindConnection(conn){
    }else if(data.type==='answersReady'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(netAnswers,data.answers||{});
-     (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
+     applyPlayerSnapshot(data.players,data.avatars);
      Object.assign(submittedPlayers,data.submitted||{});
      renderPlayers();
      remoteVotes={};localVotes={};netVotes={};showVoting();
