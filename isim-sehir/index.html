@@ -206,6 +206,7 @@ function enter(name,join){
 }
 function createRoom(){enter($('hostName').value,false)}function joinRoom(){enter($('guestName').value,true)}
 let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={};
+function createPeer(id){return new Peer(id,{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:2})}
 function connectFreshToHost(){
  if(isHost||!roomId)return;
  if(reconnecting)return;
@@ -218,7 +219,7 @@ function connectFreshToHost(){
    if(peer){try{peer.destroy()}catch(e){}}
    peer=null;
    const pid='p'+Math.random().toString(36).slice(2,11);
-   const p=new Peer(pid);
+   const p=createPeer(pid);
    peer=p;
    p.on('open',()=>{
      const conn=p.connect(String(roomId),{reliable:true,serialization:'json'});
@@ -269,7 +270,7 @@ function setupMultiplayer(join){
  if(typeof Peer==='undefined'){toast('Çok oyunculu bağlantı kütüphanesi yüklenemedi.');return}
  try{
   const peerId=join?('p'+Math.random().toString(36).slice(2,10)):roomId;
-  peer=new Peer(peerId);
+  peer=createPeer(peerId);
   peer.on('open',id=>{
    if(join){
     hostPeer=peer.connect(String(roomId),{reliable:true,serialization:'json'});
