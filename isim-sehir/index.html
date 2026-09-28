@@ -71,6 +71,35 @@ body:before,body:after,.main-menu:before,.main-menu:after{content:none!important
 .result-sub{position:relative;color:#71809d;font-size:11px}.result-sub b{color:#dce4ff}
 .final-hero{padding-bottom:16px}.final-trophy{position:relative;font-size:30px;filter:drop-shadow(0 0 12px rgba(245,197,66,.35));margin:3px 0}.final-summary{margin-top:6px}
 @media(max-width:700px){.result-score-row{gap:7px}.score-pill{font-size:8px}.result-sub{font-size:10px}}
+
+/* FINAL POLISH v8 */
+*{-webkit-tap-highlight-color:transparent}
+button,.btn,.cat-chip,.vote-circle,.player{touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #8b7cff;outline-offset:2px}
+.btn{position:relative;overflow:hidden;transition:transform .16s ease,filter .16s ease,box-shadow .2s ease,background .2s ease}
+.btn:before{content:"";position:absolute;top:-60%;left:-30%;width:24%;height:220%;transform:rotate(18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);transition:left .55s ease;pointer-events:none}
+.btn:hover:before{left:115%}
+.btn:active{transform:translateY(1px) scale(.985)!important;filter:brightness(.98)!important}
+.menu-card{will-change:transform;backface-visibility:hidden}
+.menu-card .card-icon{transition:transform .22s ease,box-shadow .22s ease}
+.menu-card:hover .card-icon{transform:translateY(-2px) scale(1.035);box-shadow:inset 0 1px rgba(255,255,255,.1),0 10px 28px rgba(0,0,0,.28),0 0 24px rgba(124,92,255,.12)}
+.quick-item{transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.quick-item:hover{transform:translateY(-2px);border-color:#33436a;background:#0c1728}
+.input{transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.input:focus{background:#070a14}
+.cat-chip{transition:transform .14s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease}
+.cat-chip:active{transform:scale(.97)}
+.cat-chip.active{box-shadow:0 5px 18px rgba(124,92,255,.13)}
+.player{transition:transform .16s ease,border-color .16s ease,background .16s ease}
+.player:hover{transform:translateY(-1px);border-color:#3b4b70}
+.vote-player{transition:background .18s ease,border-color .18s ease}
+.vote-player:has(.vote-circle.selected){background:linear-gradient(90deg,rgba(124,92,255,.055),transparent 70%)}
+.vote-circle{transition:transform .14s ease,background .14s ease,box-shadow .18s ease}
+.vote-circle:active{transform:scale(.9)!important}
+.answer input{transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.answer input:focus{box-shadow:0 0 0 3px rgba(124,92,255,.09)!important}
+@media(max-width:700px){.menu-card:hover,.quick-item:hover,.player:hover{transform:none}.btn:hover{transform:none}.menu-card:hover:after{display:none}.menu-card .card-icon{transition:none}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
 </style><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script><style>
 /* Voting Arena v2 */
 .vote-category{margin:18px 0 20px}
