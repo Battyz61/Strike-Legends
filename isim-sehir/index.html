@@ -753,6 +753,19 @@ function finishRound(){
  }
 }
 let votedCount=0;
+function canonicalAnswerOwner(row){
+ const raw=row?.dataset?.owner||'';
+ if(raw==='me')return me;
+ if(raw.startsWith('human:'))return raw.slice(6);
+ if(raw.startsWith('bot'))return 'Bot '+(Number(raw.slice(3))+1);
+ return raw;
+}
+function localAnswerOwner(canonical){
+ if(canonical===me)return 'me';
+ const botIndex=bots.findIndex(b=>b.name===canonical);
+ if(botIndex>=0)return 'bot'+botIndex;
+ return 'human:'+canonical;
+}
 function vote(btn,correct){
  const row=btn.closest('.vote-player');if(!row)return;
  const wasVoted=!!row.dataset.vote;
@@ -767,9 +780,9 @@ function vote(btn,correct){
  if(!wasVoted)votedCount++;
  updateVoteSummary();
  if(!isHost){
-   sendNet({type:'vote',round,voter:me,answer:row.dataset.answer,cat,correct,owner:row.dataset.owner});
+   sendNet({type:'vote',round,voter:me,answer:row.dataset.answer,cat,correct,owner:canonicalAnswerOwner(row)});
  }else{
-   registerNetworkVote(me,row.dataset.answer,cat,correct,row.dataset.owner);
+   registerNetworkVote(me,row.dataset.answer,cat,correct,canonicalAnswerOwner(row));
  }
 }
 function registerNetworkVote(voter,answer,cat,correct,owner=null){
@@ -777,7 +790,8 @@ function registerNetworkVote(voter,answer,cat,correct,owner=null){
  const value=correct?'yes':'no';
  remoteVotes[key]=value;
  netVotes[key]=value;
- const row=[...$('answers').querySelectorAll('.vote-player')].find(r=>r.dataset.answer===answer&&(!owner||r.dataset.owner===owner)&&r.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')===cat);
+ const localOwner=owner?localAnswerOwner(owner):null;
+ const row=[...$('answers').querySelectorAll('.vote-player')].find(r=>r.dataset.answer===answer&&(!localOwner||r.dataset.owner===localOwner)&&r.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')===cat);
  if(row){
    const square=[...row.querySelectorAll('.remote-vote')].find(x=>x.dataset.voter===voter);
    if(square){square.classList.remove('pending','yes','no');square.classList.add(correct?'yes':'no');square.style.display='inline-flex'}
