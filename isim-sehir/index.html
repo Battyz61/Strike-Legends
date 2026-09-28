@@ -165,7 +165,7 @@ function resetLocalGameState(){
  try{if(hostPeer)hostPeer.close()}catch(e){}
  try{if(peer)peer.destroy()}catch(e){}
  peer=null;hostPeer=null;connections=[];onlinePlayers={};netAnswers={};netVotes={};submittedPlayers={};votingDone={};localVotes={};remoteVotes={};pendingNetMessages=[];lastVotingResult=null;
- round=1;gameFinished=false;myScore=0;netScores={};roundState=null;roundToken=0;votingOpenedRound=0;
+ round=1;gameFinished=false;myScore=0;netScores={};roundState=null;roundToken=0;votingOpenedRound=0;reconnectAttempts=0;reconnecting=false;disconnectGraceTimers={};
 }
 function returnToMainMenu(){
  closeGameMenu();
@@ -274,7 +274,7 @@ function setupMultiplayer(join){
    if(join){
     hostPeer=peer.connect(String(roomId),{reliable:true,serialization:'json'});
     bindConnection(hostPeer);
-    hostPeer.on('open',()=>{const ns=$('netStatus');if(ns)ns.textContent='🟢 Odaya bağlandın — host başlatınca oyun açılacak';sendNet({type:'join',name:me});});
+    hostPeer.on('open',()=>{const ns=$('netStatus');if(ns)ns.textContent='🟢 Odaya bağlandın — host başlatınca oyun açılacak';sendNet({type:'join',name:me,avatar:myAvatar});});
     hostPeer.on('error',()=>{scheduleHostReconnect()});
    }else{
     onlinePlayers[me]={name:me,host:true};
@@ -285,7 +285,7 @@ function setupMultiplayer(join){
   peer.on('connection',conn=>{
    if(!isHost)return;
    bindConnection(conn);
-   conn.on('open',()=>{const s=currentGameSettings();conn.send({type:'roomState',players:Object.keys(onlinePlayers),roomId,totalRounds,cats,...s});});
+   conn.on('open',()=>{const s=currentGameSettings();conn.send({type:'roomState',players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0])),roomId,totalRounds,cats,...s});});
   });
   peer.on('error',err=>{
  console.warn('PeerJS:',err);
@@ -316,7 +316,7 @@ function bindConnection(conn){
    if(data.type==='returnMenu'){
      if(isHost){
        const leaving=data.player;
-       if(leaving&&onlinePlayers[leaving]){delete onlinePlayers[leaving];delete submittedPlayers[leaving];delete votingDone[leaving];renderPlayers();broadcast({type:'players',players:Object.keys(onlinePlayers)});}
+       if(leaving&&onlinePlayers[leaving]){delete onlinePlayers[leaving];delete submittedPlayers[leaving];delete votingDone[leaving];renderPlayers();broadcast({type:'players',players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))});}
      }else{
        resetLocalGameState();isHost=false;roomId='';me='';$('game').classList.add('hidden');$('room').style.display='none';$('lobby').classList.remove('hidden');$('categoryPanel').classList.remove('hidden');toast('🏠 Host ana menüye döndü.');
      }
@@ -369,7 +369,7 @@ function bindConnection(conn){
      const wsel=$('wheelSelect');if(wsel)wsel.classList.add('synced');
      const plsel=$('playerLimit');if(plsel)plsel.classList.add('synced');
    }else if(data.type==='players'){
-     (data.players||[]).forEach(n=>onlinePlayers[n]={name:n});
+     (data.players||[]).forEach(n=>onlinePlayers[n]={name:n,avatar:Number(data.avatars?.[n])||Number(onlinePlayers[n]?.avatar)||0});
      renderPlayers();
    }else if(data.type==='answers'&&isHost){
      if(Number(data.round)!==round)return;
