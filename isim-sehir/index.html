@@ -232,6 +232,32 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
  .answer label{padding:9px 11px 1px!important}
  .answer input{padding:7px 11px 11px!important;font-size:16px!important}
 }
+</style><style>
+/* === VOTING ARENA v6 === */
+.vote-title{font-size:24px!important;letter-spacing:-.7px;margin-bottom:3px!important}
+.vote-help{font-size:12px!important;color:#7487a3!important;margin-bottom:14px!important}
+.vote-category{margin:14px 0 18px!important}
+.vote-category-title{display:flex;align-items:center;gap:8px;font-size:12px!important;text-transform:uppercase;letter-spacing:.8px;color:#9daed0!important;margin:0 0 7px!important}
+.vote-category-title:before{content:"";width:4px;height:16px;border-radius:4px;background:linear-gradient(#7c5cff,#22d3ee);box-shadow:0 0 10px rgba(124,92,255,.4)}
+.vote-card{border-radius:16px!important;border-color:#242d45!important;box-shadow:0 12px 30px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.025)!important}
+.vote-player{min-height:72px!important;padding:10px 12px!important;grid-template-columns:40px 1fr auto!important;transition:background .16s,border-color .16s}
+.vote-player:hover{background:rgba(124,92,255,.035)}
+.vote-name{font-size:10px!important;text-transform:uppercase;letter-spacing:.45px;color:#7184a2!important}
+.vote-value{font-size:18px!important;font-weight:850!important;line-height:1.2}
+.vote-note{font-size:10px!important}
+.vote-actions{gap:7px!important}
+.vote-circle{width:40px!important;height:40px!important;font-size:18px!important;border:1px solid #33435e!important}
+.vote-circle.yes{background:#102d24!important;color:#64e9aa}
+.vote-circle.no{background:#2d1620!important;color:#ff7f99}
+.vote-circle.yes:hover,.vote-circle.yes.selected{background:#1d8f58!important;color:#fff}
+.vote-circle.no:hover,.vote-circle.no.selected{background:#c83e52!important;color:#fff}
+.own-answer-label{font-size:10px!important;padding:7px 9px!important}
+.vote-voters{margin-top:5px!important;min-height:12px!important}
+.player-vote{width:11px!important;height:11px!important;min-width:11px!important;border-radius:3px!important}
+.vote-summary{position:sticky;bottom:10px;z-index:10;padding:11px 13px!important;margin-top:12px!important;background:rgba(8,13,23,.92)!important;backdrop-filter:blur(14px);box-shadow:0 12px 35px rgba(0,0,0,.35)!important}
+.vote-summary b{font-size:16px!important;color:#dbe7ff}
+#finishBtn.votes-complete{box-shadow:0 0 0 1px rgba(52,211,153,.3),0 12px 30px rgba(16,185,129,.16)}
+@media(max-width:700px){.vote-player{grid-template-columns:36px 1fr auto!important;padding:9px 9px!important;min-height:66px!important}.vote-value{font-size:16px!important}.vote-circle{width:38px!important;height:38px!important}.vote-actions{gap:5px!important}.vote-summary{bottom:7px}}
 </style></head>
 <body><main class="wrap">
 <section class="hero main-menu"><span class="hero-logo-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M37 4 13 36h16l-4 24 26-35H35z"/></svg></span><div class="hero-badge"><span class="badge-mark">+</span> ARKADAŞLARLA OYNA <i></i> TÜRKÇE</div><h1>İsim Şehir</h1><p class="hero-sub">Harfini seç, cevaplarını doldur, arkadaşlarının cevaplarını değerlendir ve en yüksek puanı topla.</p></section>
@@ -1006,7 +1032,7 @@ function showVoting(){
  bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
  const humanPlayers=Object.keys(onlinePlayers).filter(n=>n!==me&&!bots.some(b=>b.name===n));
  const playerNames=[...new Set([...Object.keys(netAnswers),...humanPlayers])];
- let html='<div class="vote-title">🗳️ Cevapları Değerlendir</div><div class="vote-help">Senin oyun butonlarda. 🤖 Botlar cevapları değerlendirdi; kutuların rengi sonucu gösterir.</div>';
+ let html='<div class="vote-title">Cevapları Değerlendir</div><div class="vote-help">Her cevabı doğru veya yanlış olarak işaretle.</div>';
  cats.forEach(cat=>{html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';const mineCat=answerForCategory(mine,cat)||{cat,val:''};html+=voteRow('me',mineCat,!mineCat.val);bots.forEach((bot,bi)=>{const x=answerForCategory(netAnswers[bot.name]||bot.answers||[],cat);if(x)html+=voteRow('bot'+bi,x,false)});
  playerNames.filter(n=>n!==me&&!bots.some(b=>b.name===n)).forEach(name=>{
  const list=netAnswers[name]||[];
@@ -1015,7 +1041,7 @@ function showVoting(){
  html+=voteRow('human:'+name,x,!found);
 });html+='</div></div>'});
  html+='<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+document.querySelectorAll('#answers .answer input').length+'</b></div>';
- $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='🤖 Botlar oylarını verdi. Cevapları değerlendirip oylarını tamamla.';revealBotVotes();updateVoteSummary();
+ $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';revealBotVotes();updateVoteSummary();
 }
 function revealBotVotes(){
  const boxes=[...$('answers').querySelectorAll('.bot-vote')];
@@ -1040,9 +1066,9 @@ function updateVoteSummary(){
  }
  const status=$('status');
  if(status){
-   if(localDone<localRequired) status.textContent='🗳️ Kendi oyların: '+localDone+'/'+localRequired+' · Cevapları değerlendir.';
-   else if(!votingDone[me]) status.textContent='✅ Tüm oylarını verdin! Şimdi “Oyları Tamamla” butonuna bas.';
-   else status.textContent='✓ Oyların tamamlandı. Sonuçlar bekleniyor...';
+   if(localDone<localRequired) status.textContent='Değerlendirmen: '+localDone+'/'+localRequired;
+   else if(!votingDone[me]) status.textContent='Tüm cevapları değerlendirdin.';
+   else status.textContent='Oyların tamamlandı. Sonuçlar bekleniyor...';
  }
 }
 function allHumanVotesPresent(){
