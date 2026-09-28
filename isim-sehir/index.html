@@ -60,6 +60,17 @@ body:before,body:after,.main-menu:before,.main-menu:after{content:none!important
 .main-menu:after{content:"";}
 @keyframes heroScan{0%,100%{transform:translateY(5px);opacity:.55}50%{transform:translateY(-3px);opacity:.9}}
 @media(prefers-reduced-motion:reduce){.main-menu:after{animation:none}}
+
+/* RESULTS ARENA v7 */
+.result-hero{position:relative;overflow:hidden}
+.result-hero:before{content:"";position:absolute;left:50%;top:0;width:220px;height:100px;transform:translateX(-50%);background:radial-gradient(circle,rgba(124,92,255,.14),transparent 68%);pointer-events:none}
+.result-kicker{position:relative;font-size:10px!important;letter-spacing:1.8px!important;color:#8f9bc0!important;font-weight:900;text-transform:uppercase}
+.result-score-row{position:relative;display:flex;align-items:center;justify-content:center;gap:10px}
+.result-score-row .big-score{margin:5px 0 0}
+.score-pill{padding:5px 8px;border:1px solid #343b5d;border-radius:999px;background:#0d1120;color:#8995b6;font-size:9px;font-weight:900;letter-spacing:.7px}
+.result-sub{position:relative;color:#71809d;font-size:11px}.result-sub b{color:#dce4ff}
+.final-hero{padding-bottom:16px}.final-trophy{position:relative;font-size:30px;filter:drop-shadow(0 0 12px rgba(245,197,66,.35));margin:3px 0}.final-summary{margin-top:6px}
+@media(max-width:700px){.result-score-row{gap:7px}.score-pill{font-size:8px}.result-sub{font-size:10px}}
 </style><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script><style>
 /* Voting Arena v2 */
 .vote-category{margin:18px 0 20px}
@@ -1188,7 +1199,7 @@ function showResults(gains,details=[],scoresOverride=null){
    const state=points?'correct':'wrong';
    return '<article class="answer-result '+state+'"><div class="answer-result-top"><div class="answer-cat">'+esc(d.cat)+'</div><div class="answer-points '+state+'">'+(points?'+'+points:'0')+'</div></div><div class="answer-text">'+esc(d.answer||'Cevap yok')+'</div><div class="answer-meta"><span class="vote-stat yes-stat">'+yes+' doğru</span><span class="vote-stat no-stat">'+no+' yanlış</span><span class="vote-rule">'+yes+' oy × 10</span></div></article>';
  }).join('');
- let html='<div class="result-panel"><div class="result-hero"><div>Tur Sonucu</div><div class="big-score">+'+(gains[me]||0)+'</div><div style="color:var(--muted)">Bu tur kazandığın puan</div></div><div class="round-details"><div class="detail-head"><div><div class="detail-kicker">TUR DETAYLARI</div><div class="detail-title">Cevapların</div></div><span class="detail-total">'+myDetails.length+' kategori</span></div><div class="answer-results-grid">'+detailHtml+'</div></div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'1':i===1?'2':i===2?'3':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x[0]))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur <span class="button-arrow">→</span></button></div>';
+ let html='<div class="result-panel"><div class="result-hero"><div class="result-kicker">TUR '+round+' TAMAMLANDI</div><div class="result-score-row"><div class="big-score">+'+(gains[me]||0)+'</div><span class="score-pill">TUR PUANI</span></div><div class="result-sub">Bu tur kazandığın puan · Toplam <b>'+Number(myScore||0)+'</b></div></div><div class="round-details"><div class="detail-head"><div><div class="detail-kicker">TUR DETAYLARI</div><div class="detail-title">Cevapların</div></div><span class="detail-total">'+myDetails.length+' kategori</span></div><div class="answer-results-grid">'+detailHtml+'</div></div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'1':i===1?'2':i===2?'3':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x[0]))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur <span class="button-arrow">→</span></button></div>';
  $('answers').innerHTML=html;
  $('status').textContent=iAmLeader?'🔥 Lider sensin · 2. oyuncuyla fark: '+gap+' puan':'📊 Lider: '+esc(leader.name)+' · Liderle fark: '+Math.abs(Number(leader.score||0)-Number(myScore))+' puan';
  $('enemyScore').textContent=secondOpponent.score||0;
@@ -1223,7 +1234,7 @@ function showFinalResults(announce=true){
  gameFinished=true;roundState=roundState||{};roundState.phase='results';
  if(isHost&&announce)broadcast({type:'gameFinished',round,scores:netScores});
  const all=[...new Set([...Object.keys(onlinePlayers),...bots.map(b=>b.name),me,...Object.keys(netScores)])].map(name=>({name,score:Number(netScores[name]||0)})).sort((a,b)=>b.score-a.score);
- $('answers').innerHTML='<div class="result-panel"><div class="result-hero"><div>🏆 OYUN BİTTİ</div><div class="big-score">'+(netScores[me]||0)+'</div><div style="color:var(--muted)">Toplam puanın</div></div><div class="round-details"><div class="detail-title">🏁 Tüm turlar tamamlandı</div><p style="color:var(--muted);margin:6px 0 0">Oyun sona erdi. Skor tablosu aşağıda.</p></div><div class="leaderboard">'+all.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x.name))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+x.score+'</div></div>').join('')+'</div><div class="end-actions"><button class="btn" onclick="returnToMainMenu()">🏠 Ana Menü</button><button class="btn secondary" onclick="location.reload()">🔄 Yeni Oyun</button></div></div>';
+ $('answers').innerHTML='<div class="result-panel"><div class="result-hero final-hero"><div class="result-kicker">MAÇ TAMAMLANDI</div><div class="final-trophy">🏆</div><div class="big-score">'+(netScores[me]||0)+'</div><div class="result-sub">Toplam puanın</div></div><div class="round-details final-summary"><div class="detail-title">Tüm turlar tamamlandı</div><p style="color:var(--muted);margin:6px 0 0">Final skorları ve oyuncu sıralaması.</p></div><div class="leaderboard">'+all.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x.name))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+x.score+'</div></div>').join('')+'</div><div class="end-actions"><button class="btn" onclick="returnToMainMenu()">🏠 Ana Menü</button><button class="btn secondary" onclick="location.reload()">🔄 Yeni Oyun</button></div></div>';
  $('status').textContent='🏆 Oyun tamamlandı!';$('finishBtn').style.display='none';$('finishBtn').classList.add('hidden');
 }
 document.addEventListener('DOMContentLoaded',()=>{
