@@ -623,7 +623,7 @@ function bindConnection(conn){
        }else if(roundState?.phase==='results'&&lastVotingResult){
          conn.send({type:'votingResult',round,gains:lastVotingResult.gains||{},details:lastVotingResult.details||[],scores:lastVotingResult.scores||netScores});
        }else if(roundState?.phase==='voting'){
-         conn.send({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers});
+         conn.send({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers,votingDone,votes:netVotes,avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))});
        }else if(roundState?.phase==='waiting-players'){
          conn.send({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
        }
@@ -786,7 +786,7 @@ function openVotingForEveryone(){
  votingOpenedRound=round;
  roundState.phase='voting';
  showVoting();
- if(isHost)broadcast({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers});
+ if(isHost)broadcast({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers,votingDone, votes:netVotes, avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))});
 }
 function updateSubmissionStatus(){
  const names=Object.keys(onlinePlayers);
@@ -1123,8 +1123,10 @@ function voteRow(owner,x,empty=false){
  Object.keys(onlinePlayers).filter(n=>n!==answerOwner&&n!==me).forEach(n=>{const val=remoteVotes[n+'|'+owner+'|'+x.cat]||remoteVotes[n+'|'+answerOwner+'|'+x.cat];humanVotes+='<span class="player-vote remote-vote '+(val?'':'pending')+'" data-voter="'+esc(n)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
  return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+avatarSvg(ownerAvatar,true)+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
-function showVoting(){
- votedCount=0;localVotes={};netVotes={};votingDone={};
+function showVoting(sync=null){
+ const syncedVotes=sync?.votes||{};
+ const syncedDone=sync?.votingDone||{};
+ votedCount=0;localVotes={};netVotes=Object.assign({},syncedVotes);votingDone=Object.assign({},syncedDone);remoteVotes=Object.assign({},syncedVotes);
  const mine=netAnswers[me]||[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  if(!netAnswers[me])netAnswers[me]=mine;
  bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
@@ -1139,7 +1141,29 @@ function showVoting(){
  html+=voteRow('human:'+name,x,!found);
 });html+='</div></div>'});
  html+='<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+document.querySelectorAll('#answers .answer input').length+'</b></div>';
- $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';revealBotVotes();updateVoteSummary();
+ $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
+ // Rehydrate votes after a reconnect so a player does not lose their progress.
+ Object.entries(syncedVotes).forEach(([key,val])=>{
+   const parts=key.split('|');if(parts.length<3)return;
+   const voter=parts[0],owner=parts[1],cat=parts.slice(2).join('|');
+   const row=[...$('answers').querySelectorAll('.vote-player')].find(r=>r.dataset.answer===owner&&r.dataset.owner===localAnswerOwner(owner)&&r.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')===cat);
+   if(!row)return;
+   const yes=val==='yes';
+   if(voter===me){
+     row.dataset.vote=val;
+     row.querySelectorAll('.vote-circle').forEach(x=>x.classList.toggle('selected',(x.dataset.voteAction==='yes')===yes));
+     localVotes[owner+'|'+cat]=val;
+     votedCount++;
+   }else{
+     const box=[...row.querySelectorAll('.remote-vote')].find(x=>x.dataset.voter===voter);
+     if(box){box.classList.remove('pending','yes','no');box.classList.add(yes?'yes':'no');box.style.display='inline-flex'}
+   }
+ });
+ revealBotVotes();updateVoteSummary();
+ if(votingDone[me]){
+   $('finishBtn').disabled=true;$('finishBtn').classList.add('votes-complete');$('finishBtn').textContent='✓ Oylarım Tamamlandı';
+   $('status').textContent='Oyların tamamlandı. Sonuçlar bekleniyor...';
+ }
 }
 function revealBotVotes(){
  const boxes=[...$('answers').querySelectorAll('.bot-vote')];
