@@ -207,6 +207,31 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .wheel-burst{padding:8px 14px!important;background:rgba(9,11,22,.92)!important;border-color:rgba(103,232,249,.65)!important;color:#e8fbff!important;box-shadow:0 0 30px rgba(34,211,238,.22)!important;letter-spacing:1.8px!important}
 @media(max-width:700px){.wheel-wrap{height:225px!important}.wheel{width:164px!important;height:164px!important}.wheel-center{width:70px;height:70px;font-size:43px!important}.wheel-wrap:before{width:208px;height:208px}.wheel-wrap:after{width:178px;height:178px}}
 @media(prefers-reduced-motion:reduce){.wheel-wrap:before,.wheel-wrap:after{animation:none!important}}
+</style><style>
+/* === ANSWER ARENA v5 === */
+.answers{display:grid;gap:10px}
+.answer{position:relative;padding:0!important;border:1px solid rgba(52,67,96,.65);border-radius:15px;background:linear-gradient(145deg,rgba(15,22,36,.9),rgba(7,11,19,.95));overflow:hidden;transition:border-color .18s,transform .18s,box-shadow .18s}
+.answer:focus-within{transform:translateY(-1px);border-color:rgba(124,92,255,.72);box-shadow:0 0 0 2px rgba(124,92,255,.1),0 12px 30px rgba(0,0,0,.22)}
+.answer.answer-filled{border-color:rgba(52,211,153,.38);box-shadow:inset 3px 0 #34d399}
+.answer.answer-filled:after{content:"✓";position:absolute;right:11px;top:9px;width:19px;height:19px;display:grid;place-items:center;border-radius:50%;background:#123d31;color:#5af0a2;font-size:11px;font-weight:1000}
+.answer label{padding:10px 12px 2px!important;margin:0!important;color:#8999b3!important;font-size:10px!important;letter-spacing:.8px!important}
+.answer label:before{width:5px!important;height:5px!important}
+.answer input{border:0!important;background:transparent!important;border-radius:0!important;margin:0!important;padding:7px 12px 12px!important;font-size:16px!important;font-weight:700;box-shadow:none!important;transform:none!important}
+.answer input::placeholder{color:#46566f;opacity:1}
+.answer input:focus{background:transparent!important}
+.answer input.valid{color:#eafff5}
+.answers.answers-live .answer{animation:answerIn .28s ease both}
+.answers.answers-live .answer:nth-child(2){animation-delay:.03s}.answers.answers-live .answer:nth-child(3){animation-delay:.06s}.answers.answers-live .answer:nth-child(4){animation-delay:.09s}.answers.answers-live .answer:nth-child(5){animation-delay:.12s}.answers.answers-live .answer:nth-child(6){animation-delay:.15s}
+@keyframes answerIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+#finishBtn{transition:transform .18s,box-shadow .18s,filter .18s,background .18s}
+#finishBtn.finish-pulse{animation:finishGlow 1.8s ease-in-out infinite}
+@keyframes finishGlow{50%{box-shadow:0 0 0 4px rgba(79,140,255,.07),0 12px 35px rgba(79,140,255,.2)}}
+@media(max-width:700px){
+ .answers{gap:8px}
+ .answer{border-radius:13px}
+ .answer label{padding:9px 11px 1px!important}
+ .answer input{padding:7px 11px 11px!important;font-size:16px!important}
+}
 </style></head>
 <body><main class="wrap">
 <section class="hero main-menu"><span class="hero-logo-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M37 4 13 36h16l-4 24 26-35H35z"/></svg></span><div class="hero-badge"><span class="badge-mark">+</span> ARKADAŞLARLA OYNA <i></i> TÜRKÇE</div><h1>İsim Şehir</h1><p class="hero-sub">Harfini seç, cevaplarını doldur, arkadaşlarının cevaplarını değerlendir ve en yüksek puanı topla.</p></section>
@@ -782,7 +807,7 @@ function resumeActiveRound(data){
  $('wheel').classList.remove('spinning');
  $('wheelLabel').textContent='Seçilen harf';
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
- $('answers').classList.remove('hidden-answers');
+ $('answers').classList.remove('hidden-answers');bindAnswerArena();
  $('timer').classList.remove('danger');
  $('timer').textContent=seconds+' sn';updateTimerHud();
  $('status').textContent='Cevaplarını '+letterNow+' harfiyle doldur.';
@@ -834,8 +859,23 @@ function startWheelSpin(token){
  }
  wheelSpinFrame=requestAnimationFrame(frame);
 }
-function revealRound(token){
- if(token!==roundToken)return;stopWheelSpin();$('wheel').classList.remove('reveal-pop');void $('wheel').offsetWidth;$('wheel').classList.add('reveal-pop');$('letter').textContent=letterNow;$('wheelLabel').textContent='Seçilen harf';$('answers').classList.remove('hidden-answers');playUiSound('success');$('status').textContent='Cevaplarını '+letterNow+' harfiyle doldur.';
+function bindAnswerArena(){
+ const box=$('answers');if(!box)return;
+ box.classList.add('answers-live');
+ box.querySelectorAll('input').forEach(input=>{
+  input.addEventListener('input',()=>{
+   const card=input.closest('.answer');if(card)card.classList.toggle('answer-filled',!!input.value.trim());
+  });
+  input.addEventListener('keydown',e=>{
+   if(e.key==='Enter'){
+    e.preventDefault();
+    const fields=[...box.querySelectorAll('input')],idx=fields.indexOf(input),next=fields[idx+1];
+    if(next)next.focus();else if(!$('finishBtn').disabled)$('finishBtn').focus();
+   }
+  });
+ });
+}function revealRound(token){
+ if(token!==roundToken)return;stopWheelSpin();$('wheel').classList.remove('reveal-pop');void $('wheel').offsetWidth;$('wheel').classList.add('reveal-pop');$('letter').textContent=letterNow;$('wheelLabel').textContent='Seçilen harf';$('answers').classList.remove('hidden-answers');bindAnswerArena();playUiSound('success');$('status').textContent='Cevaplarını '+letterNow+' harfiyle doldur.';
  const burst=$('wheelBurst');if(burst){burst.textContent='HARF: '+letterNow;burst.classList.remove('show');void burst.offsetWidth;burst.classList.add('show');}
  seconds=selectedDuration();$('timer').textContent=seconds+' sn';$('timer').classList.remove('critical');
  // Always make the submission button visible again after wheel/reconnect.
