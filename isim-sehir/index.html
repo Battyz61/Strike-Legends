@@ -695,8 +695,13 @@ function bindConnection(conn){
      Object.assign(netAnswers,data.answers||{});
      applyPlayerSnapshot(data.players,data.avatars);
      Object.assign(submittedPlayers,data.submitted||{});
+     // Reconnect packets carry the authoritative voting state. Preserve it
+     // instead of rebuilding the screen with empty votes.
+     showVoting({
+       votes:data.votes||{},
+       votingDone:data.votingDone||{}
+     });
      renderPlayers();
-     remoteVotes={};localVotes={};netVotes={};showVoting();
    }else if(data.type==='submissionStatus'&&!isHost){
      if(Number(data.round)!==round)return;
      Object.assign(submittedPlayers,data.submitted||{});
