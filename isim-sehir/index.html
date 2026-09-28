@@ -380,7 +380,7 @@ function resetLocalGameState(){
  if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}
  try{if(hostPeer)hostPeer.close()}catch(e){}
  try{if(peer)peer.destroy()}catch(e){}
- peer=null;hostPeer=null;connections=[];onlinePlayers={};netAnswers={};netVotes={};submittedPlayers={};votingDone={};localVotes={};remoteVotes={};pendingNetMessages=[];lastVotingResult=null;
+ peer=null;hostPeer=null;connections=[];onlinePlayers={};roomRejected=false;netAnswers={};netVotes={};submittedPlayers={};votingDone={};localVotes={};remoteVotes={};pendingNetMessages=[];lastVotingResult=null;
  round=1;gameFinished=false;myScore=0;netScores={};roundState=null;roundToken=0;votingOpenedRound=0;reconnectAttempts=0;reconnecting=false;disconnectGraceTimers={};
 }
 function returnToMainMenu(){
@@ -411,6 +411,7 @@ function restoreRememberedName(){
  }catch(e){}
 }
 function enter(name,join){
+ roomRejected=false;
  if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
  const requestedCode=join?$('joinCode').value.trim().replace(/\s/g,''):'';
  if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');$('joinCode')?.focus();return}
@@ -423,10 +424,10 @@ function enter(name,join){
  setupMultiplayer(join);
 }
 function createRoom(){enter($('hostName').value,false)}function joinRoom(){enter($('guestName').value,true)}
-let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={};
+let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={},roomRejected=false;
 function createPeer(id){return new Peer(id,{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:2})}
 function connectFreshToHost(){
- if(isHost||!roomId)return;
+ if(isHost||!roomId||roomRejected)return;
  if(reconnecting)return;
  if(hostPeer&&hostPeer.open)return;
  reconnecting=true;
@@ -468,7 +469,7 @@ function connectFreshToHost(){
  }
 }
 function scheduleHostReconnect(){
- if(isHost||reconnectTimer)return;
+ if(isHost||reconnectTimer||roomRejected)return;
  const delay=Math.min(5000,700+reconnectAttempts*500);
  reconnectTimer=setTimeout(()=>{
    reconnectTimer=null;
@@ -542,6 +543,7 @@ function bindConnection(conn){
  conn.on('data',data=>{
    if(!data)return;
    if(data.type==='roomFull'&&!isHost){
+     roomRejected=true;
      const limit=Number(data.limit||4);
      const ns=$('netStatus');if(ns)ns.textContent='🔴 Oda dolu — maksimum '+limit+' oyuncu';
      toast('Oda dolu. Maksimum '+limit+' oyuncu.');
