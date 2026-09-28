@@ -376,7 +376,7 @@ function renderAvatarPickers(){['hostAvatarGrid','guestAvatarGrid'].forEach(id=>
 function openGameMenu(){const m=$('gameMenu');if(m)m.classList.add('show')}
 function closeGameMenu(){const m=$('gameMenu');if(m)m.classList.remove('show')}
 function resetLocalGameState(){
- clearInterval(timerId);
+ clearInterval(timerId);clearHostSession();
  if(reconnectTimer){clearTimeout(reconnectTimer);reconnectTimer=null}
  try{if(hostPeer)hostPeer.close()}catch(e){}
  try{if(peer)peer.destroy()}catch(e){}
@@ -412,6 +412,7 @@ function restoreRememberedName(){
 }
 function enter(name,join){
  roomRejected=false;
+ if(!join)clearHostSession();
  if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
  const requestedCode=join?$('joinCode').value.trim().replace(/\s/g,''):'';
  if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');$('joinCode')?.focus();return}
@@ -423,8 +424,54 @@ function enter(name,join){
  renderRoomSettingsSummary();
  setupMultiplayer(join);
 }
-function createRoom(){enter($('hostName').value,false)}function joinRoom(){enter($('guestName').value,true)}
-let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={},roomRejected=false;
+function createRoom(){try{sessionStorage.removeItem(HOST_SESSION_KEY)}catch(e){}enter($('hostName').value,false)}function joinRoom(){try{sessionStorage.removeItem(HOST_SESSION_KEY)}catch(e){}enter($('guestName').value,true)}
+const HOST_SESSION_KEY='isimSehirHostSessionV2';
+let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={},roomRejected=false,hostRestoreRetryTimer=null;
+function persistHostSession(){
+ if(!isHost||!roomId)return;
+ try{
+  const players={};Object.entries(onlinePlayers||{}).forEach(([name,p])=>{players[name]={name,host:!!p?.host,avatar:Number(p?.avatar)||0}});
+  sessionStorage.setItem(HOST_SESSION_KEY,JSON.stringify({
+   savedAt:Date.now(),roomId,me,letterNow,cats:[...cats],round,totalRounds,seconds,gameFinished,myScore,myAvatar,
+   bots:bots.map((b,i)=>({name:b.name||('Bot '+(i+1)),score:Number(b.score)||0,answers:Array.isArray(b.answers)?b.answers:[],avatar:Number(b.avatar)||0})),
+   onlinePlayers:players,netAnswers,netVotes,submittedPlayers,votingDone,netScores,lastVotingResult,
+   roundState:roundState?{phase:roundState.phase}:null,votingOpenedRound,settings:currentGameSettings()
+  }));
+ }catch(e){}
+}
+function clearHostSession(){try{sessionStorage.removeItem(HOST_SESSION_KEY)}catch(e){}}
+function restoreHostSession(){
+ let data=null;try{data=JSON.parse(sessionStorage.getItem(HOST_SESSION_KEY)||'null')}catch(e){}
+ if(!data||!data.roomId||!data.me)return false;
+ if(Date.now()-Number(data.savedAt||0)>30*60*1000){clearHostSession();return false}
+ isHost=true;roomId=String(data.roomId);me=String(data.me);letterNow=data.letterNow||'';round=Number(data.round)||1;totalRounds=Number(data.totalRounds)||5;
+ seconds=Math.max(1,Number(data.seconds)||120);gameFinished=!!data.gameFinished;myScore=Number(data.myScore)||0;myAvatar=Number(data.myAvatar)||0;
+ cats=Array.isArray(data.cats)&&data.cats.length?[...data.cats]:cats;
+ bots=Array.isArray(data.bots)?data.bots:[];onlinePlayers={};Object.entries(data.onlinePlayers||{}).forEach(([n,p])=>onlinePlayers[n]={name:n,host:!!p?.host,avatar:Number(p?.avatar)||0});
+ onlinePlayers[me]={name:me,host:true,avatar:myAvatar};netAnswers=data.netAnswers||{};netVotes=data.netVotes||{};submittedPlayers=data.submittedPlayers||{};votingDone=data.votingDone||{};netScores=data.netScores||{};lastVotingResult=data.lastVotingResult||null;votingOpenedRound=Number(data.votingOpenedRound)||0;roundState=data.roundState?{token:++roundToken,phase:data.roundState.phase}:null;
+ applyGameSettings(data.settings||{});
+ $('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;renderPlayers();renderRoomSettingsSummary();setupMultiplayer(false);
+ setTimeout(()=>restoreHostPhase(data),180);
+ setTimeout(()=>{if(!isHost)return;let changed=false;Object.keys(onlinePlayers).forEach(n=>{if(n!==me&&!onlinePlayers[n]?.conn){delete onlinePlayers[n];delete submittedPlayers[n];delete votingDone[n];changed=true}});if(changed){renderPlayers();broadcast({type:'players',...playerSnapshot()})}},45000);
+ return true;
+}
+function restoreHostPhase(data){
+ if(!isHost)return;$('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');$('myScore').textContent=myScore;
+ if(gameFinished){showFinalResults(false);return}
+ const phase=roundState?.phase||'lobby';
+ if(phase==='round'){
+  const elapsed=Math.max(0,Math.floor((Date.now()-Number(data.savedAt||Date.now()))/1000));
+  resumeActiveRound({duration:Number(data.settings?.duration)||selectedDuration(),seconds:Math.max(1,Number(data.seconds||1)-elapsed)});
+ }else if(phase==='voting'){
+  roundState={token:++roundToken,phase:'voting'};showVoting({votes:netVotes,votingDone});
+ }else if(phase==='waiting-players'){
+  roundState={token:++roundToken,phase:'waiting-players'};const mine=netAnswers[me]||[];
+  $('roundNo').textContent=round+'. Tur';$('letter').textContent=letterNow;$('wheelLabel').textContent='Seçilen harf';$('wheel').classList.remove('spinning');
+  $('answers').innerHTML=cats.map(c=>{const x=answerForCategory(mine,c)||{val:''};return '<div class="answer answer-filled"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" value="'+esc(x.val||'')+'" disabled></div>'}).join('');
+  $('answers').classList.remove('hidden-answers');$('status').textContent='📨 Cevaplar bekleniyor...';$('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').disabled=true;$('finishBtn').textContent='✓ Cevapların kaydedildi';$('finishBtn').classList.add('waiting');
+ }else if(phase==='results'&&lastVotingResult){showResults(lastVotingResult.gains||{},lastVotingResult.details||[],lastVotingResult.scores||netScores)}
+ else{$('game').classList.add('hidden');$('startBtn').classList.remove('hidden');$('botBtn').classList.remove('hidden');$('status').textContent='🟢 Oda geri yüklendi — oyuncular bekleniyor.'}
+}
 function createPeer(id){return new Peer(id,{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:2})}
 function connectFreshToHost(){
  if(isHost||!roomId||roomRejected)return;
@@ -479,6 +526,7 @@ function scheduleHostReconnect(){
 function handleVisibilityConnection(){
  if(document.visibilityState==='visible'){
    if(isHost){
+     if(roomId)persistHostSession();
      if(peer&&peer.disconnected)try{peer.reconnect()}catch(e){}
    }else if(!hostPeer||!hostPeer.open){
      connectFreshToHost();
@@ -509,6 +557,10 @@ function setupMultiplayer(join){
   });
   peer.on('error',err=>{
  console.warn('PeerJS:',err);
+ if(isHost&&err&&err.type==='unavailable-id'&&roomId){
+  if(!hostRestoreRetryTimer){hostRestoreRetryTimer=setTimeout(()=>{hostRestoreRetryTimer=null;if(!isHost||!roomId)return;try{if(peer)peer.destroy()}catch(e){}peer=null;connections=[];setupMultiplayer(false)},1800)}
+  const ns=$('netStatus');if(ns)ns.textContent='🟠 Oda yeniden açılıyor...';return;
+ }
  const ns=$('netStatus');
  const msg=err&&err.type==='peer-unavailable'?'🔴 Bu oda bulunamadı veya host bağlantıyı kapattı':err&&err.type==='unavailable-id'?'🔴 Bu oda kodu zaten kullanımda':'🔴 Bağlantı kurulamadı';
  if(ns)ns.textContent=msg;
@@ -1352,6 +1404,8 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')});
  document.addEventListener('visibilitychange',handleVisibilityConnection);
  window.addEventListener('pageshow',handleVisibilityConnection);
+ window.addEventListener('beforeunload',()=>{if(isHost&&roomId)persistHostSession()});
+ restoreHostSession();
  setInterval(()=>{
    if(document.visibilityState!=='visible')return;
    if(isHost){
