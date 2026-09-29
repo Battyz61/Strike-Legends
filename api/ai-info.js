@@ -31,6 +31,7 @@ export default async function handler(req, res) {
       'Benzer şekilde "Ülke" kategorisinde şehir, il, ilçe, mahalle veya bölge; "Hayvan" kategorisinde hayvan ürünü; "Bitki" kategorisinde yalnızca meyve/ürün adı gibi ilişkili ama farklı varlıklar doğrudan kabul edilmemeli. ' +
       'Kategori ile cevap arasındaki ilişki net değilse "Yüksek" güven verme. ' +
       'Açık ve bariz yazım hatalarını da değerlendir: Cevap, kategoriye uygun bilinen bir kelimenin küçük bir yazım hatalı biçimiyse ve ne kastedildiği tartışmasızsa cevabı sırf yazım hatası yüzünden reddetme. Örneğin "Eşşek" açıkça "eşek" kelimesinin fazladan ş harfi içeren yazımıdır; "Hayvan" kategorisinde uygun kabul edilmelidir. Yazım hatası anlamı belirsizleştiriyorsa "Tartışmalı" kullan. ' +
+      'Bazı cevaplar birden fazla varlık türünü ifade edebilir. Böyle durumlarda tek bir yorumla kesin "Uygun görünüyor" deme. Özellikle "Bitki" kategorisinde cevap yaygın olarak meyve/ürün adı olarak da kullanılıyorsa ve aynı kelime bitkinin kendisini de ifade edebiliyorsa "Tartışmalı" seç. Örneğin "Erik" hem erik ağacını hem meyvesini ifade edebildiği için "Bitki" kategorisinde tartışmalı kabul edilmelidir. "Elma", "armut", "kiraz" gibi benzer çift anlamlı örneklerde de aynı yaklaşımı kullan. Oyuncuların nihai kararı verebilmesi için gerekçede iki makul yorumu kısaca belirt. ' +
       'Başlangıç harfi verilmişse cevabın o harfle başlamasını da kontrol et. ' +
       'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
       'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
@@ -111,6 +112,14 @@ export default async function handler(req, res) {
     // Model yanıtını, özellikle yerleşim türü karışıklıklarına karşı küçük bir deterministik güvenlik katmanından geçir.
     // Böylece "Şehir" kategorisinde mahalle/ilçe/köy gibi alt yerleşimler yanlışlıkla kabul edilmez.
     const categoryKey = cleanCategory.toLocaleLowerCase('tr-TR');
+    const answerKey = cleanAnswer.toLocaleLowerCase('tr-TR');
+    // Bazı Türkçe kategori cevapları iki farklı varlık türüne doğal olarak işaret eder.
+    // Özellikle meyve adı aynı zamanda ağacın/bitkinin adıysa oyuncuların tartışabilmesi için kesin kabul verme.
+    if (categoryKey === 'bitki' && /^(erik|elma|armut|kiraz|şeftali|kayısı|portakal|limon|mandalina|nar|zeytin|incir|üzüm|dut|vişne|ayva)$/.test(answerKey)) {
+      parsed.uygunluk = 'Tartışmalı';
+      parsed.guven = 'Orta';
+      parsed.gerekce = 'Cevap hem bitkinin/ağacın adını hem de meyvesini ifade edebilir; hangi anlamın kastedildiği tartışılabilir.';
+    }
     const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
     if (categoryKey === 'şehir' && /(?:mahalle\\w*|semt\\w*|köy\\w*|ilçe\\w*|belde\\w*|kasaba\\w*|mezra\\w*)/i.test(evidence)) {
       parsed.uygunluk = 'Uygun görünmüyor';
