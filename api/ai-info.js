@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       }
 
       response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=' +
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
         encodeURIComponent(process.env.GEMINI_API_KEY),
         {
           method: 'POST',
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
 
       if (response.ok) break;
 
-      // Gemini documents 5xx/503 as transient errors; retry them with backoff.
+      // Retry transient 5xx/503 responses; quota/rate-limit errors are not retried.
       if (response.status < 500 || attempt === retryDelays.length - 1) break;
     }
 
