@@ -100,7 +100,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .answer input:focus{box-shadow:0 0 0 3px rgba(124,92,255,.09)!important}
 @media(max-width:700px){.menu-card:hover,.quick-item:hover,.player:hover{transform:none}.btn:hover{transform:none}.menu-card:hover:after{display:none}.menu-card .card-icon{transition:none}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
-.ai-info{margin-top:8px;padding:9px 10px;border:1px solid rgba(168,85,247,.2);border-radius:11px;background:linear-gradient(135deg,rgba(124,92,255,.08),rgba(34,211,238,.035))}
+.ai-verdict{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:9px 0 6px;padding:9px 10px;border-radius:10px;background:#101b2d;border:1px solid #30415d;font-size:12px}.ai-verdict.fit{border-color:#216b4c;background:#0c211a}.ai-verdict.not-fit{border-color:#743343;background:#241018}.ai-verdict.maybe{border-color:#715b25;background:#211c0d}.ai-verdict b{font-size:13px}.ai-verdict span{color:#9aa8bd;font-size:10px}.ai-reason{color:#aab6c8;font-size:11px;line-height:1.45;margin-bottom:8px}.ai-fact-head{color:#c9bfff;font-weight:900;font-size:12px;margin:8px 0 4px}.ai-info{margin-top:8px;padding:9px 10px;border:1px solid rgba(168,85,247,.2);border-radius:11px;background:linear-gradient(135deg,rgba(124,92,255,.08),rgba(34,211,238,.035))}
 .ai-info-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(168,85,247,.28);background:#17132a;color:#cfc7ff;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:900;cursor:pointer;transition:.16s}
 .ai-info-btn:hover{background:#211b3b;border-color:rgba(168,85,247,.5);transform:translateY(-1px)}
 .ai-info-btn:active{transform:scale(.97)}
@@ -1264,7 +1264,7 @@ function aiLocalInfo(cat,answer){
   'tatlı':a+' bir tatlıdır. Kökeni, temel malzemeleri ve hazırlanış biçimi hakkında kısa bilgi verilebilir.',
   'renk':a+' bir renk adıdır. Kullanıldığı alanlar ve renk teorisindeki karşılığı hakkında kısa bilgi verilebilir.'
  };
- return templates[k]||a+' cevabı, '+cat+' kategorisinde geçerli bir örnektir. Bu alanın detayları ve cevabın ilginç özellikleri hakkında kısa bir bilgi verilebilir.';
+ return templates[k]||a+' hakkında kısa bilgi verilebilir. Cevabın anlamı, kökeni veya kullanım alanları gibi temel bilgiler burada gösterilebilir.';
 }
 async function toggleAiInfo(btn){
  const box=btn.closest('.ai-info');if(!box)return;
@@ -1279,7 +1279,14 @@ async function toggleAiInfo(btn){
  try{
    const cached=localStorage.getItem(cacheKey);
    if(cached){
-     if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>'+esc(cached)+'</div>';
+     let cachedData=null;
+     try{cachedData=JSON.parse(cached)}catch(e){}
+     const cachedText=cachedData&&cachedData.text?cachedData.text:cached;
+     const cachedAnalysis=cachedData&&cachedData.analysis?cachedData.analysis:null;
+     const fit=cachedAnalysis?.uygunluk||'';
+     const confidence=cachedAnalysis?.guven||'';
+     const reason=cachedAnalysis?.gerekce||'';
+     if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ AI Analizi</span><span class="ai-info-tag">YARDIMCI HAKEM</span></div>'+(fit?'<div class="ai-verdict '+(fit==='Uygun görünüyor'?'fit':fit==='Uygun görünmüyor'?'not-fit':'maybe')+'"><b>'+esc(fit)+'</b><span>Güven: '+esc(confidence)+'</span></div>':'')+(reason?'<div class="ai-reason">'+esc(reason)+'</div>':'')+'<div class="ai-fact-head">✨ Cevap hakkında</div><div>'+esc(cachedText)+'</div>';
      box.dataset.loaded='1';btn.textContent='✦ Bilgiyi Gizle';return;
    }
  }catch(e){}
@@ -1287,7 +1294,7 @@ async function toggleAiInfo(btn){
  btn.disabled=true;btn.textContent='✦ Bilgi hazırlanıyor…';
  if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>Yapay zekâ cevabı inceliyor…</div>';
  try{
-   const res=await fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category,answer})});
+   const res=await fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category,answer,letter:letterNow})});
    const data=await res.json().catch(()=>({}));
    if(!res.ok){
      const status=data.upstreamStatus?' · Gemini '+data.upstreamStatus:'';
@@ -1295,8 +1302,12 @@ async function toggleAiInfo(btn){
    }
    const text=String(data.text||'').trim();
    if(!text)throw new Error('AI_EMPTY_RESPONSE');
-   if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>'+esc(text)+'</div>';
-   try{localStorage.setItem(cacheKey,text)}catch(e){}
+   const analysis=data.analysis||{};
+   const fit=String(analysis.uygunluk||'Tartışmalı');
+   const confidence=String(analysis.guven||'Düşük');
+   const reason=String(analysis.gerekce||'').trim();
+   if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ AI Analizi</span><span class="ai-info-tag">YARDIMCI HAKEM</span></div><div class="ai-verdict '+(fit==='Uygun görünüyor'?'fit':fit==='Uygun görünmüyor'?'not-fit':'maybe')+'"><b>'+esc(fit)+'</b><span>Güven: '+esc(confidence)+'</span></div>'+(reason?'<div class="ai-reason">'+esc(reason)+'</div>':'')+'<div class="ai-fact-head">✨ Cevap hakkında</div><div>'+esc(text)+'</div>';
+   try{localStorage.setItem(cacheKey,JSON.stringify({text,analysis:{uygunluk:fit,guven:confidence,gerekce:reason}}))}catch(e){}
    box.dataset.loaded='1';btn.textContent='✦ Bilgiyi Gizle';
  }catch(err){
    const fallback=aiLocalInfo(category,answer);
