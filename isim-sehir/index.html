@@ -1082,7 +1082,21 @@ function resumeActiveRound(data){
 function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
  clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};playUiSound('start');votingDone={};localVotes={};remoteVotes={};
- letterNow=forcedLetter||letters[Math.floor(Math.random()*letters.length)];$('letter').textContent='?';$('roundNo').textContent=round+'. Tur';$('roundNo').classList.remove('round-start');void $('roundNo').offsetWidth;$('roundNo').classList.add('round-start');
+ letterNow=forcedLetter||letters[Math.floor(Math.random()*letters.length)];
+ // Each round gets a completely fresh bot answer set. This prevents the
+ // previous round's answers from surviving when the letter changes.
+ bots.forEach(b=>{
+   b.answers=[];
+   b.votes={};
+   delete netAnswers[b.name];
+ });
+ if(isHost){
+   bots.forEach(b=>{
+     b.answers=botAnswers();
+     netAnswers[b.name]=b.answers;
+   });
+ }
+ $('letter').textContent='?';$('roundNo').textContent=round+'. Tur';$('roundNo').classList.remove('round-start');void $('roundNo').offsetWidth;$('roundNo').classList.add('round-start');
  if(isHost&&announce){const s=currentGameSettings();broadcast({type:'roundStart',round,letter:letterNow,duration:s.duration,wheel:s.wheel,totalRounds:s.totalRounds,cats:[...cats]});}
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
  $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger','critical');$('status').textContent='Harf çarkı dönüyor...';
