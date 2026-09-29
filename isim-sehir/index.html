@@ -398,7 +398,7 @@ const AVATARS=[
 {name:'Astra',bg:'#3b82f6',fg:'#d9e9ff',shape:'M24 7l3 8 8 3-8 3-3 8-3-8-8-3 8-3z'}];
 function avatarSvg(id,small=false){const a=AVATARS[(Number(id)||0)%AVATARS.length];return '<svg class="avatar-svg'+(small?' small':'')+'" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="'+a.bg+'"/><path d="'+a.shape+'" fill="none" stroke="'+a.fg+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
 function avatarIdFor(name){return name===me?Number(myAvatar)||0:Number(onlinePlayers[name]?.avatar||0)}
-function rememberAvatar(id){localStorage.setItem('isimSehirAvatar',String(id))}
+function rememberAvatar(id){try{localStorage.setItem('isimSehirAvatar',String(id))}catch(e){}}
 function restoreAvatar(){const n=Number(localStorage.getItem('isimSehirAvatar'));if(Number.isFinite(n))myAvatar=((n%AVATARS.length)+AVATARS.length)%AVATARS.length}
 function renderAvatarPickers(){['hostAvatarGrid','guestAvatarGrid'].forEach(id=>{const el=$(id);if(!el)return;el.innerHTML=AVATARS.map((a,i)=>'<button type="button" class="avatar-choice '+(i===myAvatar?'selected':'')+'" data-avatar="'+i+'" aria-label="'+a.name+'">'+avatarSvg(i)+'</button>').join('');el.querySelectorAll('[data-avatar]').forEach(b=>b.onclick=()=>{myAvatar=Number(b.dataset.avatar);rememberAvatar(myAvatar);renderAvatarPickers()});});}
 function openGameMenu(){const m=$('gameMenu');if(m)m.classList.add('show')}
@@ -481,21 +481,57 @@ function restoreRememberedName(){
 }
 function enter(name,join){
  roomRejected=false;
- if(!join)clearHostSession();
- if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
- const requestedCode=join?$('joinCode').value.trim().replace(/\s/g,''):'';
- if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');$('joinCode')?.focus();return}
- me=(name||'Oyuncu').trim()||'Oyuncu';rememberName(me);rememberAvatar(myAvatar);
- if(join){try{sessionStorage.removeItem(GUEST_SESSION_KEY)}catch(e){}}
- roomId=join?requestedCode:makeCode();
- isHost=!join;
- $('lobby').classList.add('hidden');$('room').style.display='block';$('roomCode').textContent=roomId;
- renderCategories();
- renderPlayers();
- renderRoomSettingsSummary();
- setupMultiplayer(join);
+ try{
+  if(!join)clearHostSession();
+  if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
+  const requestedCode=join?String($('joinCode')?.value||'').trim().replace(/\s/g,''):'';
+  if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');$('joinCode')?.focus();return}
+  me=(name||'Oyuncu').trim()||'Oyuncu';
+  rememberName(me);rememberAvatar(myAvatar);
+  if(join){try{sessionStorage.removeItem(GUEST_SESSION_KEY)}catch(e){}}
+  roomId=join?requestedCode:makeCode();
+  isHost=!join;
+
+  const lobby=$('lobby'),room=$('room'),roomCode=$('roomCode');
+  if(lobby)lobby.classList.add('hidden');
+  if(room)room.style.display='block';
+  if(roomCode)roomCode.textContent=roomId;
+
+  try{renderCategories()}catch(e){console.error('renderCategories:',e)}
+  try{renderPlayers()}catch(e){console.error('renderPlayers:',e)}
+  try{renderRoomSettingsSummary()}catch(e){console.error('renderRoomSettingsSummary:',e)}
+
+  // Oda arayüzünü önce aç; PeerJS bağlantısı UI'yi bloke etmesin.
+  setTimeout(()=>{
+   try{setupMultiplayer(join)}catch(e){
+    console.error('setupMultiplayer:',e);
+    const ns=$('netStatus');if(ns)ns.textContent='🟠 Oda arayüzü hazır — bağlantı başlatılamadı';
+    toast('Oda açıldı, bağlantı başlatılırken bir sorun oluştu.');
+   }
+  },0);
+ }catch(err){
+  console.error('enter:',err);
+  toast('Oda oluşturulurken bir hata oluştu. Tekrar dene.');
+ }
 }
-function createRoom(){try{sessionStorage.removeItem(HOST_SESSION_KEY);sessionStorage.removeItem(GUEST_SESSION_KEY)}catch(e){}enter($('hostName').value,false)}function joinRoom(){try{sessionStorage.removeItem(HOST_SESSION_KEY)}catch(e){}enter($('guestName').value,true)}
+function createRoom(){
+ try{
+  const name=$('hostName')?.value||'';
+  enter(name,false);
+ }catch(err){
+  console.error('createRoom:',err);
+  toast('Oda oluşturulamadı. Sayfayı yenileyip tekrar dene.');
+ }
+}
+function joinRoom(){
+ try{
+  const name=$('guestName')?.value||'';
+  enter(name,true);
+ }catch(err){
+  console.error('joinRoom:',err);
+  toast('Odaya katılınamadı. Sayfayı yenileyip tekrar dene.');
+ }
+}
 const HOST_SESSION_KEY='isimSehirHostSessionV2';
 const GUEST_SESSION_KEY='isimSehirGuestSessionV2';
 let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={},roomRejected=false,hostRestoreRetryTimer=null;
