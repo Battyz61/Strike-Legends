@@ -1582,15 +1582,60 @@ function calculateVotingResult(){
  const gains={};
  [...Object.keys(onlinePlayers),...bots.map(b=>b.name)].forEach(n=>gains[n]=0);
  const details=[];
+
+ // Klasik İsim-Şehir puanı:
+ // Benzersiz ve geçerli cevap = 10 puan.
+ // Aynı cevap birden fazla oyuncuda varsa 10 puan, aynı cevabı verenler arasında eşit bölünür.
+ // Böylece 2 aynı cevap = 5'er, 3 aynı cevap = 3.33'er puan olur.
+ const categoryGroups={};
+ rows.forEach(row=>{
+   const owner=row.dataset.answer;if(!owner)return;
+   const catTitle=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent||'';
+   const cat=catTitle.replace(letterNow+' ile ','');
+   const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
+   if(!answer||answer==='Cevap yok')return;
+   const key=answer
+     .toLocaleLowerCase('tr-TR')
+     .normalize('NFC')
+     .replace(/\\s+/g,' ')
+     .trim();
+   const groupKey=cat+'|'+key;
+   if(!categoryGroups[groupKey])categoryGroups[groupKey]=[];
+   categoryGroups[groupKey].push(row);
+ });
+
  rows.forEach(row=>{
    const owner=row.dataset.answer;if(!owner)return;
    const greenBoxes=row.querySelectorAll('.player-vote.yes').length;
    const redBoxes=row.querySelectorAll('.player-vote.no').length;
-   const points=greenBoxes*10;
-   gains[owner]=(gains[owner]||0)+points;
    const catTitle=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent||'';
+   const cat=catTitle.replace(letterNow+' ile ','');
    const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
-   details.push({owner,cat:catTitle.replace(letterNow+' ile ',''),answer,yes:greenBoxes,no:redBoxes,points});
+   const key=answer
+     .toLocaleLowerCase('tr-TR')
+     .normalize('NFC')
+     .replace(/\\s+/g,' ')
+     .trim();
+   const group=categoryGroups[cat+'|'+key]||[];
+   const duplicateCount=answer&&answer!=='Cevap yok'?group.length:0;
+
+   // Cevap, oyların çoğunluğuyla doğru kabul ediliyorsa puan alır.
+   // Aynı cevaplar 10 puanlık hakkı paylaşır.
+   const approved=greenBoxes>redBoxes;
+   const rawPoints=duplicateCount>0 ? 10/duplicateCount : 0;
+   const points=approved ? Number(rawPoints.toFixed(2)) : 0;
+
+   gains[owner]=(gains[owner]||0)+points;
+   details.push({
+     owner,
+     cat,
+     answer,
+     yes:greenBoxes,
+     no:redBoxes,
+     points,
+     duplicateCount,
+     approved
+   });
  });
  const scores=Object.assign({},netScores);
  Object.keys(gains).forEach(n=>{scores[n]=Number(scores[n]||0)+Number(gains[n]||0)});
@@ -1667,7 +1712,7 @@ function showResults(gains,details=[],scoresOverride=null){
  const detailHtml=myDetails.map(d=>{
    const points=Number(d.points||0),yes=Number(d.yes||0),no=Number(d.no||0);
    const state=points?'correct':'wrong';
-   return '<article class="answer-result '+state+'"><div class="answer-result-top"><div class="answer-cat">'+esc(d.cat)+'</div><div class="answer-points '+state+'">'+(points?'+'+points:'0')+'</div></div><div class="answer-text">'+esc(d.answer||'Cevap yok')+'</div><div class="answer-meta"><span class="vote-stat yes-stat">'+yes+' doğru</span><span class="vote-stat no-stat">'+no+' yanlış</span><span class="vote-rule">'+yes+' oy × 10</span></div></article>';
+   return '<article class="answer-result '+state+'"><div class="answer-result-top"><div class="answer-cat">'+esc(d.cat)+'</div><div class="answer-points '+state+'">'+(points?'+'+points:'0')+'</div></div><div class="answer-text">'+esc(d.answer||'Cevap yok')+'</div><div class="answer-meta"><span class="vote-stat yes-stat">'+yes+' doğru</span><span class="vote-stat no-stat">'+no+' yanlış</span><span class="vote-rule">'+(d.duplicateCount>1?(d.duplicateCount+' aynı cevap · 10 ÷ '+d.duplicateCount):'Benzersiz cevap · 10')+'</span></div></article>';
  }).join('');
  let html='<div class="result-panel"><div class="result-hero"><div class="result-kicker">TUR '+round+' TAMAMLANDI</div><div class="result-score-row"><div class="big-score">+'+(gains[me]||0)+'</div><span class="score-pill">TUR PUANI</span></div><div class="result-sub">Bu tur kazandığın puan · Toplam <b>'+Number(myScore||0)+'</b></div></div><div class="round-details"><div class="detail-head"><div><div class="detail-kicker">TUR DETAYLARI</div><div class="detail-title">Cevapların</div></div><span class="detail-total">'+myDetails.length+' kategori</span></div><div class="answer-results-grid">'+detailHtml+'</div></div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'1':i===1?'2':i===2?'3':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x[0]))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur <span class="button-arrow">→</span></button></div>';
  $('answers').innerHTML=html;
