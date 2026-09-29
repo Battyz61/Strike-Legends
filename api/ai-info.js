@@ -25,8 +25,10 @@ export default async function handler(req, res) {
       'Güven için yalnızca "Yüksek", "Orta" veya "Düşük" kullan. ' +
       'Kategorideki kullanım tartışmalıysa veya birden fazla makul yorum varsa "Tartışmalı" seç. ' +
       'Kategori bir varlık türü istiyorsa, cevabın o varlığın kendisi mi yoksa onun ürünü/parçası/özelliği mi olduğunu ayırt et. ' +
-      'Örneğin "Bitki" kategorisinde "Çilek" için günlük kullanımda meyve adı olduğu, çilek bitkisinin ise ayrı bir bitki olduğu dikkate alınmalı; bu tür cevaplarda otomatik olarak "Uygun görünüyor" deme, bağlama göre "Tartışmalı" kullan. ' +
-      'Benzer şekilde bir yiyeceğin adı, bir malzemenin adı, bir meyve veya hayvan ürünü yalnızca ilişkili olduğu kategoriye ait diye doğrudan kabul edilmemeli. ' +
+      'Özellikle "Şehir" kategorisinde yalnızca gerçek şehir/il veya oyunda şehir olarak kullanılan yerleşim adı kabul edilir. Mahalle, semt, köy, ilçe, belde, kasaba veya bir ilçeye bağlı küçük yerleşim birimi şehir değildir ve "Uygun görünüyor" denmemelidir. ' +
+      'Örneğin "Özdil" için bilgi bunun Araklı ilçesine bağlı bir mahalle olduğunu söylüyorsa, "Şehir" kategorisinde sonuç kesin olarak "Uygun görünmüyor" olmalıdır. ' +
+      'Aynı şekilde "Araklı" gibi bir ilçe, "Trabzon" gibi bir ilin ilçesi olarak tanımlanıyorsa "Şehir" kategorisinde kabul edilmemelidir. ' +
+      'Benzer şekilde "Ülke" kategorisinde şehir, il, ilçe, mahalle veya bölge; "Hayvan" kategorisinde hayvan ürünü; "Bitki" kategorisinde yalnızca meyve/ürün adı gibi ilişkili ama farklı varlıklar doğrudan kabul edilmemeli. ' +
       'Kategori ile cevap arasındaki ilişki net değilse "Yüksek" güven verme. ' +
       'Başlangıç harfi verilmişse cevabın o harfle başlamasını da kontrol et. ' +
       'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
@@ -103,6 +105,15 @@ export default async function handler(req, res) {
         console.error('Gemini returned invalid JSON', raw);
         return res.status(502).json({ error: 'AI_INVALID_RESPONSE' });
       }
+    }
+
+    // Model yanıtını, özellikle yerleşim türü karışıklıklarına karşı küçük bir deterministik güvenlik katmanından geçir.
+    // Böylece "Şehir" kategorisinde mahalle/ilçe/köy gibi alt yerleşimler yanlışlıkla kabul edilmez.
+    const categoryKey = cleanCategory.toLocaleLowerCase('tr-TR');
+    const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
+    if (categoryKey === 'şehir' && /\\b(mahalle|mahallesi|semt|köy|köyü|ilçe|ilçesi|belde|beldesi|kasaba)\\b/i.test(evidence)) {
+      parsed.uygunluk = 'Uygun görünmüyor';
+      if (parsed.guven === 'Yüksek') parsed.guven = 'Orta';
     }
 
     const allowedFit = new Set(['Uygun görünüyor', 'Uygun görünmüyor', 'Tartışmalı']);
