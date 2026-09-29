@@ -162,7 +162,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .answer-result:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#6d5dfc0c,transparent 55%);pointer-events:none}
 .answer-result.ok{animation:resultCardIn .35s ease both}
 .answer-result.bad{animation:resultCardIn .35s ease both}
-.answer-points{font-size:20px;font-weight:1000}
+.answer-points{font-size:20px;font-weight:1000}.split-answer{border-color:#7c5cff!important;box-shadow:inset 3px 0 #7c5cff}.split-answer .vote-rule{color:#c4b5fd!important}.answer-meta{display:flex;flex-wrap:wrap;gap:7px 12px;margin-top:4px}.answer-text{font-size:17px;font-weight:850;margin-top:2px}.result-sub{color:#9eabc5;font-size:13px}.score-pill{display:inline-flex;padding:5px 9px;border-radius:999px;background:#171432;border:1px solid #403b75;color:#bdb5ff;font-size:10px;font-weight:900;letter-spacing:.08em}
 .answer-points.correct{color:#39e58c;text-shadow:0 0 14px #39e58c44}
 .answer-points.wrong{color:#ff7893}
 .vote-stat{font-weight:800}
@@ -1697,6 +1697,16 @@ function completeVoting(){
  }
 }
 function leaderboardAvatarId(name){if(name===me)return Number(myAvatar)||0;const bot=bots.find(b=>b.name===name);if(bot)return Number(bot.avatar)||0;return Number(onlinePlayers[name]?.avatar)||0;}
+function formatPoints(value){
+ const n=Number(value||0);
+ return Number.isInteger(n)?String(n):n.toFixed(2).replace(/0+$/,'').replace(/\\.$/,'');
+}
+function pointsRuleText(d){
+ if(Number(d.duplicateCount||0)>1){
+   return '👥 '+d.duplicateCount+' aynı cevap · 10 ÷ '+d.duplicateCount;
+ }
+ return '✨ Benzersiz cevap · 10 puan';
+}
 function showResults(gains,details=[],scoresOverride=null){
  roundState.phase='results';
  const list=Object.entries(gains).sort((a,b)=>b[1]-a[1]);
@@ -1712,9 +1722,11 @@ function showResults(gains,details=[],scoresOverride=null){
  const detailHtml=myDetails.map(d=>{
    const points=Number(d.points||0),yes=Number(d.yes||0),no=Number(d.no||0);
    const state=points?'correct':'wrong';
-   return '<article class="answer-result '+state+'"><div class="answer-result-top"><div class="answer-cat">'+esc(d.cat)+'</div><div class="answer-points '+state+'">'+(points?'+'+points:'0')+'</div></div><div class="answer-text">'+esc(d.answer||'Cevap yok')+'</div><div class="answer-meta"><span class="vote-stat yes-stat">'+yes+' doğru</span><span class="vote-stat no-stat">'+no+' yanlış</span><span class="vote-rule">'+(d.duplicateCount>1?(d.duplicateCount+' aynı cevap · 10 ÷ '+d.duplicateCount):'Benzersiz cevap · 10')+'</span></div></article>';
+   const duplicate=Number(d.duplicateCount||0)>1;
+   const splitText=duplicate?' · Puan bölündü':'';
+   return '<article class="answer-result '+state+' '+(duplicate?'split-answer':'')+'"><div class="answer-result-top"><div class="answer-cat">'+esc(d.cat)+'</div><div class="answer-points '+state+'">'+(points?'+'+formatPoints(points):'0')+'</div></div><div class="answer-text">'+esc(d.answer||'Cevap yok')+'</div><div class="answer-meta"><span class="vote-stat yes-stat">'+yes+' doğru</span><span class="vote-stat no-stat">'+no+' yanlış</span><span class="vote-rule">'+pointsRuleText(d)+splitText+'</span></div></article>';
  }).join('');
- let html='<div class="result-panel"><div class="result-hero"><div class="result-kicker">TUR '+round+' TAMAMLANDI</div><div class="result-score-row"><div class="big-score">+'+(gains[me]||0)+'</div><span class="score-pill">TUR PUANI</span></div><div class="result-sub">Bu tur kazandığın puan · Toplam <b>'+Number(myScore||0)+'</b></div></div><div class="round-details"><div class="detail-head"><div><div class="detail-kicker">TUR DETAYLARI</div><div class="detail-title">Cevapların</div></div><span class="detail-total">'+myDetails.length+' kategori</span></div><div class="answer-results-grid">'+detailHtml+'</div></div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'1':i===1?'2':i===2?'3':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x[0]))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur <span class="button-arrow">→</span></button></div>';
+ let html='<div class="result-panel"><div class="result-hero"><div class="result-kicker">TUR '+round+' TAMAMLANDI</div><div class="result-score-row"><div class="big-score">+'+formatPoints(gains[me]||0)+'</div><span class="score-pill">TUR PUANI</span></div><div class="result-sub">Bu tur kazandığın puan · Toplam <b>'+Number(myScore||0)+'</b></div></div><div class="round-details"><div class="detail-head"><div><div class="detail-kicker">TUR DETAYLARI</div><div class="detail-title">Cevapların</div></div><span class="detail-total">'+myDetails.length+' kategori</span></div><div class="answer-results-grid">'+detailHtml+'</div></div><div class="leaderboard">'+list.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'1':i===1?'2':i===2?'3':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x[0]))+'</div><div class="leader-name">'+esc(x[0])+'</div><div class="leader-gain">+'+x[1]+'</div></div>').join('')+'</div><button class="btn result-next" onclick="nextRound()">Sonraki Tur <span class="button-arrow">→</span></button></div>';
  $('answers').innerHTML=html;
  $('status').textContent=iAmLeader?'🔥 Lider sensin · 2. oyuncuyla fark: '+gap+' puan':'📊 Lider: '+esc(leader.name)+' · Liderle fark: '+Math.abs(Number(leader.score||0)-Number(myScore))+' puan';
  $('enemyScore').textContent=secondOpponent.score||0;
