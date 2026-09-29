@@ -111,9 +111,10 @@ export default async function handler(req, res) {
     // Böylece "Şehir" kategorisinde mahalle/ilçe/köy gibi alt yerleşimler yanlışlıkla kabul edilmez.
     const categoryKey = cleanCategory.toLocaleLowerCase('tr-TR');
     const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
-    if (categoryKey === 'şehir' && /\b(mahalle|mahallesi|semt|köy|köyü|ilçe|ilçesi|belde|beldesi|kasaba)\b/i.test(evidence)) {
+    if (categoryKey === 'şehir' && /(?:mahalle\\w*|semt\\w*|köy\\w*|ilçe\\w*|belde\\w*|kasaba\\w*|mezra\\w*)/i.test(evidence)) {
       parsed.uygunluk = 'Uygun görünmüyor';
-      if (parsed.guven === 'Yüksek') parsed.guven = 'Orta';
+      parsed.guven = parsed.guven === 'Düşük' ? 'Düşük' : 'Orta';
+      parsed.gerekce = 'Cevap bir mahalle, ilçe veya başka bir alt yerleşim birimidir; Şehir kategorisine uygun değildir.';
     }
 
     const allowedFit = new Set(['Uygun görünüyor', 'Uygun görünmüyor', 'Tartışmalı']);
