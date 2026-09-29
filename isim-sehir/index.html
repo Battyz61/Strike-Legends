@@ -1274,6 +1274,16 @@ async function toggleAiInfo(btn){
  const open=box.classList.toggle('open');
  if(!open){btn.textContent='✦ AI Bilgisi';return}
  if(box.dataset.loaded==='1'){btn.textContent='✦ Bilgiyi Gizle';return}
+
+ const cacheKey='isimSehirAi:'+category+'|'+answer;
+ try{
+   const cached=localStorage.getItem(cacheKey);
+   if(cached){
+     if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>'+esc(cached)+'</div>';
+     box.dataset.loaded='1';btn.textContent='✦ Bilgiyi Gizle';return;
+   }
+ }catch(e){}
+
  btn.disabled=true;btn.textContent='✦ Bilgi hazırlanıyor…';
  if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>Yapay zekâ cevabı inceliyor…</div>';
  try{
@@ -1283,6 +1293,7 @@ async function toggleAiInfo(btn){
    const text=String(data.text||'').trim();
    if(!text)throw new Error('AI_EMPTY_RESPONSE');
    if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>'+esc(text)+'</div>';
+   try{localStorage.setItem(cacheKey,text)}catch(e){}
    box.dataset.loaded='1';btn.textContent='✦ Bilgiyi Gizle';
  }catch(err){
    const fallback=aiLocalInfo(category,answer);
