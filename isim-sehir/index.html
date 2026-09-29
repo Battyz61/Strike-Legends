@@ -1275,7 +1275,7 @@ async function toggleAiInfo(btn){
  if(!open){btn.textContent='✦ AI Bilgisi';return}
  if(box.dataset.loaded==='1'){btn.textContent='✦ Bilgiyi Gizle';return}
 
- const cacheKey='isimSehirAiV2:'+category+'|'+answer;
+ const cacheKey='isimSehirAiV3:'+category+'|'+letterNow+'|'+answer;
  try{
    const cached=localStorage.getItem(cacheKey);
    if(cached){
