@@ -4,9 +4,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { category, answer } = req.body || {};
+    const { category, answer, letter } = req.body || {};
     const cleanCategory = String(category || '').trim().slice(0, 80);
     const cleanAnswer = String(answer || '').trim().slice(0, 160);
+    const cleanLetter = String(letter || '').trim().slice(0, 3);
 
     if (!cleanCategory || !cleanAnswer) {
       return res.status(400).json({ error: 'category and answer are required' });
@@ -17,20 +18,28 @@ export default async function handler(req, res) {
     }
 
     const prompt =
-      'Sen İsim Şehir oyununun kısa bilgi asistanısın. Türkçe cevap ver. ' +
-      'Verilen cevabın kendisi hakkında 1-2 cümlelik, en fazla 45 kelimelik kısa ve faydalı bir bilgi üret. ' +
-      'Kategori yalnızca bağlam içindir. Cevabın kategoriye uygun, geçerli, geçersiz, doğru veya yanlış olduğunu değerlendirme ve bunu söyleme. ' +
-      'Cevabı onaylayan veya reddeden ifadeler kullanma. ' +
-      'Örneğin “bu kategoriyle uyumludur”, “geçerli bir cevaptır”, “doğru cevaptır” veya “yanlış cevaptır” deme. ' +
-      'Sadece cevap hakkında tarafsız bilgi ver. Emin olmadığın ayrıntıları uydurma. ' +
-      'Yalnızca bilgi metnini döndür; başlık, emoji, madde işareti veya kaynak ekleme.\n\n' +
-      'Kategori: ' + cleanCategory + '\nCevap: ' + cleanAnswer;
+      'Sen İsim Şehir oyununun tarafsız AI yardımcı hakemisin. Türkçe cevap ver. ' +
+      'Verilen cevabın kategoriye ve varsa başlangıç harfine uygunluğunu analiz et. ' +
+      'Son kararı oyuncular verir; sen sadece yardımcı değerlendirme sunarsın. ' +
+      'Uygunluk için yalnızca "Uygun görünüyor", "Uygun görünmüyor" veya "Tartışmalı" kullan. ' +
+      'Güven için yalnızca "Yüksek", "Orta" veya "Düşük" kullan. ' +
+      'Kategorideki kullanım tartışmalıysa veya birden fazla makul yorum varsa "Tartışmalı" seç. ' +
+      'Başlangıç harfi verilmişse cevabın o harfle başlamasını da kontrol et. ' +
+      'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
+      'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
+      'Bilgi bölümünde cevabı onaylayan veya reddeden ifadeler kullanma. ' +
+      'Yanıtı SADECE geçerli JSON olarak döndür ve başka hiçbir şey yazma. ' +
+      'JSON: {"uygunluk":"Uygun görünüyor|Uygun görünmüyor|Tartışmalı","guven":"Yüksek|Orta|Düşük","gerekce":"en fazla 20 kelime","bilgi":"en fazla 35 kelime"}\\n\\n' +
+      'Kategori: ' + cleanCategory + '\\n' +
+      'Başlangıç harfi: ' + (cleanLetter || 'Belirtilmedi') + '\\n' +
+      'Cevap: ' + cleanAnswer;
 
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        maxOutputTokens: 120,
-        temperature: 0.3
+        maxOutputTokens: 180,
+        temperature: 0.2,
+        responseMimeType: 'application/json'
       }
     };
 
@@ -69,15 +78,41 @@ export default async function handler(req, res) {
       });
     }
 
-    const text = String(
-      data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || ''
+    const raw = String(
+      (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts
+        ? data.candidates[0].content.parts.map(p => p.text || '').join('')
+        : '') || ''
     ).trim();
 
-    if (!text) {
+    if (!raw) {
       return res.status(502).json({ error: 'AI_EMPTY_RESPONSE' });
     }
 
-    return res.status(200).json({ text });
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      const cleaned = raw.replace(/^\\s*\`\`\`(?:json)?\\s*/i, '').replace(/\\s*\`\`\`\\s*$/i, '').trim();
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e2) {
+        console.error('Gemini returned invalid JSON', raw);
+        return res.status(502).json({ error: 'AI_INVALID_RESPONSE' });
+      }
+    }
+
+    const allowedFit = new Set(['Uygun görünüyor', 'Uygun görünmüyor', 'Tartışmalı']);
+    const allowedConfidence = new Set(['Yüksek', 'Orta', 'Düşük']);
+    const uygunluk = allowedFit.has(String(parsed.uygunluk)) ? String(parsed.uygunluk) : 'Tartışmalı';
+    const guven = allowedConfidence.has(String(parsed.guven)) ? String(parsed.guven) : 'Düşük';
+    const gerekce = String(parsed.gerekce || '').trim().slice(0, 180);
+    const bilgi = String(parsed.bilgi || '').trim().slice(0, 260);
+
+    if (!bilgi) {
+      return res.status(502).json({ error: 'AI_EMPTY_RESPONSE' });
+    }
+
+    return res.status(200).json({ text: bilgi, analysis: { uygunluk, guven, gerekce } });
   } catch (error) {
     console.error('Gemini AI info error', error);
     return res.status(500).json({ error: 'AI_SERVER_ERROR' });
