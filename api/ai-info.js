@@ -24,29 +24,47 @@ export default async function handler(req, res) {
       'Yalnızca bilgi metnini döndür; başlık, emoji, madde işareti veya kaynak ekleme.\n\n' +
       'Kategori: ' + cleanCategory + '\nCevap: ' + cleanAnswer;
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=' +
-      encodeURIComponent(process.env.GEMINI_API_KEY),
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            maxOutputTokens: 120,
-            temperature: 0.3
-          }
-        })
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: 120,
+        temperature: 0.3
       }
-    );
+    };
 
-    const data = await response.json();
+    let response;
+    let data = {};
+    const retryDelays = [0, 1000, 2500];
+
+    for (let attempt = 0; attempt < retryDelays.length; attempt++) {
+      if (retryDelays[attempt]) {
+        await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+      }
+
+      response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=' +
+        encodeURIComponent(process.env.GEMINI_API_KEY),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        }
+      );
+
+      data = await response.json().catch(() => ({}));
+
+      if (response.ok) break;
+
+      // Gemini documents 5xx/503 as transient errors; retry them with backoff.
+      if (response.status < 500 || attempt === retryDelays.length - 1) break;
+    }
 
     if (!response.ok) {
       console.error('Gemini API error', data);
       return res.status(502).json({
         error: 'AI_REQUEST_FAILED',
-        upstreamStatus: response.status
+        upstreamStatus: response.status,
+        upstreamMessage: data?.error?.message || null
       });
     }
 
