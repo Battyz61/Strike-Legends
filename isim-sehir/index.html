@@ -346,6 +346,19 @@ body{min-height:100dvh}
  .toast{bottom:max(18px,calc(env(safe-area-inset-bottom) + 10px))}
  .game{min-height:calc(100dvh - 20px)}
 }
+</style><style>
+.round-transition{position:fixed;inset:0;z-index:1800;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 42%,#16365ddd 0,#060b14f5 55%,#03050bf8 100%);backdrop-filter:blur(10px)}
+.round-transition.show{display:flex;animation:roundTransitionIn .22s ease-out}
+.round-transition-card{width:min(420px,100%);padding:28px 22px 24px;text-align:center;border:1px solid #31567d;border-radius:26px;background:linear-gradient(180deg,#10243af2,#081321f5);box-shadow:0 25px 90px #000b,0 0 45px #38bdf822}
+.round-transition-kicker{font-size:10px;font-weight:1000;letter-spacing:2px;color:#7db7ec;margin-bottom:10px}
+.round-transition-title{font-size:clamp(38px,11vw,58px);font-weight:1000;line-height:1;margin:0;text-shadow:0 0 28px #60a5fa44}
+.round-transition-sub{min-height:22px;margin-top:12px;color:#9db1c9;font-size:13px;font-weight:800}
+.round-transition-progress{display:flex;justify-content:center;gap:7px;margin-top:20px}
+.round-transition-dot{width:8px;height:8px;border-radius:50%;background:#29445f;transition:.2s}
+.round-transition-dot.active{background:#60a5fa;box-shadow:0 0 14px #60a5fa99;transform:scale(1.3)}
+.round-transition.ready .round-transition-title{animation:transitionReady .45s ease}
+@keyframes roundTransitionIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+@keyframes transitionReady{0%{transform:scale(.94);opacity:.7}55%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
 </style></head>
 <body><main class="wrap">
 <section class="hero main-menu"><span class="hero-logo-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M37 4 13 36h16l-4 24 26-35H35z"/></svg></span><div class="hero-badge"><span class="badge-mark">+</span> ARKADAŞLARLA OYNA <i></i> TÜRKÇE</div><h1>İsim Şehir</h1><p class="hero-sub">Harfini seç, cevaplarını doldur, arkadaşlarının cevaplarını değerlendir ve en yüksek puanı topla.</p></section>
@@ -378,7 +391,14 @@ body{min-height:100dvh}
 <div id="game" class="card game hidden"><div class="game-toolbar"><span class="game-over-badge"><span class="brand-dot"></span> İsim Şehir</span><button class="btn secondary small menu-btn" onclick="openGameMenu()">Menü</button></div><div class="roundbar"><h2 style="margin:0">Yarış</h2><span id="roundNo" class="roundnum">1. Tur</span></div>
 <div id="wheelArea" class="wheel-wrap"><div class="wheel-pointer"></div><div id="wheel" class="wheel"><div id="letter" class="wheel-center">?</div></div><div id="wheelBurst" class="wheel-burst">HARF HAZIR</div></div><div id="wheelLabel" class="wheel-label">Harf seçiliyor...</div><div class="timer-hud" id="timerHud"><div class="timer-row"><span class="timer-caption">Kalan süre</span><span id="timer" class="timer">120 sn</span></div><div class="timer-track"><div id="timerFill" class="timer-fill"></div></div></div><div id="status" class="status">Cevaplarını seçilen harfle doldur.</div><div id="answers" class="answers"></div>
 <button id="finishBtn" class="btn" onclick="finishRound()">Cevapları Gönder <span class="button-arrow">→</span></button><div class="scorebar"><div class="score"><span>Toplam Puan</span><b id="myScore">0</b></div><div class="score"><span>2. Oyuncu</span><b id="enemyScore">0</b></div><div class="score"><span>Fark</span><b id="roundScore">0</b></div></div></div>
-</section></main><div id="gameMenu" class="menu-overlay" onclick="if(event.target===this)closeGameMenu()"><div class="menu-box"><h2>Oyun Menüsü</h2><p>Oyundan çıkabilir, ana menüye dönebilir veya oyuna devam edebilirsin.</p><button class="btn cancel-btn" onclick="closeGameMenu()">Oyuna Devam Et</button><button class="btn secondary" onclick="returnToMainMenu()">Ana Menüye Dön</button><button class="btn danger-btn" onclick="leaveGame()">Odadan Çık</button></div></div><div id="toast" class="toast"></div>
+</section></main><div id="gameMenu" class="menu-overlay" onclick="if(event.target===this)closeGameMenu()"><div class="menu-box"><h2>Oyun Menüsü</h2><p>Oyundan çıkabilir, ana menüye dönebilir veya oyuna devam edebilirsin.</p><button class="btn cancel-btn" onclick="closeGameMenu()">Oyuna Devam Et</button><button class="btn secondary" onclick="returnToMainMenu()">Ana Menüye Dön</button><button class="btn danger-btn" onclick="leaveGame()">Odadan Çık</button></div></div><div id="roundTransition" class="round-transition" aria-hidden="true">
+  <div class="round-transition-card">
+    <div class="round-transition-kicker">YENİ TUR HAZIRLANIYOR</div>
+    <div id="roundTransitionTitle" class="round-transition-title">3. TUR</div>
+    <div id="roundTransitionSub" class="round-transition-sub">Harf hazırlanıyor...</div>
+    <div class="round-transition-progress"><span class="round-transition-dot"></span><span class="round-transition-dot"></span><span class="round-transition-dot"></span></div>
+  </div>
+</div><div id="toast" class="toast"></div>
 <script>
 const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
@@ -961,7 +981,8 @@ function bindConnection(conn){
      letterNow=data.letter||letterNow;
      if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      applyGameSettings(data);
-     netAnswers={};submittedPlayers={};votingOpenedRound=0;newRound(letterNow,false);
+     netAnswers={};submittedPlayers={};votingOpenedRound=0;
+     showRoundTransition(()=>newRound(letterNow,false));
    }else if(data.type==='gameFinished'&&!isHost){
      if(Number(data.round)!==round)return;
      if(data.scores)netScores=Object.assign({},data.scores);
@@ -1755,7 +1776,7 @@ function nextRound(ev){
  if(btn){btn.disabled=true;btn.textContent='Yeni tur hazırlanıyor…';}
  resetRoundVisuals();
  round++;
- requestAnimationFrame(()=>{newRound(null,true)});
+ showRoundTransition(()=>newRound(null,true));
 }
 function showFinalResults(announce=true){
  gameFinished=true;roundState=roundState||{};roundState.phase='results';
@@ -1798,6 +1819,22 @@ function playUiSound(kind='tick'){
   g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.045,now+.008);g.gain.exponentialRampToValueAtTime(.0001,now+cfg[2]);
   o.connect(g);g.connect(ac.destination);o.start(now);o.stop(now+cfg[2]+.02);
  }catch(e){}
+}
+function showRoundTransition(done){
+ const box=$('roundTransition');
+ if(!box){if(typeof done==='function')done();return}
+ const title=$('roundTransitionTitle'),sub=$('roundTransitionSub'),dots=[...box.querySelectorAll('.round-transition-dot')];
+ title.textContent=round+'. TUR';sub.textContent='Harf hazırlanıyor...';
+ box.classList.remove('ready');box.classList.add('show');box.setAttribute('aria-hidden','false');
+ dots.forEach(d=>d.classList.remove('active'));
+ playUiSound('start');
+ requestAnimationFrame(()=>{if(dots[0])dots[0].classList.add('active')});
+ setTimeout(()=>{sub.textContent='Harf seçiliyor...';if(dots[1])dots[1].classList.add('active');playUiSound('tick')},360);
+ setTimeout(()=>{sub.textContent='Çark dönmeye hazır!';if(dots[2])dots[2].classList.add('active');box.classList.add('ready');playUiSound('tick')},760);
+ setTimeout(()=>{
+   box.classList.remove('show','ready');box.setAttribute('aria-hidden','true');
+   if(typeof done==='function')done();
+ },1200);
 }
 function showRoundStage(){
  const box=$('roundStage'),title=$('roundBigTitle'),sub=$('roundSubtitle');
