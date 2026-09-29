@@ -1088,7 +1088,6 @@ function broadcastGameSettings(){
  const s=currentGameSettings();
  broadcast({type:'gameSettings',...s,cats:[...cats],letters:[...selectedLetters]});
 }
-}
 function markSubmittedButton(label,waiting=false){
  const btn=$('finishBtn');if(!btn)return;
  btn.classList.remove('submitted','waiting');
