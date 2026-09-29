@@ -1300,7 +1300,8 @@ async function toggleAiInfo(btn){
    box.dataset.loaded='1';btn.textContent='✦ Bilgiyi Gizle';
  }catch(err){
    const fallback=aiLocalInfo(category,answer);
-   if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">BİLGİ</span></div><div>'+esc(fallback)+'</div><div style="margin-top:6px;color:#7188a3;font-size:10px">AI bağlantısı şu anda kullanılamıyor.</div>';
+   const detail=err&&err.message?' · '+err.message:'';
+   if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">BİLGİ</span></div><div>'+esc(fallback)+'</div><div style="margin-top:6px;color:#7188a3;font-size:10px">AI bağlantısı şu anda kullanılamıyor'+esc(detail)+'.</div>';
    btn.textContent='✦ Tekrar Dene';
    box.classList.add('open');
  }finally{btn.disabled=false}
