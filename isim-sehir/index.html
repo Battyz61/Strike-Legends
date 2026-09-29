@@ -359,8 +359,8 @@ body{min-height:100dvh}
 <div class="setting"><label>TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div>
 </div>
 </div>
-<button id="createRoomBtn" type="button" class="btn">Oda Oluştur <span class="button-arrow">→</span></button></div>
-<div class="card menu-card join"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 9h18v30H19M29 24H6m0 0 9-9m-9 9 9 9"/></svg></div><h2>Odaya Katıl</h2><p>Arkadaşından aldığın 6 haneli kodu gir ve yarışa katıl.</p><div class="name-hint"><span>Oyuncu adı</span><span id="guestRecent"></span></div><input id="guestName" class="input" maxlength="18" placeholder="Adını yaz"><input id="joinCode" class="input" maxlength="6" placeholder="6 haneli oda kodu" inputmode="numeric"><div class="avatar-picker-label">Avatarını seç</div><div id="guestAvatarGrid" class="avatar-grid"></div><button id="joinRoomBtn" type="button" class="btn secondary">Odaya Katıl <span class="button-arrow">→</span></button></div>
+<button id="createRoomBtn" type="button" class="btn" onclick="createRoom()">Oda Oluştur <span class="button-arrow">→</span></button></div>
+<div class="card menu-card join"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 9h18v30H19M29 24H6m0 0 9-9m-9 9 9 9"/></svg></div><h2>Odaya Katıl</h2><p>Arkadaşından aldığın 6 haneli kodu gir ve yarışa katıl.</p><div class="name-hint"><span>Oyuncu adı</span><span id="guestRecent"></span></div><input id="guestName" class="input" maxlength="18" placeholder="Adını yaz"><input id="joinCode" class="input" maxlength="6" placeholder="6 haneli oda kodu" inputmode="numeric"><div class="avatar-picker-label">Avatarını seç</div><div id="guestAvatarGrid" class="avatar-grid"></div><button id="joinRoomBtn" type="button" class="btn secondary" onclick="joinRoom()">Odaya Katıl <span class="button-arrow">→</span></button></div>
 </section>
 <div class="quick-info"><div class="quick-item"><b>Puan</b><span>Yeşil oy = +10</span></div><div class="quick-item"><b>Harf</b><span>Her tur yeni harf</span></div><div class="quick-item"><b>Çoklu</b><span>Arkadaşlarınla oyna</span></div></div>
 <section id="room" class="room">
@@ -515,12 +515,15 @@ function enter(name,join){
  }
 }
 function createRoom(){
+ const btn=$('createRoomBtn');
  try{
-  const name=$('hostName')?.value||'';
+  if(btn){btn.disabled=true;btn.classList.add('loading');}
+  const name=String($('hostName')?.value||'').trim()||'Oyuncu';
   enter(name,false);
  }catch(err){
   console.error('createRoom:',err);
-  toast('Oda oluşturulamadı. Sayfayı yenileyip tekrar dene.');
+  toast('Oda oluşturulamadı. Tekrar dene.');
+  if(btn){btn.disabled=false;btn.classList.remove('loading');}
  }
 }
 function joinRoom(){
@@ -1705,10 +1708,6 @@ function showFinalResults(announce=true){
  $('status').textContent='🏆 Oyun tamamlandı!';$('finishBtn').style.display='none';$('finishBtn').classList.add('hidden');
 }
 document.addEventListener('DOMContentLoaded',()=>{
- const createBtn=$('createRoomBtn');
- if(createBtn)createBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();createRoom();});
- const joinBtn=$('joinRoomBtn');
- if(joinBtn)joinBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();joinRoom();});
  renderCategories();
  restoreRememberedName();restoreAvatar();renderAvatarPickers();
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGameMenu()});
