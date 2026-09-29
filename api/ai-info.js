@@ -42,7 +42,10 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       console.error('OpenAI API error', data);
-      return res.status(502).json({ error: 'AI_REQUEST_FAILED' });
+      return res.status(502).json({
+        error: 'AI_REQUEST_FAILED',
+        upstreamStatus: response.status
+      });
     }
 
     const text = String(data.output_text || '').trim();
