@@ -24,6 +24,10 @@ export default async function handler(req, res) {
       'Uygunluk için yalnızca "Uygun görünüyor", "Uygun görünmüyor" veya "Tartışmalı" kullan. ' +
       'Güven için yalnızca "Yüksek", "Orta" veya "Düşük" kullan. ' +
       'Kategorideki kullanım tartışmalıysa veya birden fazla makul yorum varsa "Tartışmalı" seç. ' +
+      'Kategori bir varlık türü istiyorsa, cevabın o varlığın kendisi mi yoksa onun ürünü/parçası/özelliği mi olduğunu ayırt et. ' +
+      'Örneğin "Bitki" kategorisinde "Çilek" için günlük kullanımda meyve adı olduğu, çilek bitkisinin ise ayrı bir bitki olduğu dikkate alınmalı; bu tür cevaplarda otomatik olarak "Uygun görünüyor" deme, bağlama göre "Tartışmalı" kullan. ' +
+      'Benzer şekilde bir yiyeceğin adı, bir malzemenin adı, bir meyve veya hayvan ürünü yalnızca ilişkili olduğu kategoriye ait diye doğrudan kabul edilmemeli. ' +
+      'Kategori ile cevap arasındaki ilişki net değilse "Yüksek" güven verme. ' +
       'Başlangıç harfi verilmişse cevabın o harfle başlamasını da kontrol et. ' +
       'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
       'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
