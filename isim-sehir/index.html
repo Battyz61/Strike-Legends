@@ -1289,7 +1289,10 @@ async function toggleAiInfo(btn){
  try{
    const res=await fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category,answer})});
    const data=await res.json().catch(()=>({}));
-   if(!res.ok)throw new Error(data.error||'AI_REQUEST_FAILED');
+   if(!res.ok){
+     const status=data.upstreamStatus?' · OpenAI '+data.upstreamStatus:'';
+     throw new Error((data.error||'AI_REQUEST_FAILED')+status);
+   }
    const text=String(data.text||'').trim();
    if(!text)throw new Error('AI_EMPTY_RESPONSE');
    if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>'+esc(text)+'</div>';
