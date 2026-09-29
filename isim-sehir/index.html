@@ -100,7 +100,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .answer input:focus{box-shadow:0 0 0 3px rgba(124,92,255,.09)!important}
 @media(max-width:700px){.menu-card:hover,.quick-item:hover,.player:hover{transform:none}.btn:hover{transform:none}.menu-card:hover:after{display:none}.menu-card .card-icon{transition:none}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
-</style><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script><style>
+.ai-info{margin-top:8px;padding:9px 10px;border:1px solid rgba(168,85,247,.2);border-radius:11px;background:linear-gradient(135deg,rgba(124,92,255,.08),rgba(34,211,238,.035))}
+.ai-info-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(168,85,247,.28);background:#17132a;color:#cfc7ff;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:900;cursor:pointer;transition:.16s}
+.ai-info-btn:hover{background:#211b3b;border-color:rgba(168,85,247,.5);transform:translateY(-1px)}
+.ai-info-btn:active{transform:scale(.97)}
+.ai-info-panel{display:none;margin-top:8px;color:#aeb9cf;font-size:12px;line-height:1.5}
+.ai-info.open .ai-info-panel{display:block;animation:aiInfoIn .18s ease}
+.ai-info-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;color:#ddd6fe;font-weight:900}
+.ai-info-tag{font-size:9px;letter-spacing:.7px;color:#8f82d8}
+@keyframes aiInfoIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@media(max-width:700px){.ai-info-btn{padding:8px 10px}.ai-info-panel{font-size:12px}}</style><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script><style>
 /* Voting Arena v2 */
 .vote-category{margin:18px 0 20px}
 .vote-card{border:1px solid #28385a;border-radius:20px;background:linear-gradient(145deg,#0d1627,#080d18);box-shadow:0 12px 34px #0004}
@@ -1236,6 +1245,32 @@ function registerNetworkVote(voter,answer,cat,correct,owner=null){
  if(isHost)broadcast({type:'voteUpdate',round,voter,answer,cat,correct,owner});
  if(voter===me)updateVoteSummary();
 }
+function aiLocalInfo(cat,answer){
+ const a=String(answer||'').trim(),k=String(cat||'').toLocaleLowerCase('tr-TR');
+ if(!a)return 'Bu cevap için gösterilecek bilgi bulunamadı.';
+ const templates={
+  'şehir':a+' Türkiye’de yer alan bir şehirdir. Konumu, tarihi ve kültürel özellikleri hakkında kısa bilgi verilebilir.',
+  'hayvan':a+' bir hayvan adıdır. Türün yaşam alanı, beslenmesi ve dikkat çekici özellikleri hakkında kısa bilgi verilebilir.',
+  'bitki':a+' bir bitki adıdır. Yetiştiği ortam ve kullanım alanları hakkında kısa bilgi verilebilir.',
+  'ülke':a+' bir ülkedir. Coğrafyası, başkenti ve kültürel özellikleri hakkında kısa bilgi verilebilir.',
+  'ünlü':a+' adlı kişi hakkında temel meslek ve tanınırlık bilgisi verilebilir.',
+  'meslek':a+' bir meslek adıdır. Bu mesleğin temel görevleri ve çalışma alanı kısaca açıklanabilir.',
+  'dizi/film':a+' adlı yapım için türü, konusu ve yapım dönemi hakkında kısa bilgi verilebilir.',
+  'sanatçı':a+' adlı sanatçı hakkında müzik/sanat alanı ve öne çıkan çalışmalarıyla ilgili kısa bilgi verilebilir.',
+  'futbolcu':a+' adlı futbolcu hakkında mevki, kariyer ve oynadığı takımlar gibi bilgiler verilebilir.',
+  'şarkı':a+' adlı şarkı için sanatçı, tür ve dönem gibi temel bilgiler verilebilir.',
+  'yemek malzemesi':a+' bir yemek malzemesidir. Mutfakta kullanım şekli ve hangi yemeklerde tercih edildiği açıklanabilir.',
+  'yiyecek':a+' bir yiyecektir. İçeriği, hazırlanışı veya hangi mutfaklarla ilişkilendirildiği hakkında kısa bilgi verilebilir.',
+  'tatlı':a+' bir tatlıdır. Kökeni, temel malzemeleri ve hazırlanış biçimi hakkında kısa bilgi verilebilir.',
+  'renk':a+' bir renk adıdır. Kullanıldığı alanlar ve renk teorisindeki karşılığı hakkında kısa bilgi verilebilir.'
+ };
+ return templates[k]||a+' cevabı, '+cat+' kategorisinde geçerli bir örnektir. Bu alanın detayları ve cevabın ilginç özellikleri hakkında kısa bir bilgi verilebilir.';
+}
+function toggleAiInfo(btn){
+ const box=btn.closest('.ai-info');if(!box)return;
+ const open=box.classList.toggle('open');
+ btn.textContent=open?'✦ Bilgiyi Gizle':'✦ AI Bilgisi';
+}
 function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:owner.startsWith('bot')?'Bot '+(parseInt(owner.replace('bot',''),10)+1):owner.startsWith('human:')?owner.slice(6):owner;
  const isMine=owner==='me'; const ownerAvatar=isMine?myAvatar:(owner.startsWith('bot')?((Number(owner.replace('bot',''))+4)%AVATARS.length):avatarIdFor(answerOwner));
@@ -1244,7 +1279,8 @@ function voteRow(owner,x,empty=false){
  bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const val=remoteVotes['Bot '+(bi+1)+'|'+answerOwner+'|'+x.cat];botVotes+='<span class="player-vote bot-vote '+(val?'':'pending')+'" data-voter="Bot '+(bi+1)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
  let humanVotes='';
  Object.keys(onlinePlayers).filter(n=>n!==answerOwner&&n!==me).forEach(n=>{const val=remoteVotes[n+'|'+owner+'|'+x.cat]||remoteVotes[n+'|'+answerOwner+'|'+x.cat];humanVotes+='<span class="player-vote remote-vote '+(val?'':'pending')+'" data-voter="'+esc(n)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
- return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+avatarSvg(ownerAvatar,true)+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
+ const aiText=aiLocalInfo(x.cat,x.val);
+ return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+avatarSvg(ownerAvatar,true)+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div><div class="ai-info"><button type="button" class="ai-info-btn" onclick="toggleAiInfo(this)">✦ AI Bilgisi</button><div class="ai-info-panel"><div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>'+esc(aiText)+'</div></div></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
 function showVoting(sync=null){
  const syncedVotes=sync?.votes||{};
