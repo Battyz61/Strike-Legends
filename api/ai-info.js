@@ -12,50 +12,55 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'category and answer are required' });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
       return res.status(503).json({ error: 'AI_NOT_CONFIGURED' });
     }
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY
-      },
-      body: JSON.stringify({
-        model: 'gpt-5.6-luna',
-        input: [
-          {
-            role: 'system',
-            content: 'Sen İsim Şehir oyununun kısa bilgi asistanısın. Türkçe cevap ver. Kullanıcının verdiği cevabın kategoriyle ilişkisini açıklayan 1-2 cümlelik, en fazla 45 kelimelik bilgi üret. Bilgi vermek için emin olmadığın ayrıntıları uydurma. Cevap açıkça yanlışsa bunu nazikçe belirt ve doğru bilgiyi kısaca ver. Yalnızca bilgi metnini döndür; başlık, emoji, madde işareti veya kaynak ekleme.'
-          },
-          {
-            role: 'user',
-            content: 'Kategori: ' + cleanCategory + '\nCevap: ' + cleanAnswer
+    const prompt =
+      'Sen İsim Şehir oyununun kısa bilgi asistanısın. Türkçe cevap ver. ' +
+      'Kullanıcının verdiği cevabın kategoriyle ilişkisini açıklayan 1-2 cümlelik, ' +
+      'en fazla 45 kelimelik bilgi üret. Emin olmadığın ayrıntıları uydurma. ' +
+      'Cevap açıkça yanlışsa bunu nazikçe belirt ve doğru bilgiyi kısaca ver. ' +
+      'Yalnızca bilgi metnini döndür; başlık, emoji, madde işareti veya kaynak ekleme.\n\n' +
+      'Kategori: ' + cleanCategory + '\nCevap: ' + cleanAnswer;
+
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' +
+      encodeURIComponent(process.env.GEMINI_API_KEY),
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            maxOutputTokens: 120,
+            temperature: 0.3
           }
-        ],
-        max_output_tokens: 120
-      })
-    });
+        })
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('OpenAI API error', data);
+      console.error('Gemini API error', data);
       return res.status(502).json({
         error: 'AI_REQUEST_FAILED',
         upstreamStatus: response.status
       });
     }
 
-    const text = String(data.output_text || '').trim();
+    const text = String(
+      data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || ''
+    ).trim();
+
     if (!text) {
       return res.status(502).json({ error: 'AI_EMPTY_RESPONSE' });
     }
 
     return res.status(200).json({ text });
   } catch (error) {
-    console.error('AI info error', error);
+    console.error('Gemini AI info error', error);
     return res.status(500).json({ error: 'AI_SERVER_ERROR' });
   }
 }
