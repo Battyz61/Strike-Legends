@@ -1144,23 +1144,60 @@ function answerForCategory(list,cat){
         null;
 }
 function botAnswers(){
- const generic={
-  Ünlü:['Atatürk','Einstein','Mevlana','Şener Şen'],Meslek:['Aşçı','Avukat','Doktor','Mühendis'],
-  'Dizi/Film':['Aşk-ı Memnu','Avatar','Matrix','Titanic'],Sanatçı:['Ajda Pekkan','Barış Manço','Cem Karaca','Sezen Aksu'],
-  Futbolcu:['Arda Güler','Messi','Ronaldo','Hakan Çalhanoğlu'],'Yemek malzemesi':['Un','Şeker','Tuz','Yağ'],
-  '8 harfli kelime':['Armutlar','Balıkları','Kitaplık'],Şarkı:['Aşk','Yalnızlık','Fırtına'],
-  'Erkek ismi':['Ahmet','Burak','Mert','Can'],Renk:['Mavi','Mor','Sarı','Turuncu'],
-  'Yabancı isim':['Alex','David','Kevin','Michael'],'Makyaj malzemesi':['Maskara','Ruj','Pudra','Fondöten'],
-  Yiyecek:['Pizza','Kebap','Makarna','Pilav'],Tatlı:['Baklava','Sütlaç','Künefe','Kadayıf']
+ const banks={
+  'İsim':['Ahmet','Ali','Ayşe','Berk','Burak','Can','Cem','Deniz','Ece','Elif','Emre','Esra','Fatih','Hakan','Hasan','Hatice','İbrahim','İrem','Kerem','Mehmet','Mert','Murat','Nehir','Oğuz','Onur','Ömer','Selin','Serkan','Seda','Sinan','Şahin','Tuna','Umut','Yasin','Zeynep'],
+  'Hayvan':['Arı','At','Ayı','Balık','Baykuş','Ceylan','Deve','Fil','Geyik','Horoz','İnek','Kaplan','Kedi','Keçi','Köpek','Kurt','Leylek','Maymun','Ördek','Panda','Penguen','Serçe','Tavşan','Tilki','Yılan','Zebra'],
+  'Şehir':['Adana','Ankara','Antalya','Balıkesir','Bursa','Çanakkale','Diyarbakır','Edirne','Erzurum','Eskişehir','Gaziantep','Hatay','İstanbul','İzmir','Kayseri','Konya','Malatya','Manisa','Mersin','Ordu','Rize','Samsun','Sinop','Trabzon','Uşak','Van'],
+  'Bitki':['Armut','Asma','Badem','Bambu','Buğday','Çam','Çınar','Fasulye','Gül','Ihlamur','Kaktüs','Kavak','Lale','Lavanta','Mısır','Nane','Papatya','Patates','Reyhan','Sarmaşık','Zambak'],
+  'Eşya':['Anahtar','Ayna','Bardak','Bavul','Çanta','Çekiç','Dolap','Fırın','Kalem','Kamera','Kanepe','Kitap','Masa','Makas','Saat','Sandalye','Telefon','Televizyon','Ütü'],
+  'Ülke':['Almanya','Arjantin','Avustralya','Belçika','Brezilya','Bulgaristan','Çin','Danimarka','Fransa','Hindistan','İngiltere','İran','İspanya','İtalya','Japonya','Kanada','Katar','Meksika','Norveç','Portekiz','Rusya','Sırbistan','Türkiye','Ukrayna','Yunanistan'],
+  'Ünlü':['Atatürk','Einstein','Barış Manço','Cem Yılmaz','Danla Bilic','Elvis Presley','Frida Kahlo','Haluk Levent','Kemal Sunal','Mevlana','Orhan Gencebay','Şener Şen','Tarkan','Taylor Swift'],
+  'Meslek':['Aşçı','Avukat','Berber','Çiftçi','Doktor','Eczacı','Garson','Hemşire','Mimar','Mühendis','Öğretmen','Pilot','Polis','Programcı','Ressam','Şoför','Veteriner'],
+  'Dizi/Film':['Avatar','Aşk-ı Memnu','Barbie','Breaking Bad','Dark','Friends','Gladyatör','Matrix','Titanic','The Office','Yüzüklerin Efendisi'],
+  'Sanatçı':['Ajda Pekkan','Barış Manço','Cem Karaca','Ed Sheeran','Edis','Hadise','Mabel Matiz','Sezen Aksu','Tarkan','Yıldız Tilbe'],
+  'Futbolcu':['Arda Güler','Burak Yılmaz','Hakan Çalhanoğlu','İlkay Gündoğan','Kylian Mbappe','Lionel Messi','Luka Modric','Mohamed Salah','Neymar','Ronaldo','Sergio Ramos'],
+  'Yemek malzemesi':['Bal','Biber','Bulgur','Domates','Et','Fasulye','Havuç','İrmik','Kakao','Limon','Makarna','Mercimek','Nohut','Pirinç','Salça','Soğan','Şeker','Tereyağı','Tuz','Un','Yağ'],
+  '8 harfli kelime':['Armutlar','Balıkları','Çiçekler','Dostluk','Elbiseler','Futbolcu','Hayaller','Kitaplık','Kelebekler','Macera','Oyuncular','Sandalye','Telefonum','Yolculuk'],
+  'Şarkı':['Aşk','Aşkın Olayım','Benimle Oynama','Fırtına','Gülpembe','Kuzu Kuzu','Mavi Mavi','Ölürüm Hasretinle','Sarı Çizmeli Mehmet Ağa','Yalnızlık Senfonisi'],
+  'Erkek ismi':['Ahmet','Ali','Berk','Burak','Can','Cem','Emre','Fatih','Hakan','Hasan','İbrahim','Kerem','Mehmet','Mert','Murat','Oğuz','Onur','Ömer','Serkan','Sinan','Şahin','Tuna','Umut','Yasin'],
+  'Renk':['Beyaz','Bordo','Gri','Kahverengi','Kırmızı','Lacivert','Mavi','Mor','Pembe','Sarı','Siyah','Turkuaz','Turuncu','Yeşil'],
+  'Yabancı isim':['Alex','Alice','Brian','Daniel','David','Emma','George','Jack','James','Kevin','Laura','Michael','Oliver','Robert','Sarah','Sophie','William'],
+  'Makyaj malzemesi':['Allık','Eyeliner','Fondöten','Highlighter','Kapatıcı','Maskara','Pudra','Ruj','Rimel','Ten ürünü'],
+  'Yiyecek':['Baklava','Balık','Burger','Döner','Ekmek','Hamburger','Kebap','Köfte','Lahmacun','Makarna','Mantı','Pizza','Pilav','Pide','Salata','Simit'],
+  'Tatlı':['Baklava','Brownie','Cheesecake','Dondurma','Kadayıf','Kazandibi','Künefe','Lokma','Pasta','Revani','Sufle','Sütlaç','Tiramisu']
  };
+
+ const letter=String(letterNow||'').toLocaleUpperCase('tr-TR');
+ const startsWithLetter=(value)=>{
+   const v=String(value||'').trim().toLocaleUpperCase('tr-TR');
+   return letter && v.startsWith(letter);
+ };
+ const pick=(list)=>{
+   const matching=(list||[]).filter(startsWithLetter);
+   return matching.length?matching[Math.floor(Math.random()*matching.length)]:null;
+ };
+
  return cats.map(cat=>{
-   const good=Math.random()>.18;
-   let val=pickForLetter(cat);
-   if(!['İsim','Hayvan','Şehir','Bitki','Eşya','Ülke'].includes(cat)) {
-     const list=generic[cat]||[letterNow+' cevap'];
-     val=list[Math.floor(Math.random()*list.length)];
+   const list=banks[cat]||[];
+   let val=pick(list);
+
+   // Keep bots useful for testing: most answers are valid, but a small
+   // number intentionally become questionable/empty so AI analysis can be tested.
+   const challenge=Math.random();
+   if(challenge<0.08){
+     val='Cevap yok';
+   }else if(challenge<0.15){
+     const other=list.filter(v=>!startsWithLetter(v));
+     val=other.length?other[Math.floor(Math.random()*other.length)]:val;
    }
-   return {cat,val:good?val:'Cevap yok'};
+
+   if(cat==='8 harfli kelime' && val && val!=='Cevap yok'){
+     const exact=list.filter(v=>String(v).length===8&&startsWithLetter(v));
+     if(exact.length)val=exact[Math.floor(Math.random()*exact.length)];
+   }
+
+   if(!val)val=letter+' örnek';
+   return {cat,val};
  })
 }
 function finishRound(){
