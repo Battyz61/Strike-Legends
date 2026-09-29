@@ -1198,9 +1198,9 @@ function botAnswers(){
    // Keep bots useful for testing: most answers are valid, but a small
    // number intentionally become questionable/empty so AI analysis can be tested.
    const challenge=Math.random();
-   if(challenge<0.08){
+   if(challenge<0.02){
      val='Cevap yok';
-   }else if(challenge<0.15){
+   }else if(challenge<0.06){
      const other=list.filter(v=>!startsWithLetter(v));
      val=other.length?other[Math.floor(Math.random()*other.length)]:val;
    }
