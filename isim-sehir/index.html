@@ -1290,7 +1290,7 @@ async function toggleAiInfo(btn){
    const res=await fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category,answer})});
    const data=await res.json().catch(()=>({}));
    if(!res.ok){
-     const status=data.upstreamStatus?' · OpenAI '+data.upstreamStatus:'';
+     const status=data.upstreamStatus?' · Gemini '+data.upstreamStatus:'';
      throw new Error((data.error||'AI_REQUEST_FAILED')+status);
    }
    const text=String(data.text||'').trim();
