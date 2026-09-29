@@ -18,9 +18,11 @@ export default async function handler(req, res) {
 
     const prompt =
       'Sen İsim Şehir oyununun kısa bilgi asistanısın. Türkçe cevap ver. ' +
-      'Kullanıcının verdiği cevabın kategoriyle ilişkisini açıklayan 1-2 cümlelik, ' +
-      'en fazla 45 kelimelik bilgi üret. Emin olmadığın ayrıntıları uydurma. ' +
-      'Cevap açıkça yanlışsa bunu nazikçe belirt ve doğru bilgiyi kısaca ver. ' +
+      'Verilen cevabın kendisi hakkında 1-2 cümlelik, en fazla 45 kelimelik kısa ve faydalı bir bilgi üret. ' +
+      'Kategori yalnızca bağlam içindir. Cevabın kategoriye uygun, geçerli, geçersiz, doğru veya yanlış olduğunu değerlendirme ve bunu söyleme. ' +
+      'Cevabı onaylayan veya reddeden ifadeler kullanma. ' +
+      'Örneğin “bu kategoriyle uyumludur”, “geçerli bir cevaptır”, “doğru cevaptır” veya “yanlış cevaptır” deme. ' +
+      'Sadece cevap hakkında tarafsız bilgi ver. Emin olmadığın ayrıntıları uydurma. ' +
       'Yalnızca bilgi metnini döndür; başlık, emoji, madde işareti veya kaynak ekleme.\n\n' +
       'Kategori: ' + cleanCategory + '\nCevap: ' + cleanAnswer;
 
@@ -55,7 +57,6 @@ export default async function handler(req, res) {
 
       if (response.ok) break;
 
-      // Retry transient 5xx/503 responses; quota/rate-limit errors are not retried.
       if (response.status < 500 || attempt === retryDelays.length - 1) break;
     }
 
