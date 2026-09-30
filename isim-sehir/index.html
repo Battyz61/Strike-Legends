@@ -1822,15 +1822,17 @@ function nextRound(ev){
  resetRoundVisuals();
  round++;
  roundTransitionTarget=round;
- roundTransitionLetter='';
+ const availableLetters=selectedLetters.length?selectedLetters:letters;
+ roundTransitionLetter=availableLetters[Math.floor(Math.random()*availableLetters.length)];
+ letterNow=roundTransitionLetter;
  roundState={token:++roundToken,phase:'preparing'};
  persistHostSession();
  const s=currentGameSettings();
- broadcast({type:'roundPreparing',round,letter:'',duration:s.duration,wheel:s.wheel,totalRounds:s.totalRounds,cats:[...cats],letters:[...selectedLetters]});
+ broadcast({type:'roundPreparing',round,letter:roundTransitionLetter,duration:s.duration,wheel:s.wheel,totalRounds:s.totalRounds,cats:[...cats],letters:[...selectedLetters]});
  showRoundTransition(()=>{
    if(roundTransitionTarget!==round)return;
    roundTransitionTarget=0;
-   newRound(null,true);
+   newRound(roundTransitionLetter,true);
  });
 }
 function showFinalResults(announce=true){
@@ -1890,12 +1892,5 @@ function showRoundTransition(done){
    box.classList.remove('show','ready');box.setAttribute('aria-hidden','true');
    if(typeof done==='function')done();
  },1200);
-}
-function showRoundStage(){
- const box=$('roundStage'),title=$('roundBigTitle'),sub=$('roundSubtitle');
- if(!box)return;
- title.textContent=round+'. TUR';sub.textContent='Harfini al ve cevaplarını hazırla';
- box.classList.remove('round-start-flash');void box.offsetWidth;box.classList.add('round-start-flash');
- setTimeout(()=>{if(sub)sub.textContent='Harf seçiliyor...'},500);
 }
 </script></body></html>
