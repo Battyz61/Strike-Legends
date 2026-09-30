@@ -400,7 +400,7 @@ body{min-height:100dvh}
   </div>
 </div><div id="toast" class="toast"></div>
 <script>
-const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
+const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','3 harfli kelime','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let selectedLetters=[...letters];
@@ -1330,6 +1330,7 @@ function botAnswers(){
   'Sanatçı':['Ajda Pekkan','Barış Manço','Cem Karaca','Ed Sheeran','Edis','Hadise','Mabel Matiz','Sezen Aksu','Tarkan','Yıldız Tilbe'],
   'Futbolcu':['Arda Güler','Burak Yılmaz','Hakan Çalhanoğlu','İlkay Gündoğan','Kylian Mbappe','Lionel Messi','Luka Modric','Mohamed Salah','Neymar','Ronaldo','Sergio Ramos'],
   'Yemek malzemesi':['Bal','Biber','Bulgur','Domates','Et','Fasulye','Havuç','İrmik','Kakao','Limon','Makarna','Mercimek','Nohut','Pirinç','Salça','Soğan','Şeker','Tereyağı','Tuz','Un','Yağ'],
+  '3 harfli kelime':['Aba','Ada','Ağı','Ana','Ara','Arı','Ata','Bal','Bar','Baş','Bel','Ben','Bir','Bol','Cam','Can','Cep','Çay','Dal','Dar','Dem','Dil','Diz','Don','Dut','Eki','El','Et','Fil','Göl','Gün','Hak','Han','Has','Hay','İla','İnş','İri','İyi','Kar','Kat','Kaz','Kıl','Kır','Kol','Koy','Kuş','Laf','Mey','Nar','Net','Not','Oda','Oğul','Öl','Ön','Pil','Rol','Söz','Su','Şal','Şey','Taş','Tel','Top','Tor','Toz','Uç','Uçak','Üç','Yaz','Yer','Yol','Zil'],
   '8 harfli kelime':['Armutlar','Balıkları','Çiçekler','Dostluk','Elbiseler','Futbolcu','Hayaller','Kitaplık','Kelebekler','Macera','Oyuncular','Sandalye','Telefonum','Yolculuk'],
   'Şarkı':['Aşk','Aşkın Olayım','Benimle Oynama','Fırtına','Gülpembe','Kuzu Kuzu','Mavi Mavi','Ölürüm Hasretinle','Sarı Çizmeli Mehmet Ağa','Yalnızlık Senfonisi'],
   'Erkek ismi':['Ahmet','Ali','Berk','Burak','Can','Cem','Emre','Fatih','Hakan','Hasan','İbrahim','Kerem','Mehmet','Mert','Murat','Oğuz','Onur','Ömer','Serkan','Sinan','Şahin','Tuna','Umut','Yasin'],
@@ -1357,6 +1358,10 @@ function botAnswers(){
    }else if(challenge<0.07){
      const wrong=list.filter(v=>!startsWithLetter(v));
      val=wrong.length?wrong[Math.floor(Math.random()*wrong.length)]:valid;
+   }
+   if(cat==='3 harfli kelime'){
+     const exact=(list||[]).filter(v=>String(v).length===3&&startsWithLetter(v));
+     val=challenge<0.04?'Cevap yok':(challenge<0.07?(list.find(v=>!startsWithLetter(v))||valid):(exact.length?exact[Math.floor(Math.random()*exact.length)]:'Cevap yok'));
    }
    if(cat==='8 harfli kelime'){
      const exact=(list||[]).filter(v=>String(v).length===8&&startsWithLetter(v));
