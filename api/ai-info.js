@@ -33,6 +33,8 @@ export default async function handler(req, res) {
       'Açık ve bariz yazım hatalarını da değerlendir: Cevap, kategoriye uygun bilinen bir kelimenin küçük bir yazım hatalı biçimiyse ve ne kastedildiği tartışmasızsa cevabı sırf yazım hatası yüzünden reddetme. Örneğin "Eşşek" açıkça "eşek" kelimesinin fazladan ş harfi içeren yazımıdır; "Hayvan" kategorisinde uygun kabul edilmelidir. Yazım hatası anlamı belirsizleştiriyorsa "Tartışmalı" kullan. ' +
       'Bazı cevaplar birden fazla varlık türünü ifade edebilir. Böyle durumlarda tek bir yorumla kesin "Uygun görünüyor" deme. Özellikle "Bitki" kategorisinde cevap yaygın olarak meyve/ürün adı olarak da kullanılıyorsa ve aynı kelime bitkinin kendisini de ifade edebiliyorsa "Tartışmalı" seç. Örneğin "Erik" hem erik ağacını hem meyvesini ifade edebildiği için "Bitki" kategorisinde tartışmalı kabul edilmelidir. "Elma", "armut", "kiraz" gibi benzer çift anlamlı örneklerde de aynı yaklaşımı kullan. Oyuncuların nihai kararı verebilmesi için gerekçede iki makul yorumu kısaca belirt. ' +
       'Başlangıç harfi verilmişse cevabın o harfle başlamasını da kontrol et. ' +
+      'Kategori "3 harfli kelime" ise cevabın Türkçe bir kelime olarak tam 3 harfli olması gerekir; 3 harften kısa veya uzun cevapları uygun kabul etme. ' +
+      'Kategori "8 harfli kelime" ise cevabın tam 8 harfli olması gerekir; 8 harften kısa veya uzun cevapları uygun kabul etme. ' +
       'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
       'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
       'Bilgi bölümünde cevabı onaylayan veya reddeden ifadeler kullanma. ' +
@@ -121,6 +123,17 @@ export default async function handler(req, res) {
       parsed.gerekce = 'Cevap hem bitkinin/ağacın adını hem de meyvesini ifade edebilir; hangi anlamın kastedildiği tartışılabilir.';
     }
     const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
+    const letterCount = Array.from(cleanAnswer.replace(/\\s+/g, '')).length;
+    if (categoryKey === '3 harfli kelime' && letterCount !== 3) {
+      parsed.uygunluk = 'Uygun görünmüyor';
+      parsed.guven = 'Yüksek';
+      parsed.gerekce = 'Cevap tam 3 harfli değil; bu kategori yalnızca 3 harfli kelimeleri kabul eder.';
+    }
+    if (categoryKey === '8 harfli kelime' && letterCount !== 8) {
+      parsed.uygunluk = 'Uygun görünmüyor';
+      parsed.guven = 'Yüksek';
+      parsed.gerekce = 'Cevap tam 8 harfli değil; bu kategori yalnızca 8 harfli kelimeleri kabul eder.';
+    }
     if (categoryKey === 'şehir' && /(?:mahalle\\w*|semt\\w*|köy\\w*|ilçe\\w*|belde\\w*|kasaba\\w*|mezra\\w*)/i.test(evidence)) {
       parsed.uygunluk = 'Uygun görünmüyor';
       parsed.guven = parsed.guven === 'Düşük' ? 'Düşük' : 'Orta';
