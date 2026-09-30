@@ -1504,7 +1504,7 @@ async function toggleAiInfo(btn){
 function voteRow(owner,x,empty=false){
  const answerOwner=owner==='me'?me:owner.startsWith('bot')?'Bot '+(parseInt(owner.replace('bot',''),10)+1):owner.startsWith('human:')?owner.slice(6):owner;
  const isMine=owner==='me'; const ownerAvatar=isMine?myAvatar:(owner.startsWith('bot')?((Number(owner.replace('bot',''))+4)%AVATARS.length):avatarIdFor(answerOwner));
- const voterButtons=isMine?'<span class="own-answer-label">👑 Kendi cevabın</span>':'<button type="button" class="vote-circle no" data-vote-action="no">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes">✓</button>';
+ const voterButtons=isMine?'<span class="own-answer-label">👑 Kendi cevabın</span><button type="button" class="vote-circle no" data-vote-action="no" aria-label="Kendi cevabını yanlış olarak oyla">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes" aria-label="Kendi cevabını doğru olarak oyla">✓</button>':'<button type="button" class="vote-circle no" data-vote-action="no" aria-label="Yanlış oyla">✕</button><button type="button" class="vote-circle yes" data-vote-action="yes" aria-label="Doğru oyla">✓</button>';
  let botVotes='';
  bots.forEach((b,bi)=>{if(owner==='bot'+bi)return;const val=remoteVotes['Bot '+(bi+1)+'|'+answerOwner+'|'+x.cat];botVotes+='<span class="player-vote bot-vote '+(val?'':'pending')+'" data-voter="Bot '+(bi+1)+'" style="'+(val?'display:inline-flex':'')+'"></span>'});
  let humanVotes='';
