@@ -557,7 +557,7 @@ function joinRoom(){
 }
 const HOST_SESSION_KEY='isimSehirHostSessionV2';
 const GUEST_SESSION_KEY='isimSehirGuestSessionV2';
-let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={},roomRejected=false,hostRestoreRetryTimer=null;
+let reconnectTimer=null,reconnectAttempts=0,reconnecting=false,disconnectGraceTimers={},roomRejected=false,hostRestoreRetryTimer=null,roundTransitionTarget=0,roundTransitionLetter='';
 function persistHostSession(){
  if(!isHost||!roomId)return;
  try{
@@ -979,14 +979,37 @@ function bindConnection(conn){
      if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      netAnswers={};submittedPlayers={};votingOpenedRound=0;votingDone={};localVotes={};remoteVotes={};netVotes={};
      resumeActiveRound(data);
+   }else if(data.type==='roundPreparing'&&!isHost){
+     const targetRound=Number(data.round)||1;
+     if(targetRound<=round)return;
+     round=targetRound;
+     letterNow=data.letter||letterNow;
+     roundTransitionTarget=targetRound;
+     roundTransitionLetter=letterNow;
+     if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
+     applyGameSettings(data);
+     roundState={token:++roundToken,phase:'preparing'};
+     netAnswers={};submittedPlayers={};votingOpenedRound=0;votingDone={};localVotes={};remoteVotes={};
+     showRoundTransition(()=>{
+       if(roundTransitionTarget!==targetRound)return;
+       roundTransitionTarget=0;
+       newRound(roundTransitionLetter,false);
+     });
    }else if(data.type==='roundStart'&&!isHost){
-     round=Number(data.round)||1;
+     const targetRound=Number(data.round)||1;
+     round=targetRound;
      letterNow=data.letter||letterNow;
      if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      applyGameSettings(data);
-     netAnswers={};submittedPlayers={};votingOpenedRound=0;
-     showRoundTransition(()=>newRound(letterNow,false));
+     // roundPreparing already started the transition; avoid showing it twice.
+     if(roundTransitionTarget===targetRound){
+       roundTransitionLetter=letterNow;
+     }else{
+       netAnswers={};submittedPlayers={};votingOpenedRound=0;
+       showRoundTransition(()=>newRound(letterNow,false));
+     }
    }else if(data.type==='gameFinished'&&!isHost){
+
      if(Number(data.round)!==round)return;
      if(data.scores)netScores=Object.assign({},data.scores);
      myScore=Number(netScores[me]||0);$('myScore').textContent=myScore;
@@ -1784,7 +1807,17 @@ function nextRound(ev){
  if(btn){btn.disabled=true;btn.textContent='Yeni tur hazırlanıyor…';}
  resetRoundVisuals();
  round++;
- showRoundTransition(()=>newRound(null,true));
+ roundTransitionTarget=round;
+ roundTransitionLetter='';
+ roundState={token:++roundToken,phase:'preparing'};
+ persistHostSession();
+ const s=currentGameSettings();
+ broadcast({type:'roundPreparing',round,letter:'',duration:s.duration,wheel:s.wheel,totalRounds:s.totalRounds,cats:[...cats],letters:[...selectedLetters]});
+ showRoundTransition(()=>{
+   if(roundTransitionTarget!==round)return;
+   roundTransitionTarget=0;
+   newRound(null,true);
+ });
 }
 function showFinalResults(announce=true){
  gameFinished=true;roundState=roundState||{};roundState.phase='results';
