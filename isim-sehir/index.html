@@ -913,8 +913,11 @@ function bindConnection(conn){
      else $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
    }else if(data.type==='votingDone'&&isHost){
      if(Number(data.round)!==round)return;
+     if(!data.player||!Object.prototype.hasOwnProperty.call(onlinePlayers,data.player))return;
+     if(votingDone[data.player]===true)return;
      votingDone[data.player]=true;
-     finalizeVoting();
+     persistHostSession();
+     if(allVotingDone())finalizeVoting();
    }else if(data.type==='vote'&&isHost){
      if(Number(data.round)!==round)return;
      registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct,data.owner);
