@@ -1630,8 +1630,11 @@ function calculateVotingResult(){
 
  rows.forEach(row=>{
    const owner=row.dataset.answer;if(!owner)return;
-   const greenBoxes=row.querySelectorAll('.player-vote.yes').length;
-   const redBoxes=row.querySelectorAll('.player-vote.no').length;
+   // Oyuncunun kendi cevabına verdiği oy artık da sonuca dahil.
+   // Diğer oyuncu/bot oyları .player-vote kutularında tutuluyor.
+   const ownVote=row.dataset.vote;
+   const greenBoxes=row.querySelectorAll('.player-vote.yes').length+(ownVote==='yes'?1:0);
+   const redBoxes=row.querySelectorAll('.player-vote.no').length+(ownVote==='no'?1:0);
    const catTitle=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent||'';
    const cat=catTitle.replace(letterNow+' ile ','');
    const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
@@ -1663,6 +1666,8 @@ function calculateVotingResult(){
  });
  const scores=Object.assign({},netScores);
  Object.keys(gains).forEach(n=>{scores[n]=Number(scores[n]||0)+Number(gains[n]||0)});
+ // Ondalık puanlar toplamda da okunabilir kalsın.
+ Object.keys(scores).forEach(n=>{scores[n]=Number(Number(scores[n]||0).toFixed(2))});
  return {gains,details,scores};
 }
 function allVotingDone(){
