@@ -1339,39 +1339,47 @@ function botAnswers(){
   'Yiyecek':['Baklava','Balık','Burger','Döner','Ekmek','Hamburger','Kebap','Köfte','Lahmacun','Makarna','Mantı','Pizza','Pilav','Pide','Salata','Simit'],
   'Tatlı':['Baklava','Brownie','Cheesecake','Dondurma','Kadayıf','Kazandibi','Künefe','Lokma','Pasta','Revani','Sufle','Sütlaç','Tiramisu']
  };
-
  const letter=String(letterNow||'').toLocaleUpperCase('tr-TR');
- const startsWithLetter=(value)=>{
-   const v=String(value||'').trim().toLocaleUpperCase('tr-TR');
-   return letter && v.startsWith(letter);
- };
+ const startsWithLetter=value=>String(value||'').trim().toLocaleUpperCase('tr-TR').startsWith(letter);
  const pick=(list)=>{
    const matching=(list||[]).filter(startsWithLetter);
    return matching.length?matching[Math.floor(Math.random()*matching.length)]:null;
  };
-
  return cats.map(cat=>{
    const list=banks[cat]||[];
-   let val=pick(list);
-
-   // Keep bots useful for testing: most answers are valid, but a small
-   // number intentionally become questionable/empty so AI analysis can be tested.
+   const valid=pick(list);
    const challenge=Math.random();
-   if(challenge<0.02){
+   let val=valid;
+   // Botların büyük çoğunluğu gerçek ve harfe uygun cevap verir.
+   // Küçük hata payı oy verme/AI doğrulamasını test etmek için korunur.
+   if(challenge<0.04){
      val='Cevap yok';
-   }else if(challenge<0.06){
-     const other=list.filter(v=>!startsWithLetter(v));
-     val=other.length?other[Math.floor(Math.random()*other.length)]:val;
+   }else if(challenge<0.07){
+     const wrong=list.filter(v=>!startsWithLetter(v));
+     val=wrong.length?wrong[Math.floor(Math.random()*wrong.length)]:valid;
    }
-
-   if(cat==='8 harfli kelime' && val && val!=='Cevap yok'){
-     const exact=list.filter(v=>String(v).length===8&&startsWithLetter(v));
-     if(exact.length)val=exact[Math.floor(Math.random()*exact.length)];
+   if(cat==='8 harfli kelime'){
+     const exact=(list||[]).filter(v=>String(v).length===8&&startsWithLetter(v));
+     val=challenge<0.04?'Cevap yok':(challenge<0.07?(list.find(v=>!startsWithLetter(v))||valid):(exact.length?exact[Math.floor(Math.random()*exact.length)]:'Cevap yok'));
    }
-
-   if(!val)val=letter+' örnek';
+   // Eğer bankada o harfle güvenilir cevap yoksa sahte cevap üretmek yerine
+   // bilinçli olarak boş bırakırız; böylece botlar yanlış kelime uydurmaz.
+   if(!val)val='Cevap yok';
    return {cat,val};
- })
+ });
+}
+function botVoteDecision(answer,cat,voterIndex,ownerIndex){
+ const value=String(answer||'').trim();
+ if(!value||value==='Cevap yok')return false;
+ const upper=value.toLocaleUpperCase('tr-TR');
+ const letterUpper=String(letterNow||'').toLocaleUpperCase('tr-TR');
+ // Harfle başlamayan cevapları botlar normalde reddeder.
+ if(letterUpper&&!upper.startsWith(letterUpper))return false;
+ if(cat==='8 harfli kelime'&&value.length!==8)return false;
+ // Geçerli cevaplar yüksek ihtimalle kabul edilir; ara sıra tartışmaya
+ // açık davranış üretmek için deterministik küçük bir varyasyon kullanılır.
+ const seed=(value.length*7)+(cat.length*11)+(voterIndex*13)+(ownerIndex*17)+(round*19);
+ return seed%10!==0;
 }
 function finishRound(){
  if($('finishBtn').disabled)return;
@@ -1582,14 +1590,20 @@ function showVoting(sync=null){
 }
 function revealBotVotes(){
  const boxes=[...$('answers').querySelectorAll('.bot-vote')];
- boxes.forEach((x,i)=>{
+ boxes.forEach(x=>{
    const row=x.closest('.vote-player');if(!row)return;
-   const owner=row.dataset.owner;const idx=Number(owner.replace('bot',''));const voterIndex=Number(x.dataset.voter||0);
-   const yes=((idx+voterIndex+row.dataset.answer.length+round)%4)!==0;
+   const owner=row.dataset.owner;
+   const ownerIndex=owner.startsWith('bot')?Number(owner.replace('bot','')):-1;
+   const voterName=x.dataset.voter||'Bot 1';
+   const voterIndex=Math.max(0,Number(voterName.replace(/\\D/g,''))-1);
+   const cat=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')||'';
+   const answer=row.querySelector('.vote-value')?.textContent||'';
+   const yes=botVoteDecision(answer,cat,voterIndex,ownerIndex);
    x.classList.remove('pending','yes','no');x.classList.add(yes?'yes':'no');x.style.display='inline-flex';
  });
- const botTotal=bots.reduce((n,b)=>n+1,0);
- const status=$('status');if(status&&botTotal)status.textContent='🤖 '+botTotal+' bot oyunu otomatik kullandı. Şimdi sen oyla.';
+ const botTotal=bots.length;
+ const status=$('status');
+ if(status&&botTotal)status.textContent='🤖 '+botTotal+' bot oyunu otomatik kullandı. Şimdi sen oyla.';
 }
 function updateVoteSummary(){
  const actionRows=$('answers')?[...$('answers').querySelectorAll('.vote-player [data-vote-action]')]:[];
