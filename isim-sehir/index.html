@@ -1407,12 +1407,21 @@ function botVoteDecision(answer,cat,voterIndex,ownerIndex){
  if(!value||value==='Cevap yok')return false;
  const upper=value.toLocaleUpperCase('tr-TR');
  const letterUpper=String(letterNow||'').toLocaleUpperCase('tr-TR');
- // Harfle başlamayan cevapları botlar normalde reddeder.
  if(letterUpper&&!upper.startsWith(letterUpper))return false;
- if(cat==='8 harfli kelime'&&value.length!==8)return false;
- // Geçerli cevaplar yüksek ihtimalle kabul edilir; ara sıra tartışmaya
- // açık davranış üretmek için deterministik küçük bir varyasyon kullanılır.
- const seed=(value.length*7)+(cat.length*11)+(voterIndex*13)+(ownerIndex*17)+(round*19);
+ const normalized=value.toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[ıİ]/g,'i');
+ const compact=normalized.replace(/[^a-z0-9]/g,'');
+ const catKey=String(cat||'').toLocaleLowerCase('tr-TR');
+ // Botların rastgele oy vermesi yerine, bariz kategori çelişkilerini otomatik reddet.
+ const hardReject={
+  'şehir':/mahalle|semt|köy|koy|ilçe|ilce|belde|mezra/.test(normalized),
+  'ülke':/şehir|sehir|ilçe|ilce|mahalle|köy|koy|bölge|bolge/.test(normalized),
+  'hayvan':/^(sut|yun|deri|yumurta|bal|peynir|tereyagi)$/.test(compact),
+  'yemek malzemesi':/^(süt|sut|yun|deri|yumurta|hayvan|kedi|köpek|kopek|at|araba|masa)$/.test(compact)
+ };
+ if(hardReject[catKey])return false;
+ if(catKey==='3 harfli kelime'&&Array.from(compact).length!==3)return false;
+ if(catKey==='8 harfli kelime'&&Array.from(compact).length!==8)return false;
+ const seed=(compact.length*7)+(catKey.length*11)+(voterIndex*13)+(ownerIndex*17)+(round*19);
  return seed%10!==0;
 }
 function finishRound(){
