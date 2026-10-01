@@ -54,36 +54,57 @@ export default async function handler(req, res) {
 
     let response;
     let data = {};
+
+    // Bir model/endpoint geçici olarak hata verirse diğer desteklenen modeli dene.
+    // Böylece tek bir Gemini modelindeki kota, bölge veya geçici servis sorunu AI panelini tamamen bozmaz.
+    const modelCandidates = [
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite'
+    ];
     const retryDelays = [0, 1000, 2500];
 
-    for (let attempt = 0; attempt < retryDelays.length; attempt++) {
-      if (retryDelays[attempt]) {
-        await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+    for (const model of modelCandidates) {
+      for (let attempt = 0; attempt < retryDelays.length; attempt++) {
+        if (retryDelays[attempt]) {
+          await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+        }
+
+        response = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' +
+          encodeURIComponent(process.env.GEMINI_API_KEY),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          }
+        );
+
+        data = await response.json().catch(() => ({}));
+
+        if (response.ok) break;
+
+        console.error('Gemini API error', {
+          model,
+          status: response.status,
+          message: data?.error?.message || null
+        });
+
+        // 4xx genellikle model/parametre/API erişim problemidir; aynı modeli tekrar tekrar dövmek yerine
+        // diğer adaya geç. 5xx ise kısa retry yap.
+        if (response.status < 500) break;
+        if (attempt === retryDelays.length - 1) break;
       }
 
-      response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
-        encodeURIComponent(process.env.GEMINI_API_KEY),
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
-        }
-      );
-
-      data = await response.json().catch(() => ({}));
-
-      if (response.ok) break;
-
-      if (response.status < 500 || attempt === retryDelays.length - 1) break;
+      if (response && response.ok) break;
     }
 
-    if (!response.ok) {
-      console.error('Gemini API error', data);
+    if (!response || !response.ok) {
+      console.error('Gemini API all models failed', data);
       return res.status(502).json({
         error: 'AI_REQUEST_FAILED',
-        upstreamStatus: response.status,
-        upstreamMessage: data?.error?.message || null
+        upstreamStatus: response?.status || 502,
+        upstreamMessage: data?.error?.message || null,
+        modelsTried: modelCandidates
       });
     }
 
