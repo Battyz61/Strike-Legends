@@ -17,40 +17,27 @@ export default async function handler(req, res) {
       return res.status(503).json({ error: 'AI_NOT_CONFIGURED' });
     }
 
+    const normalizedPromptAnswer = cleanAnswer.toLocaleUpperCase('tr-TR').replace(/\\s+/g, '');
+    const normalizedPromptLetter = cleanLetter.toLocaleUpperCase('tr-TR').replace(/\\s+/g, '');
+    const promptLetterMatches = !normalizedPromptLetter || normalizedPromptAnswer.startsWith(normalizedPromptLetter);
+
     const prompt =
-      'Sen İsim Şehir oyununun tarafsız AI yardımcı hakemisin. Türkçe cevap ver. ' +
-      'Verilen cevabın kategoriye ve varsa başlangıç harfine uygunluğunu analiz et. ' +
-      'Son kararı oyuncular verir; sen sadece yardımcı değerlendirme sunarsın. ' +
-      'Uygunluk için yalnızca "Uygun görünüyor", "Uygun görünmüyor" veya "Tartışmalı" kullan. ' +
-      'Güven için yalnızca "Yüksek", "Orta" veya "Düşük" kullan. ' +
-      'Kategorideki kullanım tartışmalıysa veya birden fazla makul yorum varsa "Tartışmalı" seç. ' +
-      'Kategori bir varlık türü istiyorsa, cevabın o varlığın kendisi mi yoksa onun ürünü/parçası/özelliği mi olduğunu ayırt et. ' +
-      'Özellikle "Şehir" kategorisinde yalnızca gerçek şehir/il veya oyunda şehir olarak kullanılan yerleşim adı kabul edilir. Mahalle, semt, köy, ilçe, belde, kasaba veya bir ilçeye bağlı küçük yerleşim birimi şehir değildir ve "Uygun görünüyor" denmemelidir. ' +
-      'Örneğin "Özdil" için bilgi bunun Araklı ilçesine bağlı bir mahalle olduğunu söylüyorsa, "Şehir" kategorisinde sonuç kesin olarak "Uygun görünmüyor" olmalıdır. ' +
-      'Aynı şekilde "Araklı" gibi bir ilçe, "Trabzon" gibi bir ilin ilçesi olarak tanımlanıyorsa "Şehir" kategorisinde kabul edilmemelidir. ' +
-      'Benzer şekilde "Ülke" kategorisinde şehir, il, ilçe, mahalle veya bölge; "Hayvan" kategorisinde hayvan ürünü, yiyecek veya parça; "Bitki" kategorisinde yalnızca meyve/ürün adı gibi ilişkili ama farklı varlıklar doğrudan kabul edilmemeli. "Hayvan" için hayvanın kendisini, "Bitki" için bitkinin kendisini ara; bir hayvandan elde edilen ürün (ör. süt, yün) veya bitkiden elde edilen ürün (ör. un, yağ) doğrudan hayvan/bitki kabul edilmez. Ancak bir kelime Türkçede hem canlı varlığın hem ürününün adı olarak yerleşik biçimde kullanılıyorsa bağlama göre "Tartışmalı" seç. "Yemek malzemesi" kategorisinde de malzemenin kendisini ara; hazır yemek veya hayvan/bitki adı tek başına malzeme sayılmaz. ' +
-      'Kategori ile cevap arasındaki ilişki net değilse "Yüksek" güven verme. ' +
-      'Açık ve bariz yazım hatalarını değerlendir: Cevap, kategoriye uygun bilinen bir kelimenin küçük bir yazım hatalı biçimiyse ve ne kastedildiği tartışmasızsa sırf yazım hatası yüzünden reddetme. Türkçe karakterlerin yanlış yazılması (İ/I, Ş/S, Ğ/G, Ç/C, Ö/O, Ü/U) veya tek harfin fazladan/eksik olması, kelimenin anlamını açıkça koruyorsa tolere edilebilir. Örneğin "Eşşek" açıkça "eşek" kelimesinin yazımıdır ve Hayvan kategorisinde uygun kabul edilmelidir. Ancak yazım farkı başka gerçek bir kelime oluşturuyorsa, cevabı anlamı belirsiz hale getiriyorsa veya kategoriye uygunluğu değiştiriyorsa otomatik kabul etme; "Tartışmalı" veya "Uygun görünmüyor" kullan. ' +
-      'Bazı cevaplar birden fazla varlık türünü ifade edebilir. Böyle durumlarda tek bir yorumla kesin "Uygun görünüyor" deme. Özellikle "Bitki" kategorisinde cevap yaygın olarak meyve/ürün adı olarak da kullanılıyorsa ve aynı kelime bitkinin kendisini de ifade edebiliyorsa "Tartışmalı" seç. Örneğin "Erik" hem erik ağacını hem meyvesini ifade edebildiği için "Bitki" kategorisinde tartışmalı kabul edilmelidir. "Elma", "armut", "kiraz" gibi benzer çift anlamlı örneklerde de aynı yaklaşımı kullan. Oyuncuların nihai kararı verebilmesi için gerekçede iki makul yorumu kısaca belirt. ' +
-      'Başlangıç harfi verilmişse cevabın o harfle başlamasını da kontrol et. ' +
-      'Kategori "3 harfli kelime" bir sözlük/kelime kategorisidir; cevap Türkçede anlamlı bir kelime olmalı ve tam 3 harf içermelidir. Harfleri gerçekten tek tek say. "Mal" ve "Mey" Türkçede kullanılan anlamlı 3 harfli kelimelerdir ve bu kategoriye uygundur; bunları uzunluk veya anlam nedeniyle yanlışlıkla reddetme. Yalnızca anlamsız bir harf dizisi veya başka bir kategoriye ait açıkça yanlış bir ifade ise reddet. ' +
-      'Kategori "8 harfli kelime" ise cevabın tam 8 harfli olması gerekir; 8 harften kısa veya uzun cevapları uygun kabul etme. ' +
-      'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
-      'Çok önemli tutarlılık kuralı: "gerekce" yalnızca bu istekte verilen Cevap için ve verilen Kategori için yazılmalıdır. ' +
-      'Yukarıdaki örneklerde geçen başka cevapları veya başka kategorilere ait örnek gerekçeleri asla kopyalama. ' +
-      '"bilgi" ile "gerekce" aynı cevabı anlatmalıdır. Bilgi bölümünde cevap bir isim/şehir/hayvan/bitki vb. olarak açıkça tanımlanıyorsa, gerekçede bunun tersini söyleme. ' +
-      'Gerekçe ile bilgi çelişirse kesin hüküm verme ve "Tartışmalı" seç. ' +
-      'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
-      'Bilgi bölümünde cevabı onaylayan veya reddeden ifadeler kullanma. ' +
-      'Yanıtı SADECE geçerli JSON olarak döndür ve başka hiçbir şey yazma. ' +
-      'JSON: {"uygunluk":"Uygun görünüyor|Uygun görünmüyor|Tartışmalı","guven":"Yüksek|Orta|Düşük","gerekce":"en fazla 20 kelime","bilgi":"en fazla 35 kelime"}\
-\
-' +
-      'Kategori: ' + cleanCategory + '\
-' +
-      'Başlangıç harfi: ' + (cleanLetter || 'Belirtilmedi') + '\
-' +
-      'Cevap: ' + cleanAnswer;
+      'Sen İsim Şehir oyununun tarafsız yardımcı hakemisin. Türkçe cevap ver ve yalnızca verilen Cevap + Kategori için değerlendirme yap. ' +
+      'Asla başka örnek cevapların veya başka kategorilerin gerekçelerini kopyalama. ' +
+      'Önce somut kuralları kontrol et: Başlangıç harfi verilmişse Cevap metninin ilk harfini gerçekten karşılaştır. ' +
+      'Cevap seçilen harfle başlıyorsa harf nedeniyle reddetme ve gerekçede başlamadığını söyleme. Cevap seçilen harfle başlamıyorsa bunu açıkça belirt. ' +
+      'Sonra cevabın gerçekten istenen kategoriye ait olup olmadığını değerlendir. Kategori ile cevap arasında belirsizlik varsa Tartışmalı seç. ' +
+      'Bilgi, cevabın kendisi hakkında tarafsız kısa bir bilgidir; gerekçe ise yalnızca bu cevabın bu kategoriye neden uyup uymadığını açıklar. ' +
+      'Bilgi ile gerekçe birbiriyle çelişirse kesin kabul veya kesin red verme; Tartışmalı seç. ' +
+      'Uygunluk için yalnızca "Uygun görünüyor", "Uygun görünmüyor" veya "Tartışmalı"; güven için yalnızca "Yüksek", "Orta" veya "Düşük" kullan. ' +
+      'Şehir kategorisinde mahalle, köy, ilçe, belde veya küçük alt yerleşimleri şehir olarak kabul etme. Ülke kategorisinde şehir/il/ilçe gibi yerleri ülke kabul etme. ' +
+      'Hayvan veya Bitki kategorisinde ürününü değil varlığın kendisini değerlendir; iki anlamlı yerleşik kullanımlarda Tartışmalı seç. ' +
+      '3 harfli kelime kategorisinde cevap tam 3 harf olmalı ve Türkçede anlamlı bir kelime olmalı. 8 harfli kelime kategorisinde tam 8 harf olmalı. ' +
+      'Yazım hatası küçük ve ne kastedildiği açıkça anlaşılırsa sırf bu nedenle kesin red verme. Emin olmadığın ayrıntıları uydurma. ' +
+      'Yanıtı SADECE geçerli JSON olarak döndür. ' +
+      'JSON alanları: uygunluk, guven, gerekce (en fazla 20 kelime), bilgi (en fazla 35 kelime). ' +
+      'Kontrol için hesaplanmış harf bilgisi: Cevap="' + cleanAnswer + '", Başlangıç harfi="' + (cleanLetter || 'Belirtilmedi') + '", Harf eşleşmesi=' + (promptLetterMatches ? 'EVET' : 'HAYIR') + '. ' +
+      'Kategori: ' + cleanCategory;
 
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -198,6 +185,36 @@ export default async function handler(req, res) {
       parsed.guven = 'Orta';
       parsed.gerekce = reason;
     };
+
+    // Harf kontrolü deterministiktir. Model, doğru başlayan bir cevabı yanlışlıkla
+    // "harfle başlamıyor" diye reddederse bu hatayı modelin semantik kararından ayır.
+    const letterMismatchClaim = /(?:başlamıyor|başlamıyor|başlamamaktadır|başlamamış|harfiyle başlam|seçilen harf|ilk harf|harf(?:i)? uyuşm)/i;
+    const evidenceBeforeLetterRepair = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ');
+    if (
+      normalizedLetter &&
+      normalizedAnswer &&
+      normalizedAnswer.startsWith(normalizedLetter) &&
+      parsed.uygunluk === 'Uygun görünmüyor' &&
+      letterMismatchClaim.test(evidenceBeforeLetterRepair)
+    ) {
+      // Red yalnızca harf gerekçesine dayanıyorsa, harf kuralını kesin olarak düzelt.
+      const semanticReject = /(?:değil|değildir|uygun değil|kategoriye girmez|şehir değildir|ülke değildir|hayvan değildir|bitki değildir|ürünüdür|ürünü|mahalle|ilçe|köy|belde|semt)/i;
+      if (!semanticReject.test(evidenceBeforeLetterRepair.replace(letterMismatchClaim, ''))) {
+        if (categoryKey === '3 harfli kelime' && Array.from(cleanAnswer.replace(/\\s+/g, '')).length === 3) {
+          parsed.uygunluk = 'Uygun görünüyor';
+          parsed.guven = 'Yüksek';
+          parsed.gerekce = 'Cevap seçilen harfle başlıyor ve tam 3 harfli.';
+        } else if (categoryKey === '8 harfli kelime' && Array.from(cleanAnswer.replace(/\\s+/g, '')).length === 8) {
+          parsed.uygunluk = 'Uygun görünüyor';
+          parsed.guven = 'Yüksek';
+          parsed.gerekce = 'Cevap seçilen harfle başlıyor ve tam 8 harfli.';
+        } else {
+          parsed.uygunluk = 'Tartışmalı';
+          parsed.guven = 'Orta';
+          parsed.gerekce = 'Cevap seçilen harfle başlıyor; harf kuralı açısından uygundur, kategori değerlendirmesi ayrıca ele alınmalıdır.';
+        }
+      }
+    }
     const answerKey = cleanAnswer.toLocaleLowerCase('tr-TR');
     // Bazı Türkçe kategori cevapları iki farklı varlık türüne doğal olarak işaret eder.
     // Özellikle meyve adı aynı zamanda ağacın/bitkinin adıysa oyuncuların tartışabilmesi için kesin kabul verme.
