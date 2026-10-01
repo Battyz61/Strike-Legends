@@ -96,8 +96,16 @@ export default async function handler(req, res) {
           message: data?.error?.message || null
         });
 
-        // 4xx genellikle model/parametre/API erişim problemidir; aynı modeli tekrar tekrar dövmek yerine
-        // diğer adaya geç. 5xx ise kısa retry yap.
+        // 429 kota/hız sınırı hatasıdır. Aynı proje kotasını kullanan diğer modele
+        // geçmek genellikle fayda sağlamaz; Google bu durumda bekleyip yeniden denemeyi önerir.
+        if (response.status === 429) {
+          const retryAfter = data?.error?.details?.find?.(d => d?.retryDelay)?.retryDelay || null;
+          console.warn('Gemini quota/rate limit reached', { model, retryAfter });
+          break;
+        }
+
+        // Diğer 4xx hataları model/parametre/API erişim problemidir; diğer adaya geç.
+        // 5xx ise kısa retry yap.
         if (response.status < 500) break;
         if (attempt === retryDelays.length - 1) break;
       }
@@ -107,9 +115,20 @@ export default async function handler(req, res) {
 
     if (!response || !response.ok) {
       console.error('Gemini API all models failed', data);
+      const upstreamStatus = response?.status || 502;
+      if (upstreamStatus === 429) {
+        const retryAfter = data?.error?.details?.find?.(d => d?.retryDelay)?.retryDelay || null;
+        return res.status(429).json({
+          error: 'AI_QUOTA_EXHAUSTED',
+          upstreamStatus,
+          upstreamMessage: data?.error?.message || 'Gemini API kotası veya hız sınırı aşıldı.',
+          retryAfter,
+          modelsTried: modelCandidates
+        });
+      }
       return res.status(502).json({
         error: 'AI_REQUEST_FAILED',
-        upstreamStatus: response?.status || 502,
+        upstreamStatus,
         upstreamMessage: data?.error?.message || null,
         modelsTried: modelCandidates
       });
