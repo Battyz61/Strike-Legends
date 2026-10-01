@@ -304,6 +304,19 @@ export default async function handler(req, res) {
       }
     }
 
+    // Şehir kategorisinde model bazen başka bir kategoriden kalmış gerekçeyi yanlışlıkla taşıyabiliyor.
+    // Cevap hakkında bölümünde açıkça bir şehir/il olduğu doğrulanıyorsa bu çelişkiyi düzelt.
+    if (categoryKey === 'şehir') {
+      const cityEvidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
+      const clearlyCity = /(?:bir şehir|şehir(?:dir|idir)|bir il|il(?:dir|idir)|ilimizdir|şehridir)/i.test(cityEvidence);
+      const clearlyNotCity = /(?:mahalle|semt|köy|belde|kasaba|mezra|ilçe|şehir değil|şehir değildir|il değil|il değildir)/i.test(cityEvidence);
+      if (clearlyCity && !clearlyNotCity) {
+        parsed.uygunluk = 'Uygun görünüyor';
+        parsed.guven = 'Yüksek';
+        parsed.gerekce = 'Cevap, gerekçede gerçek bir şehir/il olarak tanımlanıyor ve Şehir kategorisine uygundur.';
+      }
+    }
+
     // Modelin kararı ile kendi gerekçesi çelişiyorsa gerekçedeki açık olguyu esas al.
     // Bu, örneğin "Uygun görünüyor" deyip aynı anda "bir ilçe" veya "hayvan ürünü" demesini engeller.
     const semanticConflict = [
