@@ -38,9 +38,13 @@ export default async function handler(req, res) {
       'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
       'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
       'Bilgi bölümünde cevabı onaylayan veya reddeden ifadeler kullanma. ' +
+      'Son karar vermeden önce kendi yanıtını tutarlılık açısından kontrol et: uygunluk, gerekçe ve bilgi bölümleri aynı cevabı ve aynı kategoriyi anlatmalı. ' +
+      'Gerekçede başka bir kategoriye ait alakasız bilgi, başka bir cevaptan kalmış ifade veya uygunluk kararıyla çelişen bir tanım varsa bunu kullanma. ' +
+      'Böyle bir çelişkiyi kesin kabul veya kesin red olarak gizlemek yerine "Tartışmalı" seç ve gerekçede kısa biçimde belirt. ' +
+      'Özellikle bilgi bölümünde cevabın kategoriye açıkça uygun olduğu belirtiliyorsa, gerekçedeki alakasız bir ifadeyi gerekçe göstererek kesin red verme. ' +
       'Yanıtı SADECE geçerli JSON olarak döndür ve başka hiçbir şey yazma. ' +
-      'JSON: {"uygunluk":"Uygun görünüyor|Uygun görünmüyor|Tartışmalı","guven":"Yüksek|Orta|Düşük","gerekce":"en fazla 20 kelime","bilgi":"en fazla 35 kelime"}\
-\
+      'JSON: {"uygunluk":"Uygun görünüyor|Uygun görünmüyor|Tartışmalı","guven":"Yüksek|Orta|Düşük","gerekce":"en fazla 20 kelime","bilgi":"en fazla 35 kelime"}\\
+\\
 ' +
       'Kategori: ' + cleanCategory + '\
 ' +
@@ -290,31 +294,15 @@ export default async function handler(req, res) {
         parsed.gerekce = 'Cevap tam 8 harflidir ve 8 harfli kelime kategorisine uyar.';
       }
     }
-    // Kategori-özel tutarlılık: "İsim" cevabı gerçekten bir kişi adı olarak tanımlanıyorsa
-    // modelin alakasız bir bitki/ürün gerekçesiyle yanlışlıkla red vermesine izin verme.
-    // Özellikle kısa ve yaygın isimlerde model bazen kategori bağlamını kaçırabiliyor.
-    if (categoryKey === 'isim' && parsed.uygunluk === 'Uygun görünmüyor') {
-      const nameEvidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
-      const clearlyName = /(?:bir )?(?:erkek|kadın|kiz|kız|kadın ve erkek)\s+ismi|(?:erkek|kadın|kız)\s+adı|(?:insan|kişi)\s+adı|isim olarak kullanılır|isim olarak kullanılan/.test(nameEvidence);
-      const clearlyNotName = /(?:isim değil|isim değildir|özel isim değil|insan adı değil|kişi adı değil)/.test(nameEvidence);
-      if (clearlyName && !clearlyNotName) {
-        parsed.uygunluk = 'Uygun görünüyor';
-        parsed.guven = 'Yüksek';
-        parsed.gerekce = 'Cevap, gerekçede insan adı/ismi olarak tanımlanıyor ve İsim kategorisine uygundur.';
-      }
-    }
-
-    // Şehir kategorisinde model bazen başka bir kategoriden kalmış gerekçeyi yanlışlıkla taşıyabiliyor.
-    // Cevap hakkında bölümünde açıkça bir şehir/il olduğu doğrulanıyorsa bu çelişkiyi düzelt.
-    if (categoryKey === 'şehir') {
-      const cityEvidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
-      const clearlyCity = /(?:bir şehir|şehir(?:dir|idir)|bir il|il(?:dir|idir)|ilimizdir|şehridir)/i.test(cityEvidence);
-      const clearlyNotCity = /(?:mahalle|semt|köy|belde|kasaba|mezra|ilçe|şehir değil|şehir değildir|il değil|il değildir)/i.test(cityEvidence);
-      if (clearlyCity && !clearlyNotCity) {
-        parsed.uygunluk = 'Uygun görünüyor';
-        parsed.guven = 'Yüksek';
-        parsed.gerekce = 'Cevap, gerekçede gerçek bir şehir/il olarak tanımlanıyor ve Şehir kategorisine uygundur.';
-      }
+    // Genel tutarlılık katmanı: kategoriye özel istisnalar yerine modelin ürettiği karar, gerekçe ve bilgi
+    // alanlarının birlikte mantıklı olup olmadığını kontrol eder. Böylece yeni kategorilerde de aynı koruma çalışır.
+    const coherenceText = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
+    const positiveSignals = /(?:bir|olan|olarak|olarak kullanılan|olarak bilinen|ismi|adı|şehridir|ilimizdir|hayvandır|bitkidir|ülkedir|yemektir|renktir|meslektir|markadır|şarkıdır|filmdir|oyuncudur|sporcudur|şehir|il|hayvan|bitki|ülke|yemek|malzeme|yiyecek|tatlı|renk|meslek|marka|şarkı|film|oyuncu|sporcu)/i;
+    const contradictionSignals = /(?:değil|değildir|uymaz|uygun değil|uygun değildir|kategoriye girmez|kabul edilmez|başka bir kategori|ürün|parça|özellik|yalnızca .* değil)/i;
+    if (parsed.uygunluk !== 'Tartışmalı' && positiveSignals.test(coherenceText) && contradictionSignals.test(coherenceText)) {
+      parsed.uygunluk = 'Tartışmalı';
+      parsed.guven = 'Orta';
+      parsed.gerekce = 'AI açıklamasında çelişkili bilgiler bulunduğu için kesin karar yerine tartışmalı değerlendirme.';
     }
 
     // Modelin kararı ile kendi gerekçesi çelişiyorsa gerekçedeki açık olguyu esas al.
