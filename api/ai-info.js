@@ -61,10 +61,12 @@ export default async function handler(req, res) {
 
     // Bir model/endpoint geçici olarak hata verirse diğer desteklenen modeli dene.
     // Böylece tek bir Gemini modelindeki kota, bölge veya geçici servis sorunu AI panelini tamamen bozmaz.
+    // 2.5 Flash-Lite yeni kullanıcılar için erişim kısıtlamasına
+    // takılabildiği için fallback listesinden çıkarıldı.
+    // Güncel ana model 3.5 Flash-Lite, yedek model 3.1 Flash-Lite.
     const modelCandidates = [
       'gemini-3.5-flash-lite',
-      'gemini-3.1-flash-lite',
-      'gemini-2.5-flash-lite'
+      'gemini-3.1-flash-lite'
     ];
     const retryDelays = [0, 1000, 2500];
 
