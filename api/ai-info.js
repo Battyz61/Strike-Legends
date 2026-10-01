@@ -193,7 +193,7 @@ export default async function handler(req, res) {
         forceMaybe('Cevap küçük bir yazım farkı içeriyor; kastedilen kelime açıkça anlaşılabiliyor.');
       }
     }
-    const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
+    // Açık kategori çelişkilerini güvenli biçimde yakala; yalnızca modelin kendi açıklamasında net bir karşıtlık varsa uygula.\n    const categoryConflictRules = {\n      'ülke': [\n        { test: /(?:şehir|il|ilçe|mahalle|semt|köy|bölge)\\b.*(?:değil|değildir|ülke değil)/i, reason: 'Gerekçede cevabın ülke değil, farklı bir yerleşim veya coğrafi birim olduğu belirtiliyor.' }\n      ],\n      'hayvan': [\n        { test: /(?:ürün|parça|yiyecek|et|süt|yün|deri|yumurta|bal)\\b.*(?:hayvan değil|hayvanın kendisi değil|hayvan değildir)/i, reason: 'Gerekçede cevabın hayvanın kendisi olmadığı belirtiliyor.' }\n      ],\n      'yemek malzemesi': [\n        { test: /(?:hazır yemek|yemek|hayvan|bitki)\\b.*(?:malzeme değil|malzeme değildir|tek başına malzeme sayılmaz)/i, reason: 'Gerekçede cevabın yemek malzemesi olmadığı belirtiliyor.' }\n      ]\n    };\n\n    const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');\n    if (parsed.uygunluk === 'Uygun görünüyor') {\n      const rules = categoryConflictRules[categoryKey] || [];\n      const conflict = rules.find(rule => rule.test.test(evidence));\n      if (conflict) forceNotFit(conflict.reason);\n    }
     const normalizedAnswerForLength = cleanAnswer.replace(/\s+/g, '');
     const letterCount = Array.from(normalizedAnswerForLength).length;
     const lengthEvidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
