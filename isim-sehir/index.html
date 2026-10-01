@@ -1000,6 +1000,7 @@ function bindConnection(conn){
      if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      netAnswers={};submittedPlayers={};votingOpenedRound=0;votingDone={};localVotes={};remoteVotes={};netVotes={};
      resumeActiveRound(data);
+     persistGuestSession();
    }else if(data.type==='roundPreparing'&&!isHost){
      const targetRound=Number(data.round)||1;
      if(targetRound<=round)return;
@@ -1026,16 +1027,19 @@ function bindConnection(conn){
      // roundPreparing already started the transition; avoid showing it twice.
      if(roundTransitionTarget===targetRound){
        roundTransitionLetter=letterNow;
+       persistGuestSession();
      }else{
        netAnswers={};submittedPlayers={};votingOpenedRound=0;
        showRoundTransition(()=>newRound(letterNow,false));
      }
+     persistGuestSession();
    }else if(data.type==='gameFinished'&&!isHost){
 
      if(Number(data.round)!==round)return;
      if(data.scores)netScores=Object.assign({},data.scores);
      myScore=Number(netScores[me]||0);$('myScore').textContent=myScore;
      showFinalResults(false);
+     persistGuestSession();
    }else if(data.type==='start'&&!isHost){
      applyGameSettings(data);
      totalRounds=Number(data.totalRounds)||5;
@@ -1047,6 +1051,7 @@ function bindConnection(conn){
      $('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');
      focusWheelOnScreen();
      const ns=$('netStatus');if(ns)ns.textContent='🟢 Oyun başladı — host turu senkronize ediyor';
+     persistGuestSession();
    }
  });
  conn.on('close',()=>{
