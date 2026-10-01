@@ -1573,7 +1573,7 @@ function autoCheckVotingAnswers(){
 }
 function getCachedAiJudgment(category,answer){
  const live=aiJudgments[aiJudgmentKey(category,answer)];if(live)return live;
- const key='isimSehirAiV4:'+category+'|'+letterNow+'|'+answer;
+ const key='isimSehirAiV5:'+category+'|'+letterNow+'|'+answer;
  try{
   const raw=localStorage.getItem(key);if(!raw)return null;
   const data=JSON.parse(raw),a=data?.analysis||{};
@@ -1589,7 +1589,7 @@ function toggleAiInfo(btn){
  const open=box.classList.toggle('open');
  if(!open){btn.textContent='✦ AI Bilgisi';return}
  if(box.dataset.loaded==='1'){btn.textContent='✦ Bilgiyi Gizle';return}
- const cacheKey='isimSehirAiV4:'+category+'|'+letterNow+'|'+answer;
+ const cacheKey='isimSehirAiV5:'+category+'|'+letterNow+'|'+answer;
  try{
   const cached=localStorage.getItem(cacheKey);
   if(cached){
