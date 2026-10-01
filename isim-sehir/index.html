@@ -1745,6 +1745,7 @@ function finalizeVoting(){
  lastVotingResult={gains:result.gains,details:result.details,scores:result.scores};
  netScores=result.scores;
  myScore=Number(netScores[me]||0);
+ persistHostSession();
  bots.forEach(b=>b.score=Number(netScores[b.name]||0));
  $('myScore').textContent=myScore;
  $('finishBtn').disabled=true;
@@ -1761,6 +1762,7 @@ function completeVoting(){
    return;
  }
  votingDone[me]=true;
+ if(isHost)persistHostSession();else persistGuestSession();
  $('finishBtn').disabled=true;
  $('finishBtn').classList.remove('submitted','waiting');
  $('finishBtn').classList.add('votes-complete');
