@@ -955,7 +955,7 @@ function bindConnection(conn){
  if(Number(data.round)!==round)return;
  applyAiJudgment(data.category,data.answer,data.judgment||{});
  persistGuestSession();
- lse if(data.type==='scores'&&!isHost){
+ }else if(data.type==='scores'&&!isHost){
      if(Number(data.round)!==round)return;
      netScores=Object.assign({},data.scores||{});
      myScore=Number(netScores[me]||0);
@@ -1538,7 +1538,7 @@ function aiLocalInfo(cat,answer){
  };
  return templates[k]||a+' hakkında kısa bilgi verilebilir. Cevabın anlamı, kökeni veya kullanım alanları gibi temel bilgiler burada gösterilebilir.';
 }
-async function aiJudgmentKey(category,answer){return scoringAnswerKey(category)+'|'+scoringAnswerKey(answer)+'|'+scoringAnswerKey(letterNow)}
+function aiJudgmentKey(category,answer){return scoringAnswerKey(category)+'|'+scoringAnswerKey(answer)+'|'+scoringAnswerKey(letterNow)}
 function applyAiJudgment(category,answer,j){
  if(!category||!answer)return;
  aiJudgments[aiJudgmentKey(category,answer)]={fit:String(j?.fit||j?.uygunluk||'Tartışmalı'),confidence:String(j?.confidence||j?.guven||'Düşük'),reason:String(j?.reason||j?.gerekce||'')};
