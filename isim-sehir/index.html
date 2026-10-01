@@ -591,7 +591,7 @@ function persistGuestSession(){
  try{
   sessionStorage.setItem(GUEST_SESSION_KEY,JSON.stringify({
    savedAt:Date.now(),roomId,me,myAvatar,letterNow,cats:[...cats],round,totalRounds,
-   netAnswers,netVotes,submittedPlayers,votingDone,netScores,myScore,lastVotingResult,roundState:roundState?{phase:roundState.phase}:null,
+   netAnswers,netVotes,submittedPlayers,votingDone,netScores,myScore,lastVotingResult,seconds,roundState:roundState?{phase:roundState.phase}:null,
    settings:currentGameSettings()
   }));
  }catch(e){}
@@ -881,6 +881,8 @@ function bindConnection(conn){
          });
        }else if(roundState?.phase==='results'&&lastVotingResult){
          conn.send({type:'votingResult',round,gains:lastVotingResult.gains||{},details:lastVotingResult.details||[],scores:lastVotingResult.scores||netScores});
+       }else if(roundState?.phase==='preparing'){
+         conn.send({type:'roundPreparing',round,letter:roundTransitionLetter||letterNow,cats:[...cats],duration:selectedDuration(),wheel:currentGameSettings().wheel,totalRounds,settings:currentGameSettings()});
        }else if(roundState?.phase==='voting'){
          conn.send({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers,votingDone,votes:netVotes,avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))});
        }else if(roundState?.phase==='waiting-players'){
