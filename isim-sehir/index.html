@@ -1578,7 +1578,7 @@ function toggleAiInfo(btn){
  fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category,answer,letter:letterNow})})
  .then(res=>res.json().catch(()=>({})).then(data=>({res,data})))
  .then(({res,data})=>{
-  if(!res.ok){const status=data.upstreamStatus?' · Gemini '+data.upstreamStatus:'';throw new Error((data.error||'AI_REQUEST_FAILED')+status)}
+  if(!res.ok){const status=data.upstreamStatus?' · Gemini '+data.upstreamStatus:'';const detail=data.upstreamMessage?' · '+data.upstreamMessage:'';throw new Error((data.error||'AI_REQUEST_FAILED')+status+detail)}
   const text=String(data.text||'').trim();if(!text)throw new Error('AI_EMPTY_RESPONSE');
   const analysis=data.analysis||{},fit=String(analysis.uygunluk||'Tartışmalı'),confidence=String(analysis.guven||'Düşük'),reason=String(analysis.gerekce||'').trim();
   if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ AI Analizi</span><span class="ai-info-tag">YARDIMCI HAKEM</span></div><div class="ai-verdict '+(fit==='Uygun görünüyor'?'fit':fit==='Uygun görünmüyor'?'not-fit':'maybe')+'"><b>'+esc(fit)+'</b><span>Güven: '+esc(confidence)+'</span></div>'+(reason?'<div class="ai-reason">'+esc(reason)+'</div>':'')+'<div class="ai-fact-head">✨ Cevap hakkında</div><div>'+esc(text)+'</div>';
