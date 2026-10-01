@@ -1675,6 +1675,21 @@ function allHumanVotesPresent(){
  }
  return true;
 }
+function scoringAnswerKey(value){
+ return String(value||'').toLocaleLowerCase('tr-TR')
+   .normalize('NFD')
+   .replace(/[\\u0300-\\u036f]/g,'')
+   .replace(/[ıİ]/g,'i')
+   .replace(/[şŞ]/g,'s')
+   .replace(/[ğĞ]/g,'g')
+   .replace(/[çÇ]/g,'c')
+   .replace(/[öÖ]/g,'o')
+   .replace(/[üÜ]/g,'u')
+   .replace(/[’'`´]/g,'')
+   .replace(/[^a-z0-9\\s]/g,' ')
+   .replace(/\\s+/g,' ')
+   .trim();
+}
 function calculateVotingResult(){
  const rows=[...$('answers').querySelectorAll('.vote-player')];
  const gains={};
@@ -1692,12 +1707,8 @@ function calculateVotingResult(){
    const cat=catTitle.replace(letterNow+' ile ','');
    const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
    if(!answer||answer==='Cevap yok')return;
-   const key=answer
-     .toLocaleLowerCase('tr-TR')
-     .normalize('NFC')
-     .replace(/\\s+/g,' ')
-     .trim();
-   const groupKey=cat+'|'+key;
+   const key=scoringAnswerKey(answer);
+   const groupKey=scoringAnswerKey(cat)+'|'+key;
    if(!categoryGroups[groupKey])categoryGroups[groupKey]=[];
    categoryGroups[groupKey].push(row);
  });
@@ -1712,12 +1723,8 @@ function calculateVotingResult(){
    const catTitle=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent||'';
    const cat=catTitle.replace(letterNow+' ile ','');
    const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
-   const key=answer
-     .toLocaleLowerCase('tr-TR')
-     .normalize('NFC')
-     .replace(/\\s+/g,' ')
-     .trim();
-   const group=categoryGroups[cat+'|'+key]||[];
+   const key=scoringAnswerKey(answer);
+   const group=categoryGroups[scoringAnswerKey(cat)+'|'+key]||[];
    const duplicateCount=answer&&answer!=='Cevap yok'?group.length:0;
 
    // Cevap, oyların çoğunluğuyla doğru kabul ediliyorsa puan alır.
