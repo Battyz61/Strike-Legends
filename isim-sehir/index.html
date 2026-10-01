@@ -420,7 +420,7 @@ let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let selectedLetters=[...letters];
 let wheelSpinFrame=0,wheelSpinStart=0;let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false,myAvatar=0;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null;
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,votingFinalizedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null;
 const $=id=>document.getElementById(id);
 const AVATARS=[
 {name:'Nova',bg:'#6d5dfc',fg:'#d9d5ff',shape:'M24 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm-11 28c1-7 5-10 11-10s10 3 11 10'},
@@ -653,6 +653,7 @@ function restoreHostPhase(data){
   resumeActiveRound({duration:Number(data.settings?.duration)||selectedDuration(),seconds:Math.max(1,Number(data.seconds||1)-elapsed)});
  }else if(phase==='voting'){
   roundState={token:++roundToken,phase:'voting'};showVoting({votes:netVotes,votingDone});
+  if(allVotingDone())setTimeout(()=>{if(isHost&&roundState?.phase==='voting'&&allVotingDone())finalizeVoting()},350);
  }else if(phase==='waiting-players'){
   roundState={token:++roundToken,phase:'waiting-players'};const mine=netAnswers[me]||[];
   $('roundNo').textContent=round+'. Tur';$('letter').textContent=letterNow;$('wheelLabel').textContent='Seçilen harf';$('wheel').classList.remove('spinning');
@@ -1267,7 +1268,7 @@ function resumeActiveRound(data){
 }
 function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
- clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;submittedPlayers={};playUiSound('start');votingDone={};localVotes={};remoteVotes={};
+ clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;votingFinalizedRound=0;submittedPlayers={};playUiSound('start');votingDone={};localVotes={};remoteVotes={};
  const availableLetters=selectedLetters.length?selectedLetters:letters;
  letterNow=forcedLetter||availableLetters[Math.floor(Math.random()*availableLetters.length)];
  // Each round gets a completely fresh bot answer set. This prevents the
@@ -1748,7 +1749,8 @@ function allVotingDone(){
  return names.length>0&&names.every(n=>votingDone[n]===true);
 }
 function finalizeVoting(){
- if(!isHost||!allVotingDone())return;
+ if(!isHost||!allVotingDone()||votingFinalizedRound===round)return;
+ votingFinalizedRound=round;
  const result=calculateVotingResult();
  lastVotingResult={gains:result.gains,details:result.details,scores:result.scores};
  netScores=result.scores;
