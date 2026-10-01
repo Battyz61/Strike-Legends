@@ -591,7 +591,7 @@ function persistGuestSession(){
  try{
   sessionStorage.setItem(GUEST_SESSION_KEY,JSON.stringify({
    savedAt:Date.now(),roomId,me,myAvatar,letterNow,cats:[...cats],round,totalRounds,
-   netAnswers,submittedPlayers,netScores,myScore,roundState:roundState?{phase:roundState.phase}:null,
+   netAnswers,netVotes,submittedPlayers,votingDone,netScores,myScore,lastVotingResult,roundState:roundState?{phase:roundState.phase}:null,
    settings:currentGameSettings()
   }));
  }catch(e){}
@@ -604,7 +604,7 @@ function restoreGuestSession(){
  isHost=false;roomId=String(data.roomId);me=String(data.me);myAvatar=Number(data.myAvatar)||0;
  letterNow=data.letterNow||'';round=Number(data.round)||1;totalRounds=Number(data.totalRounds)||5;
  cats=Array.isArray(data.cats)&&data.cats.length?[...data.cats]:cats;
- netAnswers=data.netAnswers||{};submittedPlayers=data.submittedPlayers||{};netScores=data.netScores||{};
+ netAnswers=data.netAnswers||{};netVotes=data.netVotes||{};submittedPlayers=data.submittedPlayers||{};votingDone=data.votingDone||{};netScores=data.netScores||{};lastVotingResult=data.lastVotingResult||null;
  myScore=Number(data.myScore)||0;roundState=data.roundState?{token:++roundToken,phase:data.roundState.phase}:null;
  applyGameSettings(data.settings||{});
  $('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';
@@ -621,6 +621,10 @@ function restoreGuestSession(){
    $('answers').innerHTML=cats.map(c=>{const x=answerForCategory(mine,c)||{val:''};return '<div class="answer answer-filled"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" value="'+esc(x.val||'')+'" disabled></div>'}).join('');
    $('answers').classList.remove('hidden-answers');$('status').textContent='📨 Cevapların korunuyor — host bağlantısı bekleniyor...';
    $('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').disabled=true;$('finishBtn').textContent='✓ Cevapların kaydedildi';$('finishBtn').classList.add('waiting');
+  }else if(phase==='voting'){
+   showVoting({votes:netVotes||{},votingDone:votingDone||{}});
+  }else if(phase==='results'&&lastVotingResult){
+   showResults(lastVotingResult.gains||{},lastVotingResult.details||[],lastVotingResult.scores||netScores);
   }
  },180);
  return true;
