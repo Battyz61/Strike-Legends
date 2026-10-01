@@ -153,11 +153,16 @@ async function handleAi(request, env) {
       forceNotFit(parsed, 'Cevap seçilen harfle başlamıyor; bu nedenle harf kuralına uygun değildir.');
     }
 
-    if (category === '3 harfli kelime' && count !== 3) {
+    // Kategori adları bazen "N ile 3 harfli kelime" gibi ek kurallar içerir.
+    // Harf sayısı kontrolü, kategori adının birebir aynı olmasına bağlı kalmamalı.
+    const isThreeLetterCategory = /(?:^|\\b)3\\s*harfli\\s+kelime(?:\\b|$)/i.test(category);
+    const isEightLetterCategory = /(?:^|\\b)8\\s*harfli\\s+kelime(?:\\b|$)/i.test(category);
+
+    if (isThreeLetterCategory && count !== 3) {
       forceNotFit(parsed, 'Cevap tam 3 harfli değil; bu kategori yalnızca 3 harfli kelimeleri kabul eder.');
     }
 
-    if (category === '8 harfli kelime' && count !== 8) {
+    if (isEightLetterCategory && count !== 8) {
       forceNotFit(parsed, 'Cevap tam 8 harfli değil; bu kategori yalnızca 8 harfli kelimeleri kabul eder.');
     }
 
