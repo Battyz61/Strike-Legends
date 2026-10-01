@@ -351,7 +351,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .vote-summary{position:sticky;bottom:10px;z-index:10;padding:11px 13px!important;margin-top:12px!important;background:rgba(8,13,23,.92)!important;backdrop-filter:blur(14px);box-shadow:0 12px 35px rgba(0,0,0,.35)!important}
 .vote-summary b{font-size:16px!important;color:#dbe7ff}
 #finishBtn.votes-complete{box-shadow:0 0 0 1px rgba(52,211,153,.3),0 12px 30px rgba(16,185,129,.16)}
-@media(max-width:700px){.vote-player{grid-template-columns:36px 1fr auto!important;padding:9px 9px!important;min-height:66px!important}.vote-value{font-size:16px!important}.vote-circle{width:38px!important;height:38px!important}.vote-actions{gap:5px!important}.vote-summary{bottom:7px}}
+@media(max-width:700px){.vote-player{grid-template-columns:36px minmax(0,1fr)!important;padding:10px 9px!important;min-height:66px!important;align-items:start!important}.vote-info{grid-column:2;grid-row:1;min-width:0!important;width:100%;overflow:visible!important}.vote-value{display:block;max-width:100%;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;line-height:1.25}.vote-actions{grid-column:2;grid-row:2;display:flex!important;flex-wrap:wrap!important;justify-content:flex-start!important;align-items:center!important;min-width:0!important;max-width:100%;margin-top:8px}.own-answer-label{white-space:normal!important;max-width:100%;overflow-wrap:anywhere}.vote-circle{flex:0 0 40px!important}.vote-value{font-size:16px!important}.vote-circle{width:38px!important;height:38px!important}.vote-actions{gap:5px!important}.vote-summary{bottom:7px}}
 /* MOBILE SAFARI POLISH */
 html{scroll-padding-bottom:30vh}
 body{min-height:100dvh}
