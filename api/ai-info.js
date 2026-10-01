@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       'Aynı şekilde "Araklı" gibi bir ilçe, "Trabzon" gibi bir ilin ilçesi olarak tanımlanıyorsa "Şehir" kategorisinde kabul edilmemelidir. ' +
       'Benzer şekilde "Ülke" kategorisinde şehir, il, ilçe, mahalle veya bölge; "Hayvan" kategorisinde hayvan ürünü, yiyecek veya parça; "Bitki" kategorisinde yalnızca meyve/ürün adı gibi ilişkili ama farklı varlıklar doğrudan kabul edilmemeli. "Hayvan" için hayvanın kendisini, "Bitki" için bitkinin kendisini ara; bir hayvandan elde edilen ürün (ör. süt, yün) veya bitkiden elde edilen ürün (ör. un, yağ) doğrudan hayvan/bitki kabul edilmez. Ancak bir kelime Türkçede hem canlı varlığın hem ürününün adı olarak yerleşik biçimde kullanılıyorsa bağlama göre "Tartışmalı" seç. "Yemek malzemesi" kategorisinde de malzemenin kendisini ara; hazır yemek veya hayvan/bitki adı tek başına malzeme sayılmaz. ' +
       'Kategori ile cevap arasındaki ilişki net değilse "Yüksek" güven verme. ' +
-      'Açık ve bariz yazım hatalarını da değerlendir: Cevap, kategoriye uygun bilinen bir kelimenin küçük bir yazım hatalı biçimiyse ve ne kastedildiği tartışmasızsa cevabı sırf yazım hatası yüzünden reddetme. Örneğin "Eşşek" açıkça "eşek" kelimesinin fazladan ş harfi içeren yazımıdır; "Hayvan" kategorisinde uygun kabul edilmelidir. Yazım hatası anlamı belirsizleştiriyorsa "Tartışmalı" kullan. ' +
+      'Açık ve bariz yazım hatalarını değerlendir: Cevap, kategoriye uygun bilinen bir kelimenin küçük bir yazım hatalı biçimiyse ve ne kastedildiği tartışmasızsa sırf yazım hatası yüzünden reddetme. Türkçe karakterlerin yanlış yazılması (İ/I, Ş/S, Ğ/G, Ç/C, Ö/O, Ü/U) veya tek harfin fazladan/eksik olması, kelimenin anlamını açıkça koruyorsa tolere edilebilir. Örneğin "Eşşek" açıkça "eşek" kelimesinin yazımıdır ve Hayvan kategorisinde uygun kabul edilmelidir. Ancak yazım farkı başka gerçek bir kelime oluşturuyorsa, cevabı anlamı belirsiz hale getiriyorsa veya kategoriye uygunluğu değiştiriyorsa otomatik kabul etme; "Tartışmalı" veya "Uygun görünmüyor" kullan. ' +
       'Bazı cevaplar birden fazla varlık türünü ifade edebilir. Böyle durumlarda tek bir yorumla kesin "Uygun görünüyor" deme. Özellikle "Bitki" kategorisinde cevap yaygın olarak meyve/ürün adı olarak da kullanılıyorsa ve aynı kelime bitkinin kendisini de ifade edebiliyorsa "Tartışmalı" seç. Örneğin "Erik" hem erik ağacını hem meyvesini ifade edebildiği için "Bitki" kategorisinde tartışmalı kabul edilmelidir. "Elma", "armut", "kiraz" gibi benzer çift anlamlı örneklerde de aynı yaklaşımı kullan. Oyuncuların nihai kararı verebilmesi için gerekçede iki makul yorumu kısaca belirt. ' +
       'Başlangıç harfi verilmişse cevabın o harfle başlamasını da kontrol et. ' +
       'Kategori "3 harfli kelime" bir sözlük/kelime kategorisidir; cevap Türkçede anlamlı bir kelime olmalı ve tam 3 harf içermelidir. Harfleri gerçekten tek tek say. "Mal" ve "Mey" Türkçede kullanılan anlamlı 3 harfli kelimelerdir ve bu kategoriye uygundur; bunları uzunluk veya anlam nedeniyle yanlışlıkla reddetme. Yalnızca anlamsız bir harf dizisi veya başka bir kategoriye ait açıkça yanlış bir ifade ise reddet. ' +
@@ -115,6 +115,32 @@ export default async function handler(req, res) {
     // Böylece "Şehir" kategorisinde mahalle/ilçe/köy gibi alt yerleşimler yanlışlıkla kabul edilmez.
     const categoryKey = cleanCategory.toLocaleLowerCase('tr-TR');
     const normalizedSemanticAnswer = cleanAnswer.toLocaleLowerCase('tr-TR').replace(/[’']/g, '');
+    const normalizedForComparison = normalizedSemanticAnswer
+      .replace(/ı/g, 'i').replace(/İ/g, 'i')
+      .replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ç/g, 'c')
+      .replace(/ö/g, 'o').replace(/ü/g, 'u')
+      .replace(/[^a-z0-9]/g, '');
+    const compactSpelling = (value) => String(value || '')
+      .toLocaleLowerCase('tr-TR')
+      .replace(/[’']/g, '')
+      .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
+      .replace(/ç/g, 'c').replace(/ö/g, 'o').replace(/ü/g, 'u')
+      .replace(/[^a-z0-9]/g, '');
+    const oneEditAway = (a, b) => {
+      if (!a || !b || Math.abs(a.length - b.length) > 1) return false;
+      if (a.length === b.length) {
+        let diff = 0;
+        for (let i = 0; i < a.length; i++) if (a[i] !== b[i] && ++diff > 1) return false;
+        return diff === 1;
+      }
+      const [shorter, longer] = a.length < b.length ? [a, b] : [b, a];
+      let i = 0, j = 0, diff = 0;
+      while (i < shorter.length && j < longer.length) {
+        if (shorter[i] === longer[j]) { i++; j++; }
+        else { j++; if (++diff > 1) return false; }
+      }
+      return true;
+    };
     const forceNotFit = (reason) => {
       parsed.uygunluk = 'Uygun görünmüyor';
       parsed.guven = 'Yüksek';
@@ -152,6 +178,20 @@ export default async function handler(req, res) {
     }
     if (categoryKey === 'ülke' && /^(trabzon|ankara|istanbul|izmir|bursa|antalya|rize|ordu|samsun)$/.test(normalizedSemanticAnswer)) {
       forceNotFit('Cevap bir ülke değil, şehir adıdır.');
+    }
+    const spellingEvidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
+    if (
+      parsed.uygunluk === 'Uygun görünmüyor' &&
+      /yazım|yazim|harf|yanlış yaz|yanlis yaz|typo/.test(spellingEvidence) &&
+      normalizedForComparison.length >= 3
+    ) {
+      // Modelin sırf küçük yazım farkı yüzünden verdiği red kararını ikinci kez değerlendir.
+      // Kategoriye ait kelimeyi model gerekçesinde açıkça isimlendirdiyse ve fark tek karakter civarındaysa,
+      // kesin red yerine tartışmalı bırakmak daha güvenlidir.
+      const quoted = spellingEvidence.match(/[“"']([a-zçğıöşüı]+)[”"']/i);
+      if (quoted && oneEditAway(normalizedForComparison, compactSpelling(quoted[1]))) {
+        forceMaybe('Cevap küçük bir yazım farkı içeriyor; kastedilen kelime açıkça anlaşılabiliyor.');
+      }
     }
     const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
     const normalizedAnswerForLength = cleanAnswer.replace(/\s+/g, '');
