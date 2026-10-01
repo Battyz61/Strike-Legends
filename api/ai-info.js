@@ -232,7 +232,7 @@ export default async function handler(req, res) {
       parsed.gerekce = 'Cevap bir mahalle, ilçe veya başka bir alt yerleşim birimidir; Şehir kategorisine uygun değildir.';
     }
 
-    const allowedFit = new Set(['Uygun görünüyor', 'Uygun görünmüyor', 'Tartışmalı']);
+    // Belirsizlik sinyalleri varken modeli gereksiz kesin red/kabulden koru.\n    // Net bir yanlışlık yoksa "Tartışmalı" oyuncuların nihai kararı vermesine alan bırakır.\n    const ambiguitySignals = /(?:olabilir|olması mümkün|bağlama göre|kullanılabilir|bazı kaynaklarda|bazı kullanımlarda|iki anlam|çift anlam|belirsiz|kesin değil|tartışmalı|değişebilir)/i;\n    const hardRejectSignals = /(?:değildir|değil|uymaz|uygun değil|kabul edilmez|kategoriye girmez|bir .* değil)/i;\n    const hardAcceptSignals = /(?:tam olarak|doğrudan|kesinlikle|açıkça|kendisi olan|gerçek bir)/i;\n    if (parsed.uygunluk === 'Uygun görünmüyor' && ambiguitySignals.test(evidence) && !hardRejectSignals.test(evidence)) {\n      forceMaybe('Cevap için birden fazla makul yorum bulunuyor; kesin red yerine tartışmalı değerlendirme daha uygundur.');\n    }\n    if (parsed.uygunluk === 'Uygun görünüyor' && ambiguitySignals.test(evidence) && !hardAcceptSignals.test(evidence)) {\n      forceMaybe('Cevabın kategoriyle ilişkisi bağlama göre değişebiliyor; kesin kabul yerine tartışmalı değerlendirme daha uygundur.');\n    }\n\n    const allowedFit = new Set(['Uygun görünüyor', 'Uygun görünmüyor', 'Tartışmalı']);
     const allowedConfidence = new Set(['Yüksek', 'Orta', 'Düşük']);
     const uygunluk = allowedFit.has(String(parsed.uygunluk)) ? String(parsed.uygunluk) : 'Tartışmalı';
     const guven = allowedConfidence.has(String(parsed.guven)) ? String(parsed.guven) : 'Düşük';
