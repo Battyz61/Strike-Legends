@@ -38,13 +38,9 @@ export default async function handler(req, res) {
       'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
       'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
       'Bilgi bölümünde cevabı onaylayan veya reddeden ifadeler kullanma. ' +
-      'Son karar vermeden önce kendi yanıtını tutarlılık açısından kontrol et: uygunluk, gerekçe ve bilgi bölümleri aynı cevabı ve aynı kategoriyi anlatmalı. ' +
-      'Gerekçede başka bir kategoriye ait alakasız bilgi, başka bir cevaptan kalmış ifade veya uygunluk kararıyla çelişen bir tanım varsa bunu kullanma. ' +
-      'Böyle bir çelişkiyi kesin kabul veya kesin red olarak gizlemek yerine "Tartışmalı" seç ve gerekçede kısa biçimde belirt. ' +
-      'Özellikle bilgi bölümünde cevabın kategoriye açıkça uygun olduğu belirtiliyorsa, gerekçedeki alakasız bir ifadeyi gerekçe göstererek kesin red verme. ' +
       'Yanıtı SADECE geçerli JSON olarak döndür ve başka hiçbir şey yazma. ' +
-      'JSON: {"uygunluk":"Uygun görünüyor|Uygun görünmüyor|Tartışmalı","guven":"Yüksek|Orta|Düşük","gerekce":"en fazla 20 kelime","bilgi":"en fazla 35 kelime"}\\
-\\
+      'JSON: {"uygunluk":"Uygun görünüyor|Uygun görünmüyor|Tartışmalı","guven":"Yüksek|Orta|Düşük","gerekce":"en fazla 20 kelime","bilgi":"en fazla 35 kelime"}\
+\
 ' +
       'Kategori: ' + cleanCategory + '\
 ' +
@@ -100,16 +96,8 @@ export default async function handler(req, res) {
           message: data?.error?.message || null
         });
 
-        // 429 kota/hız sınırı hatasıdır. Aynı proje kotasını kullanan diğer modele
-        // geçmek genellikle fayda sağlamaz; Google bu durumda bekleyip yeniden denemeyi önerir.
-        if (response.status === 429) {
-          const retryAfter = data?.error?.details?.find?.(d => d?.retryDelay)?.retryDelay || null;
-          console.warn('Gemini quota/rate limit reached', { model, retryAfter });
-          break;
-        }
-
-        // Diğer 4xx hataları model/parametre/API erişim problemidir; diğer adaya geç.
-        // 5xx ise kısa retry yap.
+        // 4xx genellikle model/parametre/API erişim problemidir; aynı modeli tekrar tekrar dövmek yerine
+        // diğer adaya geç. 5xx ise kısa retry yap.
         if (response.status < 500) break;
         if (attempt === retryDelays.length - 1) break;
       }
@@ -119,20 +107,9 @@ export default async function handler(req, res) {
 
     if (!response || !response.ok) {
       console.error('Gemini API all models failed', data);
-      const upstreamStatus = response?.status || 502;
-      if (upstreamStatus === 429) {
-        const retryAfter = data?.error?.details?.find?.(d => d?.retryDelay)?.retryDelay || null;
-        return res.status(429).json({
-          error: 'AI_QUOTA_EXHAUSTED',
-          upstreamStatus,
-          upstreamMessage: data?.error?.message || 'Gemini API kotası veya hız sınırı aşıldı.',
-          retryAfter,
-          modelsTried: modelCandidates
-        });
-      }
       return res.status(502).json({
         error: 'AI_REQUEST_FAILED',
-        upstreamStatus,
+        upstreamStatus: response?.status || 502,
         upstreamMessage: data?.error?.message || null,
         modelsTried: modelCandidates
       });
@@ -294,17 +271,6 @@ export default async function handler(req, res) {
         parsed.gerekce = 'Cevap tam 8 harflidir ve 8 harfli kelime kategorisine uyar.';
       }
     }
-    // Genel tutarlılık katmanı: kategoriye özel istisnalar yerine modelin ürettiği karar, gerekçe ve bilgi
-    // alanlarının birlikte mantıklı olup olmadığını kontrol eder. Böylece yeni kategorilerde de aynı koruma çalışır.
-    const coherenceText = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
-    const positiveSignals = /(?:bir|olan|olarak|olarak kullanılan|olarak bilinen|ismi|adı|şehridir|ilimizdir|hayvandır|bitkidir|ülkedir|yemektir|renktir|meslektir|markadır|şarkıdır|filmdir|oyuncudur|sporcudur|şehir|il|hayvan|bitki|ülke|yemek|malzeme|yiyecek|tatlı|renk|meslek|marka|şarkı|film|oyuncu|sporcu)/i;
-    const contradictionSignals = /(?:değil|değildir|uymaz|uygun değil|uygun değildir|kategoriye girmez|kabul edilmez|başka bir kategori|ürün|parça|özellik|yalnızca .* değil)/i;
-    if (parsed.uygunluk !== 'Tartışmalı' && positiveSignals.test(coherenceText) && contradictionSignals.test(coherenceText)) {
-      parsed.uygunluk = 'Tartışmalı';
-      parsed.guven = 'Orta';
-      parsed.gerekce = 'AI açıklamasında çelişkili bilgiler bulunduğu için kesin karar yerine tartışmalı değerlendirme.';
-    }
-
     // Modelin kararı ile kendi gerekçesi çelişiyorsa gerekçedeki açık olguyu esas al.
     // Bu, örneğin "Uygun görünüyor" deyip aynı anda "bir ilçe" veya "hayvan ürünü" demesini engeller.
     const semanticConflict = [
