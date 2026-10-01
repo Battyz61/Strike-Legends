@@ -39,52 +39,79 @@ export default async function handler(req, res) {
       'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
       'Bilgi bölümünde cevabı onaylayan veya reddeden ifadeler kullanma. ' +
       'Yanıtı SADECE geçerli JSON olarak döndür ve başka hiçbir şey yazma. ' +
-      'JSON: {"uygunluk":"Uygun görünüyor|Uygun görünmüyor|Tartışmalı","guven":"Yüksek|Orta|Düşük","gerekce":"en fazla 20 kelime","bilgi":"en fazla 35 kelime"}\\n\\n' +
-      'Kategori: ' + cleanCategory + '\\n' +
-      'Başlangıç harfi: ' + (cleanLetter || 'Belirtilmedi') + '\\n' +
+      'JSON: {"uygunluk":"Uygun görünüyor|Uygun görünmüyor|Tartışmalı","guven":"Yüksek|Orta|Düşük","gerekce":"en fazla 20 kelime","bilgi":"en fazla 35 kelime"}\
+\
+' +
+      'Kategori: ' + cleanCategory + '\
+' +
+      'Başlangıç harfi: ' + (cleanLetter || 'Belirtilmedi') + '\
+' +
       'Cevap: ' + cleanAnswer;
 
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         maxOutputTokens: 180,
-        temperature: 0.2,
         responseMimeType: 'application/json'
       }
     };
 
     let response;
     let data = {};
+
+    // Bir model/endpoint geçici olarak hata verirse diğer desteklenen modeli dene.
+    // Böylece tek bir Gemini modelindeki kota, bölge veya geçici servis sorunu AI panelini tamamen bozmaz.
+    // 2.5 Flash-Lite yeni kullanıcılar için erişim kısıtlamasına
+    // takılabildiği için fallback listesinden çıkarıldı.
+    // Güncel ana model 3.5 Flash-Lite, yedek model 3.1 Flash-Lite.
+    const modelCandidates = [
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite'
+    ];
     const retryDelays = [0, 1000, 2500];
 
-    for (let attempt = 0; attempt < retryDelays.length; attempt++) {
-      if (retryDelays[attempt]) {
-        await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+    for (const model of modelCandidates) {
+      for (let attempt = 0; attempt < retryDelays.length; attempt++) {
+        if (retryDelays[attempt]) {
+          await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+        }
+
+        response = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' +
+          encodeURIComponent(process.env.GEMINI_API_KEY),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          }
+        );
+
+        data = await response.json().catch(() => ({}));
+
+        if (response.ok) break;
+
+        console.error('Gemini API error', {
+          model,
+          status: response.status,
+          message: data?.error?.message || null
+        });
+
+        // 4xx genellikle model/parametre/API erişim problemidir; aynı modeli tekrar tekrar dövmek yerine
+        // diğer adaya geç. 5xx ise kısa retry yap.
+        if (response.status < 500) break;
+        if (attempt === retryDelays.length - 1) break;
       }
 
-      response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=' +
-        encodeURIComponent(process.env.GEMINI_API_KEY),
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
-        }
-      );
-
-      data = await response.json().catch(() => ({}));
-
-      if (response.ok) break;
-
-      if (response.status < 500 || attempt === retryDelays.length - 1) break;
+      if (response && response.ok) break;
     }
 
-    if (!response.ok) {
-      console.error('Gemini API error', data);
+    if (!response || !response.ok) {
+      console.error('Gemini API all models failed', data);
       return res.status(502).json({
         error: 'AI_REQUEST_FAILED',
-        upstreamStatus: response.status,
-        upstreamMessage: data?.error?.message || null
+        upstreamStatus: response?.status || 502,
+        upstreamMessage: data?.error?.message || null,
+        modelsTried: modelCandidates
       });
     }
 
@@ -193,7 +220,25 @@ export default async function handler(req, res) {
         forceMaybe('Cevap küçük bir yazım farkı içeriyor; kastedilen kelime açıkça anlaşılabiliyor.');
       }
     }
-    // Açık kategori çelişkilerini güvenli biçimde yakala; yalnızca modelin kendi açıklamasında net bir karşıtlık varsa uygula.\n    const categoryConflictRules = {\n      'ülke': [\n        { test: /(?:şehir|il|ilçe|mahalle|semt|köy|bölge)\\b.*(?:değil|değildir|ülke değil)/i, reason: 'Gerekçede cevabın ülke değil, farklı bir yerleşim veya coğrafi birim olduğu belirtiliyor.' }\n      ],\n      'hayvan': [\n        { test: /(?:ürün|parça|yiyecek|et|süt|yün|deri|yumurta|bal)\\b.*(?:hayvan değil|hayvanın kendisi değil|hayvan değildir)/i, reason: 'Gerekçede cevabın hayvanın kendisi olmadığı belirtiliyor.' }\n      ],\n      'yemek malzemesi': [\n        { test: /(?:hazır yemek|yemek|hayvan|bitki)\\b.*(?:malzeme değil|malzeme değildir|tek başına malzeme sayılmaz)/i, reason: 'Gerekçede cevabın yemek malzemesi olmadığı belirtiliyor.' }\n      ]\n    };\n\n    const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');\n    if (parsed.uygunluk === 'Uygun görünüyor') {\n      const rules = categoryConflictRules[categoryKey] || [];\n      const conflict = rules.find(rule => rule.test.test(evidence));\n      if (conflict) forceNotFit(conflict.reason);\n    }
+    // Açık kategori çelişkilerini güvenli biçimde yakala; yalnızca modelin kendi açıklamasında net bir karşıtlık varsa uygula.
+    const categoryConflictRules = {
+      'ülke': [
+        { test: /(?:şehir|il|ilçe|mahalle|semt|köy|bölge)\\b.*(?:değil|değildir|ülke değil)/i, reason: 'Gerekçede cevabın ülke değil, farklı bir yerleşim veya coğrafi birim olduğu belirtiliyor.' }
+      ],
+      'hayvan': [
+        { test: /(?:ürün|parça|yiyecek|et|süt|yün|deri|yumurta|bal)\\b.*(?:hayvan değil|hayvanın kendisi değil|hayvan değildir)/i, reason: 'Gerekçede cevabın hayvanın kendisi olmadığı belirtiliyor.' }
+      ],
+      'yemek malzemesi': [
+        { test: /(?:hazır yemek|yemek|hayvan|bitki)\\b.*(?:malzeme değil|malzeme değildir|tek başına malzeme sayılmaz)/i, reason: 'Gerekçede cevabın yemek malzemesi olmadığı belirtiliyor.' }
+      ]
+    };
+
+    const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
+    if (parsed.uygunluk === 'Uygun görünüyor') {
+      const rules = categoryConflictRules[categoryKey] || [];
+      const conflict = rules.find(rule => rule.test.test(evidence));
+      if (conflict) forceNotFit(conflict.reason);
+    }
     const normalizedAnswerForLength = cleanAnswer.replace(/\s+/g, '');
     const letterCount = Array.from(normalizedAnswerForLength).length;
     const lengthEvidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
@@ -226,13 +271,38 @@ export default async function handler(req, res) {
         parsed.gerekce = 'Cevap tam 8 harflidir ve 8 harfli kelime kategorisine uyar.';
       }
     }
-    // Modelin kararı ile kendi gerekçesi çelişiyorsa gerekçedeki açık olguyu esas al.\n    // Bu, örneğin "Uygun görünüyor" deyip aynı anda "bir ilçe" veya "hayvan ürünü" demesini engeller.\n    const semanticConflict = [\n      { test: /(?:bir ilçe|ilçesidir|ilçesi|mahalle|semt|köy|belde|kasaba|mezra)/i, reason: 'Gerekçede cevabın şehir değil, alt yerleşim birimi olduğu belirtiliyor.' },\n      { test: /(?:hayvan(?:sal)? ürünü|hayvandan elde edilen|hayvanın ürünü|süt|yün|deri|yumurta|peynir|tereyağı)/i, reason: 'Gerekçede cevabın hayvanın kendisi değil, hayvansal bir ürün olduğu belirtiliyor.' },\n      { test: /(?:bitkisel ürün|işlenmiş ürün|bitkiden elde edilen|bitkinin ürünü|un|salça|reçel)/i, reason: 'Gerekçede cevabın bitkinin kendisi değil, bitkisel/işlenmiş bir ürün olduğu belirtiliyor.' },\n      { test: /(?:şehir değil|şehir değildir|ülke değil|ülke değildir)/i, reason: 'Gerekçede cevabın istenen varlık türü olmadığı açıkça belirtiliyor.' }\n    ];\n    if (parsed.uygunluk === 'Uygun görünüyor') {\n      const conflict = semanticConflict.find(item => item.test.test(evidence));\n      if (conflict) forceNotFit(conflict.reason);\n    }\n\n    if (categoryKey === 'şehir' && /(?:mahalle\\w*|semt\\w*|köy\\w*|ilçe\\w*|belde\\w*|kasaba\\w*|mezra\\w*)/i.test(evidence)) {
+    // Modelin kararı ile kendi gerekçesi çelişiyorsa gerekçedeki açık olguyu esas al.
+    // Bu, örneğin "Uygun görünüyor" deyip aynı anda "bir ilçe" veya "hayvan ürünü" demesini engeller.
+    const semanticConflict = [
+      { test: /(?:bir ilçe|ilçesidir|ilçesi|mahalle|semt|köy|belde|kasaba|mezra)/i, reason: 'Gerekçede cevabın şehir değil, alt yerleşim birimi olduğu belirtiliyor.' },
+      { test: /(?:hayvan(?:sal)? ürünü|hayvandan elde edilen|hayvanın ürünü|süt|yün|deri|yumurta|peynir|tereyağı)/i, reason: 'Gerekçede cevabın hayvanın kendisi değil, hayvansal bir ürün olduğu belirtiliyor.' },
+      { test: /(?:bitkisel ürün|işlenmiş ürün|bitkiden elde edilen|bitkinin ürünü|un|salça|reçel)/i, reason: 'Gerekçede cevabın bitkinin kendisi değil, bitkisel/işlenmiş bir ürün olduğu belirtiliyor.' },
+      { test: /(?:şehir değil|şehir değildir|ülke değil|ülke değildir)/i, reason: 'Gerekçede cevabın istenen varlık türü olmadığı açıkça belirtiliyor.' }
+    ];
+    if (parsed.uygunluk === 'Uygun görünüyor') {
+      const conflict = semanticConflict.find(item => item.test.test(evidence));
+      if (conflict) forceNotFit(conflict.reason);
+    }
+
+    if (categoryKey === 'şehir' && /(?:mahalle\\w*|semt\\w*|köy\\w*|ilçe\\w*|belde\\w*|kasaba\\w*|mezra\\w*)/i.test(evidence)) {
       parsed.uygunluk = 'Uygun görünmüyor';
       parsed.guven = parsed.guven === 'Düşük' ? 'Düşük' : 'Orta';
       parsed.gerekce = 'Cevap bir mahalle, ilçe veya başka bir alt yerleşim birimidir; Şehir kategorisine uygun değildir.';
     }
 
-    // Belirsizlik sinyalleri varken modeli gereksiz kesin red/kabulden koru.\n    // Net bir yanlışlık yoksa "Tartışmalı" oyuncuların nihai kararı vermesine alan bırakır.\n    const ambiguitySignals = /(?:olabilir|olması mümkün|bağlama göre|kullanılabilir|bazı kaynaklarda|bazı kullanımlarda|iki anlam|çift anlam|belirsiz|kesin değil|tartışmalı|değişebilir)/i;\n    const hardRejectSignals = /(?:değildir|değil|uymaz|uygun değil|kabul edilmez|kategoriye girmez|bir .* değil)/i;\n    const hardAcceptSignals = /(?:tam olarak|doğrudan|kesinlikle|açıkça|kendisi olan|gerçek bir)/i;\n    if (parsed.uygunluk === 'Uygun görünmüyor' && ambiguitySignals.test(evidence) && !hardRejectSignals.test(evidence)) {\n      forceMaybe('Cevap için birden fazla makul yorum bulunuyor; kesin red yerine tartışmalı değerlendirme daha uygundur.');\n    }\n    if (parsed.uygunluk === 'Uygun görünüyor' && ambiguitySignals.test(evidence) && !hardAcceptSignals.test(evidence)) {\n      forceMaybe('Cevabın kategoriyle ilişkisi bağlama göre değişebiliyor; kesin kabul yerine tartışmalı değerlendirme daha uygundur.');\n    }\n\n    const allowedFit = new Set(['Uygun görünüyor', 'Uygun görünmüyor', 'Tartışmalı']);
+    // Belirsizlik sinyalleri varken modeli gereksiz kesin red/kabulden koru.
+    // Net bir yanlışlık yoksa "Tartışmalı" oyuncuların nihai kararı vermesine alan bırakır.
+    const ambiguitySignals = /(?:olabilir|olması mümkün|bağlama göre|kullanılabilir|bazı kaynaklarda|bazı kullanımlarda|iki anlam|çift anlam|belirsiz|kesin değil|tartışmalı|değişebilir)/i;
+    const hardRejectSignals = /(?:değildir|değil|uymaz|uygun değil|kabul edilmez|kategoriye girmez|bir .* değil)/i;
+    const hardAcceptSignals = /(?:tam olarak|doğrudan|kesinlikle|açıkça|kendisi olan|gerçek bir)/i;
+    if (parsed.uygunluk === 'Uygun görünmüyor' && ambiguitySignals.test(evidence) && !hardRejectSignals.test(evidence)) {
+      forceMaybe('Cevap için birden fazla makul yorum bulunuyor; kesin red yerine tartışmalı değerlendirme daha uygundur.');
+    }
+    if (parsed.uygunluk === 'Uygun görünüyor' && ambiguitySignals.test(evidence) && !hardAcceptSignals.test(evidence)) {
+      forceMaybe('Cevabın kategoriyle ilişkisi bağlama göre değişebiliyor; kesin kabul yerine tartışmalı değerlendirme daha uygundur.');
+    }
+
+    const allowedFit = new Set(['Uygun görünüyor', 'Uygun görünmüyor', 'Tartışmalı']);
     const allowedConfidence = new Set(['Yüksek', 'Orta', 'Düşük']);
     const uygunluk = allowedFit.has(String(parsed.uygunluk)) ? String(parsed.uygunluk) : 'Tartışmalı';
     const guven = allowedConfidence.has(String(parsed.guven)) ? String(parsed.guven) : 'Düşük';
