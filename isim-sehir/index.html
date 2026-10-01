@@ -1978,10 +1978,11 @@ function showRoundTransition(done){
     word-break: normal !important; line-height: 1.25 !important;
   }
   .vote-player > .vote-actions {
-    grid-column: 2 !important; grid-row: 2 !important;
+    grid-column: 1 / -1 !important; grid-row: 2 !important;
     display: flex !important; flex-wrap: wrap !important;
     justify-content: flex-end !important; align-items: center !important;
     gap: 7px !important; width: 100% !important; min-width: 0 !important;
+    box-sizing: border-box !important; padding-right: 2px !important;
     margin: 0 !important; overflow: visible !important;
   }
   .vote-player .own-answer-label {
