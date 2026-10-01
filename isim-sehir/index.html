@@ -1010,6 +1010,7 @@ function bindConnection(conn){
      if(Array.isArray(data.cats)&&data.cats.length)cats=[...data.cats];
      applyGameSettings(data);
      roundState={token:++roundToken,phase:'preparing'};
+     persistGuestSession();
      netAnswers={};submittedPlayers={};votingOpenedRound=0;votingDone={};localVotes={};remoteVotes={};
      showRoundTransition(()=>{
        if(roundTransitionTarget!==targetRound)return;
@@ -1240,6 +1241,7 @@ function resumeActiveRound(data){
  $('wheel').classList.remove('spinning');
  $('wheelLabel').textContent='Seçilen harf';
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
+ if(isHost)persistHostSession();
  $('answers').classList.remove('hidden-answers');bindAnswerArena();
  $('timer').classList.remove('danger');
  $('timer').textContent=seconds+' sn';updateTimerHud();
@@ -1415,6 +1417,7 @@ function finishRound(){
  netAnswers[me]=mine;
  if(isHost){
    submittedPlayers[me]=true;
+   persistHostSession();
    bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers;submittedPlayers[b.name]=true}});
    if(Object.keys(onlinePlayers).length<=1){submittedPlayers[me]=true;markSubmittedButton('✓ Cevapların kaydedildi');showVoting();}
    else{roundState.phase='waiting-players';markSubmittedButton('✓ Cevapların kaydedildi',true);updateSubmissionStatus();}
@@ -1805,6 +1808,7 @@ function pointsRuleText(d){
 }
 function showResults(gains,details=[],scoresOverride=null){
  roundState.phase='results';
+ if(isHost)persistHostSession();else persistGuestSession();
  const list=Object.entries(gains).sort((a,b)=>b[1]-a[1]);
  const scores=scoresOverride||netScores||{};
  const names=[...new Set([...Object.keys(onlinePlayers),...bots.map(b=>b.name),me,...Object.keys(scores)])];
