@@ -1536,18 +1536,40 @@ function applyAiJudgment(category,answer,j){
 function autoCheckVotingAnswers(){
  if(!isHost)return;
  const unique={};
- Object.values(netAnswers||{}).forEach(list=>(list||[]).forEach(x=>{if(x?.val)unique[aiJudgmentKey(x.cat,x.val)]={cat:x.cat,answer:x.val}}));
- const entries=Object.values(unique),jobs=[];
- for(let start=0;start<entries.length;start+=4){
-  entries.slice(start,start+4).forEach(x=>{
-   const key=aiJudgmentKey(x.cat,x.answer);if(aiJudgments[key])return;
-   jobs.push(fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category:x.cat,answer:x.answer,letter:letterNow})})
-    .then(res=>res.json().catch(()=>({})).then(data=>({res,data})))
-    .then(({res,data})=>{if(!res.ok)return;applyAiJudgment(x.cat,x.answer,data.analysis||{});broadcast({type:'aiJudgment',round,category:x.cat,answer:x.answer,judgment:aiJudgments[key]})})
-    .catch(()=>{}));
-  });
- }
- Promise.all(jobs).then(()=>{if(isHost)persistHostSession()});
+ Object.values(netAnswers||{}).forEach(list=>(list||[]).forEach(x=>{
+   if(x?.val)unique[aiJudgmentKey(x.cat,x.val)]={cat:x.cat,answer:x.val};
+ }));
+ const entries=Object.values(unique).filter(x=>!aiJudgments[aiJudgmentKey(x.cat,x.answer)]);
+ // Gemini kotasını korumak için tur başına yalnızca birkaç cevabı otomatik hakemden geçiriyoruz.
+ // Diğer cevaplar "✦ AI Bilgisi" düğmesine basıldığında isteğe bağlı olarak analiz edilir.
+ const autoEntries=entries.slice(0,4);
+ if(!autoEntries.length)return;
+ let index=0;
+ const runNext=()=>{
+   if(!isHost||index>=autoEntries.length){
+     if(isHost)persistHostSession();
+     return;
+   }
+   const x=autoEntries[index++];
+   const key=aiJudgmentKey(x.cat,x.answer);
+   fetch('/api/ai-info',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({category:x.cat,answer:x.answer,letter:letterNow})
+   })
+   .then(res=>res.json().catch(()=>({})).then(data=>({res,data})))
+   .then(({res,data})=>{
+     if(!res.ok){
+       if(res.status===429||data.error==='AI_QUOTA_EXHAUSTED')return;
+       return;
+     }
+     applyAiJudgment(x.cat,x.answer,data.analysis||{});
+     broadcast({type:'aiJudgment',round,category:x.cat,answer:x.answer,judgment:aiJudgments[key]});
+   })
+   .catch(()=>{})
+   .finally(()=>setTimeout(runNext,900));
+ };
+ runNext();
 }
 function getCachedAiJudgment(category,answer){
  const live=aiJudgments[aiJudgmentKey(category,answer)];if(live)return live;
@@ -1592,7 +1614,11 @@ function toggleAiInfo(btn){
   box.dataset.loaded='1';btn.textContent='✦ Bilgiyi Gizle';
  }).catch(err=>{
   const fallback=aiLocalInfo(category,answer),detail=err&&err.message?' · '+err.message:'';
-  if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">BİLGİ</span></div><div>'+esc(fallback)+'</div><div style="margin-top:6px;color:#7188a3;font-size:10px">AI bağlantısı şu anda kullanılamıyor'+esc(detail)+'.</div>';
+  const quota=err&&String(err.message||'').includes('AI_QUOTA_EXHAUSTED');
+  const helper=quota
+    ? 'Gemini kotası/hız sınırı dolmuş olabilir. Bir süre sonra tekrar deneyebilirsin.'
+    : 'AI bağlantısı şu anda kullanılamıyor'+esc(detail)+'.';
+  if(panel)panel.innerHTML='<div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">BİLGİ</span></div><div>'+esc(fallback)+'</div><div style="margin-top:6px;color:#7188a3;font-size:10px">'+helper+'</div>';
   btn.textContent='✦ Tekrar Dene';box.classList.add('open');
  }).finally(()=>{btn.disabled=false});
 }
