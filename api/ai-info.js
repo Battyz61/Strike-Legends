@@ -59,7 +59,8 @@ export default async function handler(req, res) {
     // Böylece tek bir Gemini modelindeki kota, bölge veya geçici servis sorunu AI panelini tamamen bozmaz.
     const modelCandidates = [
       'gemini-3.5-flash-lite',
-      'gemini-3.1-flash-lite'
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash-lite'
     ];
     const retryDelays = [0, 1000, 2500];
 
