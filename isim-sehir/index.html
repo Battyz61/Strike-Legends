@@ -955,7 +955,7 @@ function bindConnection(conn){
  if(Number(data.round)!==round)return;
  applyAiJudgment(data.category,data.answer,data.judgment||{});
  persistGuestSession();
- lse if(data.type==='scores'&&!isHost){
+ }else if(data.type==='scores'&&!isHost){
      if(Number(data.round)!==round)return;
      netScores=Object.assign({},data.scores||{});
      myScore=Number(netScores[me]||0);
