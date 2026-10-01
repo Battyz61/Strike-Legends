@@ -522,7 +522,6 @@ function enter(name,join){
  roomRejected=false;
  try{
   if(!join)clearHostSession();
-  if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
   const requestedCode=join?String($('joinCode')?.value||'').trim().replace(/\s/g,''):'';
   if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');$('joinCode')?.focus();return}
   me=(name||'Oyuncu').trim()||'Oyuncu';
@@ -558,7 +557,8 @@ function createRoom(){
  try{
   if(btn){btn.disabled=true;btn.classList.add('loading');}
   const name=String($('hostName')?.value||'').trim()||'Oyuncu';
-  enter(name,false);
+  const ok=enter(name,false);
+  if(ok===false&&btn){btn.disabled=false;btn.classList.remove('loading');}
  }catch(err){
   console.error('createRoom:',err);
   toast('Oda oluşturulamadı. Tekrar dene.');
