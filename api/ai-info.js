@@ -36,6 +36,10 @@ export default async function handler(req, res) {
       'Kategori "3 harfli kelime" bir sözlük/kelime kategorisidir; cevap Türkçede anlamlı bir kelime olmalı ve tam 3 harf içermelidir. Harfleri gerçekten tek tek say. "Mal" ve "Mey" Türkçede kullanılan anlamlı 3 harfli kelimelerdir ve bu kategoriye uygundur; bunları uzunluk veya anlam nedeniyle yanlışlıkla reddetme. Yalnızca anlamsız bir harf dizisi veya başka bir kategoriye ait açıkça yanlış bir ifade ise reddet. ' +
       'Kategori "8 harfli kelime" ise cevabın tam 8 harfli olması gerekir; 8 harften kısa veya uzun cevapları uygun kabul etme. ' +
       'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
+      'Çok önemli tutarlılık kuralı: "gerekce" yalnızca bu istekte verilen Cevap için ve verilen Kategori için yazılmalıdır. ' +
+      'Yukarıdaki örneklerde geçen başka cevapları veya başka kategorilere ait örnek gerekçeleri asla kopyalama. ' +
+      '"bilgi" ile "gerekce" aynı cevabı anlatmalıdır. Bilgi bölümünde cevap bir isim/şehir/hayvan/bitki vb. olarak açıkça tanımlanıyorsa, gerekçede bunun tersini söyleme. ' +
+      'Gerekçe ile bilgi çelişirse kesin hüküm verme ve "Tartışmalı" seç. ' +
       'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
       'Bilgi bölümünde cevabı onaylayan veya reddeden ifadeler kullanma. ' +
       'Yanıtı SADECE geçerli JSON olarak döndür ve başka hiçbir şey yazma. ' +
@@ -51,8 +55,24 @@ export default async function handler(req, res) {
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        maxOutputTokens: 180,
-        responseMimeType: 'application/json'
+        maxOutputTokens: 220,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'object',
+          properties: {
+            uygunluk: {
+              type: 'string',
+              enum: ['Uygun görünüyor', 'Uygun görünmüyor', 'Tartışmalı']
+            },
+            guven: {
+              type: 'string',
+              enum: ['Yüksek', 'Orta', 'Düşük']
+            },
+            gerekce: { type: 'string' },
+            bilgi: { type: 'string' }
+          },
+          required: ['uygunluk', 'guven', 'gerekce', 'bilgi']
+        }
       }
     };
 
@@ -271,18 +291,9 @@ export default async function handler(req, res) {
         parsed.gerekce = 'Cevap tam 8 harflidir ve 8 harfli kelime kategorisine uyar.';
       }
     }
-    // Modelin kararı ile kendi gerekçesi çelişiyorsa gerekçedeki açık olguyu esas al.
-    // Bu, örneğin "Uygun görünüyor" deyip aynı anda "bir ilçe" veya "hayvan ürünü" demesini engeller.
-    const semanticConflict = [
-      { test: /(?:bir ilçe|ilçesidir|ilçesi|mahalle|semt|köy|belde|kasaba|mezra)/i, reason: 'Gerekçede cevabın şehir değil, alt yerleşim birimi olduğu belirtiliyor.' },
-      { test: /(?:hayvan(?:sal)? ürünü|hayvandan elde edilen|hayvanın ürünü|süt|yün|deri|yumurta|peynir|tereyağı)/i, reason: 'Gerekçede cevabın hayvanın kendisi değil, hayvansal bir ürün olduğu belirtiliyor.' },
-      { test: /(?:bitkisel ürün|işlenmiş ürün|bitkiden elde edilen|bitkinin ürünü|un|salça|reçel)/i, reason: 'Gerekçede cevabın bitkinin kendisi değil, bitkisel/işlenmiş bir ürün olduğu belirtiliyor.' },
-      { test: /(?:şehir değil|şehir değildir|ülke değil|ülke değildir)/i, reason: 'Gerekçede cevabın istenen varlık türü olmadığı açıkça belirtiliyor.' }
-    ];
-    if (parsed.uygunluk === 'Uygun görünüyor') {
-      const conflict = semanticConflict.find(item => item.test.test(evidence));
-      if (conflict) forceNotFit(conflict.reason);
-    }
+    // Genel tutarlılık artık model promptu + JSON şeması ile sağlanıyor.
+    // Burada kategori bağımsız anahtar kelime taraması yapılmaz; aksi halde başka kategoriden
+    // kalmış bir ifade (ör. "bitkisel ürün") doğru cevabı yanlışlıkla reddedebilir.
 
     if (categoryKey === 'şehir' && /(?:mahalle\\w*|semt\\w*|köy\\w*|ilçe\\w*|belde\\w*|kasaba\\w*|mezra\\w*)/i.test(evidence)) {
       parsed.uygunluk = 'Uygun görünmüyor';
