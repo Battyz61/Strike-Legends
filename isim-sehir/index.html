@@ -506,7 +506,13 @@ function toggleCat(cat){
  if(cats.includes(cat)){if(cats.length===1){toast('En az 1 kategori seçmelisin.');return}cats=cats.filter(x=>x!==cat)}else cats.push(cat);
  renderCategories();broadcastGameSettings();
 }
-function shuffleCats(){cats=[...allCats].sort(()=>Math.random()-.5).slice(0,Math.min(6,allCats.length));renderCategories();toast('Kategoriler karıştırıldı!')}
+function shuffleCats(){
+ if(!isHost){toast('Kategorileri sadece host değiştirebilir.');return}
+ cats=[...allCats].sort(()=>Math.random()-.5).slice(0,Math.min(6,allCats.length));
+ renderCategories();
+ broadcastGameSettings();
+ toast('Kategoriler karıştırıldı ve odaya gönderildi!');
+}
 function rememberName(name){
  const value=(name||'').trim();
  if(!value)return;
@@ -1619,7 +1625,15 @@ function showVoting(sync=null){
  html+=voteRow('human:'+name,x,!found);
 });html+='</div></div>'});
  html+='<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+document.querySelectorAll('#answers .answer input').length+'</b></div>';
- $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');if(isHost)setTimeout(()=>autoCheckVotingAnswers(),100);$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
+ $('answers').innerHTML=html;
+ $('answers').classList.remove('hidden-answers');
+ if(isHost)setTimeout(()=>autoCheckVotingAnswers(),100);
+ $('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');
+ $('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+$('answers').querySelectorAll('.vote-player').length;
+ $('finishBtn').disabled=false;
+ $('finishBtn').onclick=completeVoting;
+ $('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
+ updateVoteSummary();
  // Rehydrate votes after a reconnect so a player does not lose their progress.
  Object.entries(syncedVotes).forEach(([key,val])=>{
    const parts=key.split('|');if(parts.length<3)return;
