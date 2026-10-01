@@ -1129,36 +1129,20 @@ function broadcast(data){
  connections=connections.filter(cn=>cn&&!cn.destroyed);
  connections.forEach(cn=>{if(cn.open)cn.send(data)});
 }
-async function copyRoom(){
+function copyRoom(){
  const code=String(roomId||$('roomCode')?.textContent||'').trim();
  if(!code){toast('Oda kodu bulunamadı.');return}
  const text='🎮 İsim Şehir\\nOda kodu: '+code+'\\nKatıl ve yarışalım!';
- const copied=async()=>{
-   if(navigator.clipboard&&window.isSecureContext){
-     await navigator.clipboard.writeText(code);
-     return true;
-   }
-   const ta=document.createElement('textarea');
-   ta.value=code;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';
-   document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
-   let ok=false;try{ok=document.execCommand('copy')}catch(e){}
-   ta.remove();return ok;
+ const copied=()=>{
+  if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(code).then(()=>true).catch(()=>false);
+  const ta=document.createElement('textarea');ta.value=code;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
+  let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();return Promise.resolve(ok);
  };
- try{
-   const ok=await copied();
-   if(ok){toast('📋 Oda kodu kopyalandı: '+code);return}
-   if(navigator.share){
-     await navigator.share({title:'İsim Şehir — Oda Daveti',text});
-     toast('📤 Davet paylaşımını açtım');return;
-   }
-   toast('Oda kodu: '+code);
- }catch(e){
-   try{
-     const ok=await copied();
-     if(ok){toast('📋 Oda kodu kopyalandı: '+code);return}
-   }catch(_){}
-   toast('Oda kodu: '+code);
- }
+ copied().then(ok=>{
+  if(ok){toast('📋 Oda kodu kopyalandı: '+code);return}
+  if(navigator.share)return navigator.share({title:'İsim Şehir — Oda Daveti',text}).then(()=>toast('📤 Davet paylaşımını açtım')).catch(()=>toast('Oda kodu: '+code));
+  toast('Oda kodu: '+code);
+ }).catch(()=>toast('Oda kodu: '+code));
 }
 function addBot(){
  const limit=Number($('playerLimit')?.value||4);
@@ -1538,28 +1522,26 @@ function aiLocalInfo(cat,answer){
  };
  return templates[k]||a+' hakkında kısa bilgi verilebilir. Cevabın anlamı, kökeni veya kullanım alanları gibi temel bilgiler burada gösterilebilir.';
 }
-async function aiJudgmentKey(category,answer){return scoringAnswerKey(category)+'|'+scoringAnswerKey(answer)+'|'+scoringAnswerKey(letterNow)}
+function aiJudgmentKey(category,answer){return scoringAnswerKey(category)+'|'+scoringAnswerKey(answer)+'|'+scoringAnswerKey(letterNow)}
 function applyAiJudgment(category,answer,j){
  if(!category||!answer)return;
  aiJudgments[aiJudgmentKey(category,answer)]={fit:String(j?.fit||j?.uygunluk||'Tartışmalı'),confidence:String(j?.confidence||j?.guven||'Düşük'),reason:String(j?.reason||j?.gerekce||'')};
 }
-async function autoCheckVotingAnswers(){
+function autoCheckVotingAnswers(){
  if(!isHost)return;
  const unique={};
  Object.values(netAnswers||{}).forEach(list=>(list||[]).forEach(x=>{if(x?.val)unique[aiJudgmentKey(x.cat,x.val)]={cat:x.cat,answer:x.val}}));
- const entries=Object.values(unique);
+ const entries=Object.values(unique),jobs=[];
  for(let start=0;start<entries.length;start+=4){
-  await Promise.all(entries.slice(start,start+4).map(async x=>{
+  entries.slice(start,start+4).forEach(x=>{
    const key=aiJudgmentKey(x.cat,x.answer);if(aiJudgments[key])return;
-   try{
-    const res=await fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category:x.cat,answer:x.answer,letter:letterNow})});
-    const data=await res.json().catch(()=>({}));if(!res.ok)return;
-    applyAiJudgment(x.cat,x.answer,data.analysis||{});
-    broadcast({type:'aiJudgment',round,category:x.cat,answer:x.answer,judgment:aiJudgments[key]});
-   }catch(e){}
-  }));
+   jobs.push(fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category:x.cat,answer:x.answer,letter:letterNow})})
+    .then(res=>res.json().catch(()=>({})).then(data=>({res,data})))
+    .then(({res,data})=>{if(!res.ok)return;applyAiJudgment(x.cat,x.answer,data.analysis||{});broadcast({type:'aiJudgment',round,category:x.cat,answer:x.answer,judgment:aiJudgments[key]})})
+    .catch(()=>{}));
+  });
  }
- if(isHost)persistHostSession();
+ Promise.all(jobs).then(()=>{if(isHost)persistHostSession()});
 }
 function getCachedAiJudgment(category,answer){
  const live=aiJudgments[aiJudgmentKey(category,answer)];if(live)return live;
