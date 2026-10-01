@@ -422,7 +422,7 @@ let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
 const letters='ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ'.split('');
 let selectedLetters=[...letters];
 let wheelSpinFrame=0,wheelSpinStart=0;let timerId,seconds=120,round=1,myScore=0,roomId='',me='',letterNow='',bots=[],roundToken=0,roundState=null,totalRounds=5,gameFinished=false,myAvatar=0;
-let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,votingFinalizedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null;
+let peer=null,hostPeer=null,connections=[],isHost=false,onlinePlayers={},netAnswers={},netVotes={},submittedPlayers={},pendingNetMessages=[],votingOpenedRound=0,votingFinalizedRound=0,localVotes={},remoteVotes={},netScores={},votingDone={},lastVotingResult=null,aiJudgments={};
 const $=id=>document.getElementById(id);
 const AVATARS=[
 {name:'Nova',bg:'#6d5dfc',fg:'#d9d5ff',shape:'M24 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm-11 28c1-7 5-10 11-10s10 3 11 10'},
@@ -582,7 +582,7 @@ function persistHostSession(){
   sessionStorage.setItem(HOST_SESSION_KEY,JSON.stringify({
    savedAt:Date.now(),roomId,me,letterNow,cats:[...cats],round,totalRounds,seconds,gameFinished,myScore,myAvatar,
    bots:bots.map((b,i)=>({name:b.name||('Bot '+(i+1)),score:Number(b.score)||0,answers:Array.isArray(b.answers)?b.answers:[],avatar:Number(b.avatar)||0})),
-   onlinePlayers:players,netAnswers,netVotes,submittedPlayers,votingDone,netScores,lastVotingResult,
+   onlinePlayers:players,netAnswers,netVotes,submittedPlayers,votingDone,netScores,lastVotingResult,aiJudgments,
    roundState:roundState?{phase:roundState.phase}:null,votingOpenedRound,settings:currentGameSettings()
   }));
  }catch(e){}
@@ -593,7 +593,7 @@ function persistGuestSession(){
  try{
   sessionStorage.setItem(GUEST_SESSION_KEY,JSON.stringify({
    savedAt:Date.now(),roomId,me,myAvatar,letterNow,cats:[...cats],round,totalRounds,
-   netAnswers,netVotes,submittedPlayers,votingDone,netScores,myScore,lastVotingResult,seconds,roundState:roundState?{phase:roundState.phase}:null,
+   netAnswers,netVotes,submittedPlayers,votingDone,netScores,myScore,lastVotingResult,aiJudgments,seconds,roundState:roundState?{phase:roundState.phase}:null,
    settings:currentGameSettings()
   }));
  }catch(e){}
@@ -606,7 +606,7 @@ function restoreGuestSession(){
  isHost=false;roomId=String(data.roomId);me=String(data.me);myAvatar=Number(data.myAvatar)||0;
  letterNow=data.letterNow||'';round=Number(data.round)||1;totalRounds=Number(data.totalRounds)||5;
  cats=Array.isArray(data.cats)&&data.cats.length?[...data.cats]:cats;
- netAnswers=data.netAnswers||{};netVotes=data.netVotes||{};submittedPlayers=data.submittedPlayers||{};votingDone=data.votingDone||{};netScores=data.netScores||{};lastVotingResult=data.lastVotingResult||null;
+ netAnswers=data.netAnswers||{};netVotes=data.netVotes||{};submittedPlayers=data.submittedPlayers||{};votingDone=data.votingDone||{};netScores=data.netScores||{};lastVotingResult=data.lastVotingResult||null;aiJudgments=data.aiJudgments||{};
  myScore=Number(data.myScore)||0;roundState=data.roundState?{token:++roundToken,phase:data.roundState.phase}:null;
  applyGameSettings(data.settings||{});
  $('lobby').classList.add('hidden');$('categoryPanel').classList.add('hidden');$('room').style.display='block';
@@ -949,7 +949,11 @@ function bindConnection(conn){
      if(Number(data.round)!==round)return;
      remoteVotes[data.voter+'|'+(data.owner||data.answer)+'|'+data.cat]=data.correct?'yes':'no';
      registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct,data.owner);persistGuestSession();updateVoteSummary();
-   }else if(data.type==='scores'&&!isHost){
+   }else if(data.type==='aiJudgment'&&!isHost){
+ if(Number(data.round)!==round)return;
+ applyAiJudgment(data.category,data.answer,data.judgment||{});
+ persistGuestSession();
+ lse if(data.type==='scores'&&!isHost){
      if(Number(data.round)!==round)return;
      netScores=Object.assign({},data.scores||{});
      myScore=Number(netScores[me]||0);
@@ -1532,7 +1536,31 @@ function aiLocalInfo(cat,answer){
  };
  return templates[k]||a+' hakkında kısa bilgi verilebilir. Cevabın anlamı, kökeni veya kullanım alanları gibi temel bilgiler burada gösterilebilir.';
 }
-async function getCachedAiJudgment(category,answer){
+async function aiJudgmentKey(category,answer){return scoringAnswerKey(category)+'|'+scoringAnswerKey(answer)+'|'+scoringAnswerKey(letterNow)}
+function applyAiJudgment(category,answer,j){
+ if(!category||!answer)return;
+ aiJudgments[aiJudgmentKey(category,answer)]={fit:String(j?.fit||j?.uygunluk||'Tartışmalı'),confidence:String(j?.confidence||j?.guven||'Düşük'),reason:String(j?.reason||j?.gerekce||'')};
+}
+async function autoCheckVotingAnswers(){
+ if(!isHost)return;
+ const unique={};
+ Object.values(netAnswers||{}).forEach(list=>(list||[]).forEach(x=>{if(x?.val)unique[aiJudgmentKey(x.cat,x.val)]={cat:x.cat,answer:x.val}}));
+ const entries=Object.values(unique);
+ for(let start=0;start<entries.length;start+=4){
+  await Promise.all(entries.slice(start,start+4).map(async x=>{
+   const key=aiJudgmentKey(x.cat,x.answer);if(aiJudgments[key])return;
+   try{
+    const res=await fetch('/api/ai-info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category:x.cat,answer:x.answer,letter:letterNow})});
+    const data=await res.json().catch(()=>({}));if(!res.ok)return;
+    applyAiJudgment(x.cat,x.answer,data.analysis||{});
+    broadcast({type:'aiJudgment',round,category:x.cat,answer:x.answer,judgment:aiJudgments[key]});
+   }catch(e){}
+  }));
+ }
+ if(isHost)persistHostSession();
+}
+function getCachedAiJudgment(category,answer){
+ const live=aiJudgments[aiJudgmentKey(category,answer)];if(live)return live;
  const key='isimSehirAiV4:'+category+'|'+letterNow+'|'+answer;
  try{
   const raw=localStorage.getItem(key);if(!raw)return null;
@@ -1621,7 +1649,7 @@ function showVoting(sync=null){
  html+=voteRow('human:'+name,x,!found);
 });html+='</div></div>'});
  html+='<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+document.querySelectorAll('#answers .answer input').length+'</b></div>';
- $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
+ $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');if(isHost)setTimeout(()=>autoCheckVotingAnswers(),100);$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
  // Rehydrate votes after a reconnect so a player does not lose their progress.
  Object.entries(syncedVotes).forEach(([key,val])=>{
    const parts=key.split('|');if(parts.length<3)return;
