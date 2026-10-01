@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       'Özellikle "Şehir" kategorisinde yalnızca gerçek şehir/il veya oyunda şehir olarak kullanılan yerleşim adı kabul edilir. Mahalle, semt, köy, ilçe, belde, kasaba veya bir ilçeye bağlı küçük yerleşim birimi şehir değildir ve "Uygun görünüyor" denmemelidir. ' +
       'Örneğin "Özdil" için bilgi bunun Araklı ilçesine bağlı bir mahalle olduğunu söylüyorsa, "Şehir" kategorisinde sonuç kesin olarak "Uygun görünmüyor" olmalıdır. ' +
       'Aynı şekilde "Araklı" gibi bir ilçe, "Trabzon" gibi bir ilin ilçesi olarak tanımlanıyorsa "Şehir" kategorisinde kabul edilmemelidir. ' +
-      'Benzer şekilde "Ülke" kategorisinde şehir, il, ilçe, mahalle veya bölge; "Hayvan" kategorisinde hayvan ürünü; "Bitki" kategorisinde yalnızca meyve/ürün adı gibi ilişkili ama farklı varlıklar doğrudan kabul edilmemeli. ' +
+      'Benzer şekilde "Ülke" kategorisinde şehir, il, ilçe, mahalle veya bölge; "Hayvan" kategorisinde hayvan ürünü, yiyecek veya parça; "Bitki" kategorisinde yalnızca meyve/ürün adı gibi ilişkili ama farklı varlıklar doğrudan kabul edilmemeli. "Hayvan" için hayvanın kendisini, "Bitki" için bitkinin kendisini ara; bir hayvandan elde edilen ürün (ör. süt, yün) veya bitkiden elde edilen ürün (ör. un, yağ) doğrudan hayvan/bitki kabul edilmez. Ancak bir kelime Türkçede hem canlı varlığın hem ürününün adı olarak yerleşik biçimde kullanılıyorsa bağlama göre "Tartışmalı" seç. "Yemek malzemesi" kategorisinde de malzemenin kendisini ara; hazır yemek veya hayvan/bitki adı tek başına malzeme sayılmaz. ' +
       'Kategori ile cevap arasındaki ilişki net değilse "Yüksek" güven verme. ' +
       'Açık ve bariz yazım hatalarını da değerlendir: Cevap, kategoriye uygun bilinen bir kelimenin küçük bir yazım hatalı biçimiyse ve ne kastedildiği tartışmasızsa cevabı sırf yazım hatası yüzünden reddetme. Örneğin "Eşşek" açıkça "eşek" kelimesinin fazladan ş harfi içeren yazımıdır; "Hayvan" kategorisinde uygun kabul edilmelidir. Yazım hatası anlamı belirsizleştiriyorsa "Tartışmalı" kullan. ' +
       'Bazı cevaplar birden fazla varlık türünü ifade edebilir. Böyle durumlarda tek bir yorumla kesin "Uygun görünüyor" deme. Özellikle "Bitki" kategorisinde cevap yaygın olarak meyve/ürün adı olarak da kullanılıyorsa ve aynı kelime bitkinin kendisini de ifade edebiliyorsa "Tartışmalı" seç. Örneğin "Erik" hem erik ağacını hem meyvesini ifade edebildiği için "Bitki" kategorisinde tartışmalı kabul edilmelidir. "Elma", "armut", "kiraz" gibi benzer çift anlamlı örneklerde de aynı yaklaşımı kullan. Oyuncuların nihai kararı verebilmesi için gerekçede iki makul yorumu kısaca belirt. ' +
@@ -114,6 +114,17 @@ export default async function handler(req, res) {
     // Model yanıtını, özellikle yerleşim türü karışıklıklarına karşı küçük bir deterministik güvenlik katmanından geçir.
     // Böylece "Şehir" kategorisinde mahalle/ilçe/köy gibi alt yerleşimler yanlışlıkla kabul edilmez.
     const categoryKey = cleanCategory.toLocaleLowerCase('tr-TR');
+    const normalizedSemanticAnswer = cleanAnswer.toLocaleLowerCase('tr-TR').replace(/[’']/g, '');
+    const forceNotFit = (reason) => {
+      parsed.uygunluk = 'Uygun görünmüyor';
+      parsed.guven = 'Yüksek';
+      parsed.gerekce = reason;
+    };
+    const forceMaybe = (reason) => {
+      parsed.uygunluk = 'Tartışmalı';
+      parsed.guven = 'Orta';
+      parsed.gerekce = reason;
+    };
     const answerKey = cleanAnswer.toLocaleLowerCase('tr-TR');
     // Bazı Türkçe kategori cevapları iki farklı varlık türüne doğal olarak işaret eder.
     // Özellikle meyve adı aynı zamanda ağacın/bitkinin adıysa oyuncuların tartışabilmesi için kesin kabul verme.
@@ -130,6 +141,17 @@ export default async function handler(req, res) {
       parsed.uygunluk = 'Uygun görünmüyor';
       parsed.guven = 'Yüksek';
       parsed.gerekce = 'Cevap seçilen harfle başlamıyor; bu nedenle kategori kuralına uygun değildir.';
+    }
+    // Modelin semantik kararını, çok bariz ve sık görülen kategori karışıklıklarına karşı
+    // küçük bir deterministik katmanla destekle.
+    if (categoryKey === 'hayvan' && /^(süt|yün|deri|yumurta|bal|peynir|tereyağı)$/.test(normalizedSemanticAnswer)) {
+      forceNotFit('Cevap bir hayvanın kendisi değil, hayvansal bir ürün veya hayvandan elde edilen bir üründür.');
+    }
+    if (categoryKey === 'bitki' && /^(un|yağ|salça|şeker|çay|kahve|reçel)$/.test(normalizedSemanticAnswer)) {
+      forceNotFit('Cevap bitkinin kendisi değil, bitkisel bir ürün veya işlenmiş bir üründür.');
+    }
+    if (categoryKey === 'ülke' && /^(trabzon|ankara|istanbul|izmir|bursa|antalya|rize|ordu|samsun)$/.test(normalizedSemanticAnswer)) {
+      forceNotFit('Cevap bir ülke değil, şehir adıdır.');
     }
     const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
     const normalizedAnswerForLength = cleanAnswer.replace(/\s+/g, '');
