@@ -290,6 +290,20 @@ export default async function handler(req, res) {
         parsed.gerekce = 'Cevap tam 8 harflidir ve 8 harfli kelime kategorisine uyar.';
       }
     }
+    // Kategori-özel tutarlılık: "İsim" cevabı gerçekten bir kişi adı olarak tanımlanıyorsa
+    // modelin alakasız bir bitki/ürün gerekçesiyle yanlışlıkla red vermesine izin verme.
+    // Özellikle kısa ve yaygın isimlerde model bazen kategori bağlamını kaçırabiliyor.
+    if (categoryKey === 'isim' && parsed.uygunluk === 'Uygun görünmüyor') {
+      const nameEvidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
+      const clearlyName = /(?:bir )?(?:erkek|kadın|kiz|kız|kadın ve erkek)\s+ismi|(?:erkek|kadın|kız)\s+adı|(?:insan|kişi)\s+adı|isim olarak kullanılır|isim olarak kullanılan/.test(nameEvidence);
+      const clearlyNotName = /(?:isim değil|isim değildir|özel isim değil|insan adı değil|kişi adı değil)/.test(nameEvidence);
+      if (clearlyName && !clearlyNotName) {
+        parsed.uygunluk = 'Uygun görünüyor';
+        parsed.guven = 'Yüksek';
+        parsed.gerekce = 'Cevap, gerekçede insan adı/ismi olarak tanımlanıyor ve İsim kategorisine uygundur.';
+      }
+    }
+
     // Modelin kararı ile kendi gerekçesi çelişiyorsa gerekçedeki açık olguyu esas al.
     // Bu, örneğin "Uygun görünüyor" deyip aynı anda "bir ilçe" veya "hayvan ürünü" demesini engeller.
     const semanticConflict = [
