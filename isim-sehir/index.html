@@ -1661,9 +1661,9 @@ function revealBotVotes(){
  if(status&&botTotal)status.textContent='🤖 '+botTotal+' bot oyunu otomatik kullandı. Şimdi sen oyla.';
 }
 function updateVoteSummary(){
- const actionRows=$('answers')?[...$('answers').querySelectorAll('.vote-player [data-vote-action]')]:[];
- const localRequired=actionRows.length;
- const localDone=actionRows.reduce((n,r)=>n+(r.closest('.vote-player')?.dataset.vote?1:0),0);
+ const voteRows=$('answers')?[...$('answers').querySelectorAll('.vote-player')]:[];
+ const localRequired=voteRows.length;
+ const localDone=voteRows.reduce((n,r)=>n+(r.dataset.vote?1:0),0);
  const el=$('voteCount');if(el)el.textContent=localDone+' / '+localRequired;
  const btn=$('finishBtn');
  if(btn&&!btn.classList.contains('hidden')&&!votingDone[me]){
