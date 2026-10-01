@@ -945,7 +945,7 @@ function bindConnection(conn){
    }else if(data.type==='voteUpdate'&&!isHost){
      if(Number(data.round)!==round)return;
      remoteVotes[data.voter+'|'+(data.owner||data.answer)+'|'+data.cat]=data.correct?'yes':'no';
-     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct,data.owner);updateVoteSummary();
+     registerNetworkVote(data.voter,data.answer,data.cat,!!data.correct,data.owner);persistGuestSession();updateVoteSummary();
    }else if(data.type==='scores'&&!isHost){
      if(Number(data.round)!==round)return;
      netScores=Object.assign({},data.scores||{});
@@ -1468,6 +1468,7 @@ function vote(btn,correct){
  localVotes[row.dataset.answer+'|'+cat]=correct?'yes':'no';
  netVotes[me+'|'+row.dataset.answer+'|'+cat]=correct?'yes':'no';
  if(!wasVoted)votedCount++;
+ if(isHost)persistHostSession();else persistGuestSession();
  updateVoteSummary();
  if(!isHost){
    sendNet({type:'vote',round,voter:me,answer:row.dataset.answer,cat,correct,owner:canonicalAnswerOwner(row)});
@@ -1480,6 +1481,7 @@ function registerNetworkVote(voter,answer,cat,correct,owner=null){
  const value=correct?'yes':'no';
  remoteVotes[key]=value;
  netVotes[key]=value;
+ if(isHost)persistHostSession();
  const localOwner=owner?localAnswerOwner(owner):null;
  const row=[...$('answers').querySelectorAll('.vote-player')].find(r=>r.dataset.answer===answer&&(!localOwner||r.dataset.owner===localOwner)&&r.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')===cat);
  if(row){
