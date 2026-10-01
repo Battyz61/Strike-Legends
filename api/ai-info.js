@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       'Açık ve bariz yazım hatalarını da değerlendir: Cevap, kategoriye uygun bilinen bir kelimenin küçük bir yazım hatalı biçimiyse ve ne kastedildiği tartışmasızsa cevabı sırf yazım hatası yüzünden reddetme. Örneğin "Eşşek" açıkça "eşek" kelimesinin fazladan ş harfi içeren yazımıdır; "Hayvan" kategorisinde uygun kabul edilmelidir. Yazım hatası anlamı belirsizleştiriyorsa "Tartışmalı" kullan. ' +
       'Bazı cevaplar birden fazla varlık türünü ifade edebilir. Böyle durumlarda tek bir yorumla kesin "Uygun görünüyor" deme. Özellikle "Bitki" kategorisinde cevap yaygın olarak meyve/ürün adı olarak da kullanılıyorsa ve aynı kelime bitkinin kendisini de ifade edebiliyorsa "Tartışmalı" seç. Örneğin "Erik" hem erik ağacını hem meyvesini ifade edebildiği için "Bitki" kategorisinde tartışmalı kabul edilmelidir. "Elma", "armut", "kiraz" gibi benzer çift anlamlı örneklerde de aynı yaklaşımı kullan. Oyuncuların nihai kararı verebilmesi için gerekçede iki makul yorumu kısaca belirt. ' +
       'Başlangıç harfi verilmişse cevabın o harfle başlamasını da kontrol et. ' +
-      'Kategori "3 harfli kelime" ise cevabın Türkçe bir kelime olarak tam 3 harfli olması gerekir. Harfleri tek tek say: örneğin "Mal" ve "Mey" tam 3 harftir ve yalnızca uzunlukları nedeniyle reddedilemez. ' +
+      'Kategori "3 harfli kelime" bir sözlük/kelime kategorisidir; cevap Türkçede anlamlı bir kelime olmalı ve tam 3 harf içermelidir. Harfleri gerçekten tek tek say. "Mal" ve "Mey" Türkçede kullanılan anlamlı 3 harfli kelimelerdir ve bu kategoriye uygundur; bunları uzunluk veya anlam nedeniyle yanlışlıkla reddetme. Yalnızca anlamsız bir harf dizisi veya başka bir kategoriye ait açıkça yanlış bir ifade ise reddet. ' +
       'Kategori "8 harfli kelime" ise cevabın tam 8 harfli olması gerekir; 8 harften kısa veya uzun cevapları uygun kabul etme. ' +
       'Cevap açıkça boşsa uygun olmadığını belirt. Emin olmadığın ayrıntıları uydurma. ' +
       'Ayrıca cevabın kendisi hakkında 1-2 cümlelik, en fazla 35 kelimelik kısa bilgi ver. ' +
@@ -122,8 +122,17 @@ export default async function handler(req, res) {
       parsed.guven = 'Orta';
       parsed.gerekce = 'Cevap hem bitkinin/ağacın adını hem de meyvesini ifade edebilir; hangi anlamın kastedildiği tartışılabilir.';
     }
+    const normalizedAnswer = cleanAnswer.replace(/\s+/g, '').toLocaleUpperCase('tr-TR');
+    const normalizedLetter = cleanLetter.replace(/\s+/g, '').toLocaleUpperCase('tr-TR');
+    // Başlangıç harfi oyun kuralıdır; model yanlışlıkla harf uyuşmazlığını gözden kaçırırsa
+    // bunu deterministik olarak düzelt.
+    if (normalizedLetter && normalizedAnswer && !normalizedAnswer.startsWith(normalizedLetter)) {
+      parsed.uygunluk = 'Uygun görünmüyor';
+      parsed.guven = 'Yüksek';
+      parsed.gerekce = 'Cevap seçilen harfle başlamıyor; bu nedenle kategori kuralına uygun değildir.';
+    }
     const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
-    const normalizedAnswerForLength = cleanAnswer.replace(/\\s+/g, '');
+    const normalizedAnswerForLength = cleanAnswer.replace(/\s+/g, '');
     const letterCount = Array.from(normalizedAnswerForLength).length;
     const lengthEvidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ').toLocaleLowerCase('tr-TR');
     if (categoryKey === '3 harfli kelime') {
