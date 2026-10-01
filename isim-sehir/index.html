@@ -1540,7 +1540,7 @@ async function toggleAiInfo(btn){
  if(!open){btn.textContent='✦ AI Bilgisi';return}
  if(box.dataset.loaded==='1'){btn.textContent='✦ Bilgiyi Gizle';return}
 
- const cacheKey='isimSehirAiV4:'+category+'|'+letterNow+'|'+answer;
+ const cacheKey='isimSehirAiV8:'+category+'|'+letterNow+'|'+answer;
  try{
    const cached=localStorage.getItem(cacheKey);
    if(cached){
