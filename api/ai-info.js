@@ -204,7 +204,7 @@ export default async function handler(req, res) {
         parsed.gerekce = 'Cevap tam 3 harfli değil; bu kategori yalnızca 3 harfli kelimeleri kabul eder.';
       } else if (
         parsed.uygunluk === 'Uygun görünmüyor' &&
-        /\\b(\\d+|üç|dört|beş|altı|yedi|sekiz|dokuz|on)\\s*harf/.test(lengthEvidence)
+        /\b(\d+|üç|dört|beş|altı|yedi|sekiz|dokuz|on)\s*harf/.test(lengthEvidence)
       ) {
         // Model bazen 3 harfli cevapları yanlış sayabiliyor. Harf sayısını burada deterministik olarak esas al.
         parsed.uygunluk = 'Uygun görünüyor';
@@ -219,14 +219,14 @@ export default async function handler(req, res) {
         parsed.gerekce = 'Cevap tam 8 harfli değil; bu kategori yalnızca 8 harfli kelimeleri kabul eder.';
       } else if (
         parsed.uygunluk === 'Uygun görünmüyor' &&
-        /\\b(\\d+|yedi|sekiz|dokuz|on)\\s*harf/.test(lengthEvidence)
+        /\b(\d+|yedi|sekiz|dokuz|on)\s*harf/.test(lengthEvidence)
       ) {
         parsed.uygunluk = 'Uygun görünüyor';
         parsed.guven = 'Yüksek';
         parsed.gerekce = 'Cevap tam 8 harflidir ve 8 harfli kelime kategorisine uyar.';
       }
     }
-    if (categoryKey === 'şehir' && /(?:mahalle\\w*|semt\\w*|köy\\w*|ilçe\\w*|belde\\w*|kasaba\\w*|mezra\\w*)/i.test(evidence)) {
+    // Modelin kararı ile kendi gerekçesi çelişiyorsa gerekçedeki açık olguyu esas al.\n    // Bu, örneğin "Uygun görünüyor" deyip aynı anda "bir ilçe" veya "hayvan ürünü" demesini engeller.\n    const semanticConflict = [\n      { test: /(?:bir ilçe|ilçesidir|ilçesi|mahalle|semt|köy|belde|kasaba|mezra)/i, reason: 'Gerekçede cevabın şehir değil, alt yerleşim birimi olduğu belirtiliyor.' },\n      { test: /(?:hayvan(?:sal)? ürünü|hayvandan elde edilen|hayvanın ürünü|süt|yün|deri|yumurta|peynir|tereyağı)/i, reason: 'Gerekçede cevabın hayvanın kendisi değil, hayvansal bir ürün olduğu belirtiliyor.' },\n      { test: /(?:bitkisel ürün|işlenmiş ürün|bitkiden elde edilen|bitkinin ürünü|un|salça|reçel)/i, reason: 'Gerekçede cevabın bitkinin kendisi değil, bitkisel/işlenmiş bir ürün olduğu belirtiliyor.' },\n      { test: /(?:şehir değil|şehir değildir|ülke değil|ülke değildir)/i, reason: 'Gerekçede cevabın istenen varlık türü olmadığı açıkça belirtiliyor.' }\n    ];\n    if (parsed.uygunluk === 'Uygun görünüyor') {\n      const conflict = semanticConflict.find(item => item.test.test(evidence));\n      if (conflict) forceNotFit(conflict.reason);\n    }\n\n    if (categoryKey === 'şehir' && /(?:mahalle\\w*|semt\\w*|köy\\w*|ilçe\\w*|belde\\w*|kasaba\\w*|mezra\\w*)/i.test(evidence)) {
       parsed.uygunluk = 'Uygun görünmüyor';
       parsed.guven = parsed.guven === 'Düşük' ? 'Düşük' : 'Orta';
       parsed.gerekce = 'Cevap bir mahalle, ilçe veya başka bir alt yerleşim birimidir; Şehir kategorisine uygun değildir.';
