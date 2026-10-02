@@ -1091,8 +1091,10 @@ function allPlayersSubmitted(){
  return names.length>0&&names.every(n=>submittedPlayers[n]===true);
 }
 function openVotingForEveryone(){
- if(votingOpenedRound===round)return;
- votingOpenedRound=round;
+ // If the host entered voting before a late guest submission arrived,
+ // refresh the existing voting screen with the latest canonical answers.
+ const alreadyOpened=votingOpenedRound===round;
+ if(!alreadyOpened)votingOpenedRound=round;
  roundState.phase='voting';
  showVoting();
  if(isHost)broadcast({type:'answersReady',round,answers:netAnswers,players:Object.keys(onlinePlayers),submitted:submittedPlayers,votingDone, votes:netVotes, avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))});
@@ -1435,7 +1437,7 @@ function finishRound(){
    submittedPlayers[me]=true;
    persistHostSession();
    bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers;submittedPlayers[b.name]=true}});
-   if(Object.keys(onlinePlayers).length<=1){submittedPlayers[me]=true;markSubmittedButton('✓ Cevapların kaydedildi');showVoting();}
+   if(Object.keys(onlinePlayers).length<=1){submittedPlayers[me]=true;markSubmittedButton('✓ Cevapların kaydedildi');roundState.phase='waiting-players';updateSubmissionStatus();}
    else{roundState.phase='waiting-players';markSubmittedButton('✓ Cevapların kaydedildi',true);updateSubmissionStatus();}
    broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers)});
    // Keep the host UI responsive after its own submission; if every
