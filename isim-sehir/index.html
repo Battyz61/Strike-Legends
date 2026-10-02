@@ -745,7 +745,7 @@ function setupMultiplayer(join){
   peer.on('connection',conn=>{
    if(!isHost)return;
    bindConnection(conn);
-   conn.on('open',()=>{const s=currentGameSettings();conn.send({type:'roomState',players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0])),roomId,totalRounds,cats,...s});});
+   conn.on('open',()=>{const s=currentGameSettings();conn.send({type:'roomState',players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0])),roomId,totalRounds,cats:[...cats],letters:[...selectedLetters],...s});});
   });
   peer.on('error',err=>{
  console.warn('PeerJS:',err);
