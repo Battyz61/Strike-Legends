@@ -909,10 +909,20 @@ function bindConnection(conn){
      renderPlayers();
    }else if(data.type==='answers'&&isHost){
      if(Number(data.round)!==round)return;
-     Object.assign(netAnswers,data.answers||{});
+     // Resolve the submitter from the actual connection, not only the
+     // client-provided name; this prevents answers landing under a stale alias.
+     const senderEntry=Object.entries(onlinePlayers).find(([n,p])=>p&&p.conn===conn&&!p.host);
+     const senderName=senderEntry?.[0]||data.from||'';
+     const incomingAnswers={...(data.answers||{})};
+     if(senderName&&data.from&&senderName!==data.from&&incomingAnswers[data.from]!==undefined){
+       incomingAnswers[senderName]=incomingAnswers[data.from];
+       delete incomingAnswers[data.from];
+     }
+     Object.assign(netAnswers,incomingAnswers);
      Object.assign(submittedPlayers,data.submitted||{});
      Object.keys(data.submitted||{}).forEach(n=>{if(data.submitted[n]===true)submittedPlayers[n]=true});
-     if(data.from)submittedPlayers[data.from]=true;
+     if(senderName)submittedPlayers[senderName]=true;
+     else if(data.from)submittedPlayers[data.from]=true;
      // Once at least one player has submitted, the host must restore the
      // waiting state after a refresh instead of restarting the active round.
      if(!allPlayersSubmitted())roundState.phase='waiting-players';
@@ -929,11 +939,9 @@ function bindConnection(conn){
      if(data.players)applyPlayerSnapshot(data.players,data.avatars);
      if(data.submitted)Object.assign(submittedPlayers,data.submitted);
      persistGuestSession();
-     // The ACK itself contains the authoritative submission state. Do not
-     // wait for a second packet to transition this client.
+     // ACK confirms receipt only. The host alone decides when voting starts.
      updateSubmissionStatus();
-     if(allPlayersSubmitted())openVotingForEveryone();
-     else $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
+     $('status').textContent='✅ Host cevabını aldı. Diğer oyuncular bekleniyor...';
    }else if(data.type==='votingDone'&&isHost){
      if(Number(data.round)!==round)return;
      if(!data.player||!Object.prototype.hasOwnProperty.call(onlinePlayers,data.player))return;
@@ -1109,7 +1117,9 @@ function updateSubmissionStatus(){
  // transition locally when the final synchronized submission arrives.
  // This prevents a lost/delayed answersReady packet from leaving a guest
  // stuck forever on "waiting for players".
- if(allPlayersSubmitted())openVotingForEveryone();
+ // Only the host may decide that every player has submitted.
+ // Guests wait for the host's authoritative answersReady packet.
+ if(isHost&&allPlayersSubmitted())openVotingForEveryone();
 }
 function sendNet(data){
  if(!hostPeer){pendingNetMessages.push(data);return false}
