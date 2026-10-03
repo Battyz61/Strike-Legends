@@ -2276,4 +2276,31 @@ body{background:radial-gradient(850px 560px at 8% -12%,#164b36 0,transparent 62%
  .end-actions{gap:8px}
 }
 </style>
+
+<style id="emerald-atmosphere-polish">
+/* İnce arka plan dokusu ve ortak durum bileşenleri */
+body{background-image:radial-gradient(900px 620px at 8% -12%,#16432f 0,transparent 64%),radial-gradient(720px 520px at 100% 16%,#243923 0,transparent 62%),linear-gradient(180deg,#07110c,#050c08 78%)!important;background-attachment:fixed}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.14;background-image:linear-gradient(#9fbd9e0a 1px,transparent 1px),linear-gradient(90deg,#9fbd9e0a 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+.hero-logo-mark{filter:drop-shadow(0 5px 18px #d7ad4520)!important}
+.hero .logo{box-shadow:inset 0 1px #ffffff08,0 5px 18px #0002}
+.card,.room-hero,.player-panel,.vote-card,.vote-row,.menu-box{backdrop-filter:blur(10px)}
+.category-options .cat-chip,.cat-chip{background-color:#0d1e14;border-color:#345640;color:#d8e5da}
+.category-options .cat-chip.active,.cat-chip.active{background:linear-gradient(135deg,#218957,#14663f);border-color:#65bf83;color:#fff;box-shadow:0 3px 12px #0a5b342b}
+.selected-cat{background:#132c1e;border-color:#4b8b60;color:#e3f3e7;border-radius:9px}
+.selected-cat button{color:#e5c45b}
+.letter-chip{background:#09160f;border-color:#284834;color:#b6c9ba;border-radius:10px}
+.letter-chip.active{background:linear-gradient(145deg,#1f9b60,#12623d);border-color:#e0bc4f;color:#fff;box-shadow:0 0 0 1px #e0bc4f55,0 5px 15px #0d6a3d30}
+.letter-action{background:#0d2016;border-color:#2a4a35;color:#c0d2c4;border-radius:10px}
+.letter-action:hover{border-color:#c6a84d;color:#f1d981}
+.setting select.synced{border-color:#d4b44d;box-shadow:0 0 0 2px #d4b44d18}
+.answer input.valid{border-color:#2ba66b;box-shadow:inset 0 0 0 1px #2ba66b22}
+.answer input.invalid{border-color:#c6535b}
+.vote-circle.yes{background:#155f3e}
+.vote-circle.no{background:#85313b}
+.vote-circle.yes.selected{background:#168456}
+.vote-circle.no.selected{background:#b93845}
+.status{background:linear-gradient(90deg,#102b1c,#10251a);color:#c8e8d1}
+@media(max-width:700px){body:before{background-size:28px 28px;opacity:.1}.card,.room-hero,.player-panel,.vote-card,.vote-row,.menu-box{backdrop-filter:none}}
+@media(prefers-reduced-motion:reduce){.result-next{animation:none!important}}
+</style>
 </body></html>
