@@ -2439,4 +2439,47 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  .menu-box button,.menu-modal button,.modal-content button,.game-menu button,.dialog button{min-height:48px}
 }
 </style>
+
+<style id="emerald-gold-final-pass">
+/* Final visual consistency pass: remove leftover violet/cyan accents across every screen */
+:root{color-scheme:dark;--accent:#d8b64a;--accent-2:#249b67;--panel-bg:#0b1a13;--panel-line:#28513d}
+html{background:#050d09}
+body{background:radial-gradient(ellipse at 50% 0%,#153a29 0%,#08140e 45%,#050d09 100%)!important;color:#edf4ee}
+button, input, select, textarea{font:inherit}
+button{transition:background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #e8c75d!important;outline-offset:3px}
+a{color:#e7c75f}
+.hero .logo,.brand,.brand-pill,.game-brand,.top-brand{background:#11291d!important;border-color:#315b43!important;color:#e7c75f!important}
+.menu-card,.card,.panel,.room-card,.setup-card,.join-card,.game-shell,.game-card,.results-card,.score-card,.category-panel,.player-panel,.settings-panel,.vote-card{background:linear-gradient(155deg,#10251b 0%,#09150f 100%)!important;border-color:#28513d!important;box-shadow:0 18px 45px #0004}
+.menu-card:before,.card:before,.panel:before{border-color:#2c5d43}
+h1,h2,h3,.section-title,.room-title,.game-title{color:#f1f5ee}
+p,.subtitle,.description,.muted,.help-text,.field-help{color:#a5b9aa}
+input,textarea,select,.input,.answer input,.form-control{background:#07130d!important;color:#f3f6f1!important;border-color:#2b4d3a!important;border-radius:12px}
+input::placeholder,textarea::placeholder,.input::placeholder{color:#819889!important;opacity:1}
+button.primary,.btn.primary,.btn:not(.secondary):not(.danger):not(.no):not(.vote-no),.create-room-btn,.start-game-btn,.submit-btn,.main-action{background:linear-gradient(135deg,#e8c75d,#c59a31)!important;color:#142116!important;border-color:#e5c45b!important}
+button.secondary,.btn.secondary,.back-btn,.menu-btn,.cancel-btn,.copy-btn,.letter-action{background:linear-gradient(135deg,#173626,#0e2117)!important;color:#eaf2eb!important;border-color:#315b43!important}
+button.danger,.btn.danger,.leave-btn,.exit-btn{background:linear-gradient(135deg,#a63b45,#792b35)!important;color:#fff!important;border-color:#c65a61!important}
+button:disabled,.btn:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.55)}
+.avatar-option,.avatar-btn,.letter-chip,.category-chip,.cat-chip,.option-chip,.category-option{background:#10251a!important;border-color:#315640!important;color:#d8e7db!important}
+.avatar-option.selected,.avatar-btn.selected,.letter-chip.active,.category-chip.active,.cat-chip.active,.option-chip.active,.category-option.active,.selected{border-color:#e2bf50!important;box-shadow:0 0 0 2px #d8b64a24!important}
+.wheel,.wheel-ring,.wheel-outer,.roulette-wheel{border-color:#d8b64a!important}
+.wheel-center,.wheel-center *, .wheel-letter,.selected-letter{color:#e9c95f!important}
+.wheel-pointer,.pointer{color:#f1ce5e!important}
+.timer,.timer-value,.round-pill,.round-badge,.roundnum{background:#10261a!important;border-color:#315640!important;color:#f0d477!important}
+.timerbar,.timer-progress,.progress-fill,.progress-bar-fill{background:linear-gradient(90deg,#249b67,#e5c456)!important}
+.vote-circle.yes,.vote-circle.yes:hover,.vote-circle.yes.selected,.vote-yes{background:#168456!important;border-color:#3bbd80!important;color:white!important}
+.vote-circle.no,.vote-circle.no:hover,.vote-circle.no.selected,.vote-no{background:#a93643!important;border-color:#d45c61!important;color:white!important}
+.status,.success,.correct,.answer-correct{border-color:#2d8056!important}
+.error,.incorrect,.answer-incorrect{border-color:#873b43!important}
+table th{color:#e4c65d}table td,table th{border-color:#244532}
+hr,.divider{border-color:#254a36!important}
+.toast,.notification{background:#10251a!important;border-color:#315640!important;color:#edf4ee!important}
+.modal,.modal-content,.menu-box,.menu-modal,.game-menu,.dialog{background:linear-gradient(155deg,#10251b,#08140e)!important;border-color:#315640!important;color:#edf4ee}
+@media(max-width:700px){
+ body{background:radial-gradient(ellipse at 50% 0%,#123523 0%,#07120c 48%,#050d09 100%)!important}
+ .menu-card,.card,.panel,.room-card,.setup-card,.join-card,.game-shell,.game-card,.results-card,.score-card{border-radius:18px!important}
+ input,select,textarea,.input{font-size:16px!important}
+}
+@media(prefers-reduced-motion:reduce){button,*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
 </body></html>
