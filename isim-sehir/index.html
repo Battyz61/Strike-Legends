@@ -2241,4 +2241,39 @@ body{background:radial-gradient(850px 560px at 8% -12%,#164b36 0,transparent 62%
 }
 @media(prefers-reduced-motion:reduce){.menu-card,.btn,.hero-logo-mark{animation:none!important;transition:none!important}}
 </style>
+
+<style id="emerald-gold-gameplay-finish">
+/* Oyun içi ekranlar: sonuç, puan tablosu ve tur geçişleri */
+.result-panel,.result-card,.results-panel{border-color:#2b4c39!important;background:linear-gradient(155deg,#10271d,#09150f)!important;border-radius:18px}
+.result-hero>div:first-child{color:#d6bd68!important}
+.big-score{color:#f0d477!important;text-shadow:0 0 24px #d7ad452b!important}
+.score-rules span{background:#102219!important;border-color:#2a4b38!important;color:#a9bcad!important}
+.score-rules b{color:#e8cd72!important}
+.answer-result{border-radius:13px!important;border-color:#294a37!important;background:#0b1b13!important}
+.answer-result:after{background:linear-gradient(90deg,#d7ad4509,transparent 55%)!important}
+.answer-result.ok,.answer-result.correct{border-color:#267b53!important}
+.answer-result.bad,.answer-result.wrong{border-color:#71343b!important}
+.split-answer{border-color:#d0ad4e!important;box-shadow:inset 3px 0 #d0ad4e!important}
+.split-answer .vote-rule{color:#e2c96f!important}
+.result-next{animation:emeraldNextPulse 2.8s ease-in-out infinite!important}
+@keyframes emeraldNextPulse{0%,100%{box-shadow:0 7px 22px #c49a2514}50%{box-shadow:0 7px 28px #c49a2533}}
+.leader-row{background:linear-gradient(110deg,#10241a,#0b1711)!important;border-color:#294a37!important}
+.leader-row:first-child{background:linear-gradient(100deg,#292617,#122219)!important;border-color:#d1ad4d!important}
+.leader-row:first-child .leader-gain{color:#f0d477!important}
+.game-over-badge{background:#203a27!important;color:#f0d477!important;border:1px solid #66552a}
+.menu-overlay{background:rgba(2,9,6,.78)!important}
+.menu-box{background:linear-gradient(160deg,#153126,#091710)!important;border-color:#315744!important;border-radius:19px!important}
+.menu-box h2{letter-spacing:-.4px}
+.menu-box .danger-btn{background:linear-gradient(135deg,#a43b43,#772a31)!important}
+.wheel-burst{border-color:#d8b64a!important;background:#12251bE8!important;color:#f4d879!important;box-shadow:0 0 26px #d8b64a33!important}
+.wheel{background:conic-gradient(#1b5438 0deg 30deg,#103c29 30deg 60deg,#1b5438 60deg 90deg,#103c29 90deg 120deg,#1b5438 120deg 150deg,#103c29 150deg 180deg,#1b5438 180deg 210deg,#103c29 210deg 240deg,#1b5438 240deg 270deg,#103c29 270deg 300deg,#1b5438 300deg 330deg,#103c29 330deg 360deg)!important}
+.wheel::after{background:#07130d!important;border-color:#d1ad4d!important}
+.wheel-pointer{border-top-color:#e9c65c!important}
+.toast{background:#e8c65b!important;color:#172014!important}
+@media(max-width:700px){
+ .big-score{font-size:clamp(38px,12vw,52px)!important}
+ .result-hero{padding:10px 0 16px}
+ .end-actions{gap:8px}
+}
+</style>
 </body></html>
