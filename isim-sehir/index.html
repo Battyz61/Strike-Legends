@@ -2481,5 +2481,83 @@ hr,.divider{border-color:#254a36!important}
  input,select,textarea,.input{font-size:16px!important}
 }
 @media(prefers-reduced-motion:reduce){button,*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* EMERALD + GOLD: final consistency pass across menu, lobby, race, voting and results */
+:root{--bg:#050d09;--panel:#0b1b13;--line:#254936;--text:#f2f5ef;--muted:#a0b4a5;--blue:#d8b64c;--cyan:#d8b64c;--green:#28a56b;--red:#c94c57}
+body{background:radial-gradient(900px 600px at 50% -12%,#173c29 0,transparent 66%),radial-gradient(600px 420px at 100% 40%,#10271b 0,transparent 65%),#050d09;color:#f2f5ef}
+.hero h1{background:linear-gradient(100deg,#fff8d9,#e7c85e 55%,#b88c2e);-webkit-background-clip:text;color:transparent}
+.logo,.hero-badge,.room-kicker,.room-code-big,.lang,.roundnum,.vote-category-title{color:#e5c95f}
+.hero-badge{border-color:#49623a;background:#172b1d;color:#e5c95f}
+.hero-logo-mark{filter:drop-shadow(0 0 18px #d8b64c30)}
+.card{background:linear-gradient(155deg,#10251aF5,#08140dF8);border-color:#294b37;box-shadow:0 18px 45px #0005}
+.menu-card{background:linear-gradient(145deg,#11291d,#0a1710);border-color:#2d513a}
+.menu-card .card-icon{background:#183b29;border-color:#3c684b;color:#e5c95f}
+.menu-card.join .card-icon{background:#163426;border-color:#3c684b}
+.input,.answer input{background:#07130c;border-color:#31543e;color:#f5f7f2}
+.input:focus,.answer input:focus{border-color:#d8b64c;box-shadow:0 0 0 3px #d8b64c20}
+.btn{background:linear-gradient(135deg,#f0d16a,#bd922f);color:#142015;box-shadow:0 7px 18px #0003}
+.btn.secondary,.menu-btn,.menu-box .cancel-btn{background:linear-gradient(135deg,#173526,#10271b)!important;border:1px solid #386349!important;color:#f0f4ed!important}
+.btn:hover{filter:brightness(1.06)}
+.btn:disabled{opacity:.82}
+.btn.submitted,.btn.votes-complete{background:linear-gradient(135deg,#1ba56b,#13764d);color:#fff}
+.btn.waiting,.btn.votes-waiting{background:#1b3024;color:#c4d3c7}
+.room-hero{background:linear-gradient(135deg,#143624,#0a1b11);border-color:#315b40}
+.room-hero:after{background:#d8b64c10}
+.room-code-big{text-shadow:0 0 24px #d8b64c22}
+.player-panel,.setting,.quick-item{background:#09180f;border-color:#284b36}
+.player,.player.host{background:#11271a;border-color:#315740}
+.player-count{background:#1b3927;color:#e5c95f}
+.room #categoryPanel{background:linear-gradient(160deg,#0e2117,#08140d);border-color:#2d503a}
+.cat-chip{border-color:#365a42;background:#0b1a11;color:#e7eee7}
+.cat-chip:hover,.letter-action:hover{border-color:#d8b64c;color:#ffe9a0}
+.cat-chip.active{background:linear-gradient(135deg,#f0d16a,#bd922f);color:#172016;border-color:#f0d16a}
+.selected-cat{border-color:#9d7a2a;color:#f6df88;background:#211f12}
+.selected-cat button{color:#e6c65a}
+.letter-chip{border-color:#2b4a36;background:#07130c;color:#c0d0c3}
+.letter-chip.active{border-color:#e5c95f;background:linear-gradient(135deg,#e8c85b,#ad8126);color:#142016;box-shadow:0 0 16px #d8b64c24}
+.letter-action{border-color:#2b4a36;background:#102318;color:#b9cbbb}
+.setting select{background:#10251a;border-color:#315640;color:#f4f5ee}
+.roundnum{background:#172d20;border:1px solid #3c5b3c}
+.wheel{border-color:#d5b44a;background:conic-gradient(#20553a 0deg 30deg,#163e2a 30deg 60deg,#20553a 60deg 90deg,#163e2a 90deg 120deg,#20553a 120deg 150deg,#163e2a 150deg 180deg,#20553a 180deg 210deg,#163e2a 210deg 240deg,#20553a 240deg 270deg,#163e2a 270deg 300deg,#20553a 300deg 330deg,#163e2a 330deg 360deg);box-shadow:0 0 28px #d8b64c20}
+.wheel::after{background:#07130c;border-color:#c5a444}
+.wheel-pointer{border-top-color:#f0d16a;filter:drop-shadow(0 0 7px #d8b64c55)}
+.letter{color:#e5c95f;text-shadow:0 0 32px #d8b64c30}
+.timer-hud,.timer-track,.timer{border-color:#294936}
+.timer{color:#f2d879}
+.timer.danger{color:#f1bd55}
+.timer.critical{color:#fff;border-color:#c94c57;box-shadow:0 0 18px #c94c5744}
+.status{background:#10291a;color:#cfe4d3;border:1px solid #315b40}
+.answer{background:transparent}
+.answer label{color:#a8bcae}
+.answer input{background:#07130c}
+.score,.vote-summary,.vote-row{background:#0a1910;border-color:#294936}
+.vote-card{background:linear-gradient(160deg,#102319,#08140d);border-color:#2d503a}
+.vote-player{border-bottom-color:#203c2b}
+.vote-name,.vote-note{color:#a0b4a5}
+.vote-value{color:#f1f5ef}
+.own-answer-label{background:#1c3023;color:#d8c36f}
+.vote-circle.yes:hover,.vote-circle.yes.selected{background:#168353}
+.vote-circle.no:hover,.vote-circle.no.selected{background:#b83b4b}
+.vote-discussion-note{border-color:#725b25;background:#211f12;color:#ead98b}
+.ai-info-btn,.ai-info-panel{border-color:#5b4b75}
+.result-panel,.result-hero,.score-rules,.round-details{background:linear-gradient(150deg,#10251a,#09160f);border-color:#2b4d38}
+.result-kicker,.score-pill,.big-score{color:#e5c95f}
+.game-over-badge{background:#24331c;color:#ead47a}
+.menu-overlay{background:rgba(2,8,5,.78)}
+.menu-box{background:linear-gradient(155deg,#12291c,#08150e);border-color:#31553d}
+.menu-box .danger-btn{background:linear-gradient(135deg,#bd4852,#842b37);color:#fff}
+.toast{background:#e7c85e;color:#152017}
+@media(max-width:700px){
+ .wrap{padding:12px}
+ .card{padding:17px}
+ .menu-card{min-height:0}
+ .answers{grid-template-columns:1fr}
+ .vote-player{grid-template-columns:40px minmax(0,1fr);align-items:start}
+ .vote-actions{grid-column:2}
+ .menu-overlay{padding:14px}
+ .menu-box{max-height:calc(100dvh - 28px);overflow:auto}
+ .settings-row{gap:8px}
+ .setting{padding:10px}
+}
 </style>
 </body></html>
