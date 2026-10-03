@@ -919,8 +919,13 @@ function bindConnection(conn){
        delete incomingAnswers[data.from];
      }
      Object.assign(netAnswers,incomingAnswers);
-     Object.assign(submittedPlayers,data.submitted||{});
-     Object.keys(data.submitted||{}).forEach(n=>{if(data.submitted[n]===true)submittedPlayers[n]=true});
+     const incomingSubmitted={...(data.submitted||{})};
+     if(senderName&&data.from&&senderName!==data.from&&incomingSubmitted[data.from]!==undefined){
+       incomingSubmitted[senderName]=incomingSubmitted[data.from];
+       delete incomingSubmitted[data.from];
+     }
+     Object.assign(submittedPlayers,incomingSubmitted);
+     Object.keys(incomingSubmitted).forEach(n=>{if(incomingSubmitted[n]===true)submittedPlayers[n]=true});
      if(senderName)submittedPlayers[senderName]=true;
      else if(data.from)submittedPlayers[data.from]=true;
      // Once at least one player has submitted, the host must restore the
@@ -929,7 +934,10 @@ function bindConnection(conn){
      persistHostSession();
      const ack=connections.find(cn=>cn===conn);
      if(ack&&ack.open)ack.send({type:'answerAck',round,player:data.from||Object.keys(data.answers||{})[0],answers:netAnswers,players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0])),submitted:submittedPlayers});
+     // Send one authoritative snapshot including every known player and
+     // the canonical answer/submission maps after each guest submission.
      broadcast({type:'answers',round,answers:netAnswers,submitted:submittedPlayers,players:Object.keys(onlinePlayers),avatars:Object.fromEntries(Object.entries(onlinePlayers).map(([n,p])=>[n,Number(p.avatar)||0]))});
+     persistHostSession();
      updateSubmissionStatus();
      if(allPlayersSubmitted())openVotingForEveryone();
      else broadcast({type:'submissionStatus',round,submitted:submittedPlayers});
