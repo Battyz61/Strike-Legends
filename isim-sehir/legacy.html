@@ -400,6 +400,33 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
  .timer{font-size:21px!important}
 }
 </style><style>
+/* === GAME ARENA PRO v8 === */
+#game{background:radial-gradient(circle at 50% 0%,rgba(124,92,255,.075),transparent 34%),linear-gradient(180deg,rgba(11,17,30,.98),rgba(5,9,17,.99))!important;border-color:rgba(88,104,142,.25)!important;box-shadow:0 30px 90px rgba(0,0,0,.45),inset 0 1px rgba(255,255,255,.035)!important}
+#game .game-toolbar{margin-bottom:8px}
+#game .game-over-badge{border:1px solid rgba(124,92,255,.2);background:rgba(124,92,255,.08);color:#c9c0ff}
+#game .roundbar{align-items:flex-end!important;padding:10px 3px 13px!important}
+#game .roundbar h2{font-size:30px!important;font-weight:950!important;background:linear-gradient(90deg,#fff,#b9b1ff,#8be9ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+#game .roundnum{font-size:11px!important;font-weight:950;letter-spacing:.4px}
+#game .status{background:linear-gradient(90deg,rgba(124,92,255,.075),rgba(34,211,238,.045))!important;border-color:rgba(124,92,255,.16)!important;color:#b7c5db!important}
+#game .timer-hud{background:rgba(5,10,18,.76)!important;border-color:rgba(90,108,145,.28)!important}
+#game .timer-caption{color:#7185a3!important}
+#game .timer{font-weight:1000!important}
+#game .answers{margin-top:13px}
+#game .answer{background:linear-gradient(145deg,rgba(16,24,39,.94),rgba(6,11,19,.98))!important}
+#game .answer label{color:#8497b3!important}
+#game .answer input{color:#f5f8ff!important}
+#game .answer input::placeholder{color:#465773!important}
+#game #finishBtn{background:linear-gradient(135deg,#6d5dfc,#3b82f6)!important;border:1px solid rgba(167,139,250,.22)!important}
+#game #finishBtn:hover:not(:disabled){box-shadow:0 14px 38px rgba(79,70,229,.22),0 0 0 1px rgba(103,232,249,.12)!important}
+#game .scorebar{margin-top:18px}
+#game .score{background:linear-gradient(145deg,rgba(13,22,37,.92),rgba(8,13,23,.96))!important;border-color:rgba(71,88,120,.3)!important}
+#game .score b{color:#e8efff}
+@media(max-width:700px){
+ #game{padding:15px!important}
+ #game .roundbar h2{font-size:25px!important}
+ #game .status{font-size:11px!important}
+}
+</style><style>
 /* === SIGNATURE WHEEL v4 === */
 .wheel-wrap{height:245px!important;margin:4px 0 8px!important;position:relative!important;isolation:isolate}
 .wheel-wrap:before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid rgba(124,92,255,.16);box-shadow:0 0 70px rgba(124,92,255,.09),inset 0 0 45px rgba(34,211,238,.035);animation:wheelAura 3s ease-in-out infinite}
