@@ -4,8 +4,10 @@ import { Vortex } from "@/components/ui/vortex"
 import { Button } from "@/components/ui/button"
 
 const avatars = ["Nova", "Pulse", "Vega", "Orbit", "Flux", "Echo", "Lumen", "Astra"]
+const categories = ["İsim","Hayvan","Şehir","Eşya","Bitki","Ülke","Ünlü","Meslek","Dizi/Film","Sanatçı","Futbolcu","Yemek malzemesi","3 harfli kelime","8 harfli kelime","Şarkı","Erkek ismi","Renk","Yabancı isim","Makyaj malzemesi","Yiyecek","Tatlı"]
+const letters = "ABCÇDEFGĞHİIJKLMNOÖPRSŞTUÜVYZ".split("")
 
-function goToGame(mode: "create" | "join", name: string, code?: string, avatarIndex = 0, settings?: {duration:string;wheel:string;playerLimit:string;roundLimit:string}) {
+function goToGame(mode: "create" | "join", name: string, code?: string, avatarIndex = 0, settings?: {duration:string;wheel:string;playerLimit:string;roundLimit:string;categories:string;letters:string}) {
   const params = new URLSearchParams({ mode, name: name.trim() || "Oyuncu", avatar: String(avatarIndex) })
   if (mode === "join" && code) params.set("code", code.replace(/\s/g, ""))
   if (mode === "create" && settings) Object.entries(settings).forEach(([key,value]) => params.set(key,value))
@@ -22,6 +24,8 @@ export default function App() {
   const [wheel, setWheel] = useState("on")
   const [playerLimit, setPlayerLimit] = useState("4")
   const [roundLimit, setRoundLimit] = useState("5")
+  const [selectedCategories, setSelectedCategories] = useState(["İsim","Hayvan","Şehir","Eşya","Bitki","Ülke"])
+  const [selectedLetters, setSelectedLetters] = useState([...letters])
 
   const recentName = useMemo(() => {
     try { return localStorage.getItem("isimSehirName") || "" } catch { return "" }
@@ -33,7 +37,7 @@ export default function App() {
 
   const create = () => {
     setError("")
-    goToGame("create", hostName, undefined, avatar, {duration,wheel,playerLimit,roundLimit})
+    goToGame("create", hostName, undefined, avatar, {duration,wheel,playerLimit,roundLimit,categories:selectedCategories.join(","),letters:selectedLetters.join("")})
   }
 
   const join = () => {
@@ -140,6 +144,20 @@ export default function App() {
                   </select>
                 </label>
               ))}
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-white/8 bg-white/[.025] p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-[.16em] text-white/35">Kategoriler</span>
+                <button type="button" onClick={() => setSelectedCategories([...categories].sort(() => Math.random()-.5).slice(0,6))} className="text-[10px] text-violet-300">Karıştır</button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {categories.map(cat => <button type="button" key={cat} onClick={() => setSelectedCategories(x => x.includes(cat) ? (x.length===1 ? x : x.filter(v=>v!==cat)) : [...x,cat])} className={`rounded-full border px-2.5 py-1 text-[10px] transition ${selectedCategories.includes(cat) ? "border-violet-300/60 bg-violet-500/20 text-violet-100" : "border-white/10 bg-black/20 text-white/35"}`}>{cat}</button>)}
+              </div>
+              <div className="mt-4 flex items-center justify-between"><span className="text-[9px] font-black uppercase tracking-[.16em] text-white/35">Harf havuzu · {selectedLetters.length}</span><button type="button" onClick={() => setSelectedLetters([...letters])} className="text-[10px] text-cyan-300">Tümü</button></div>
+              <div className="mt-2 grid grid-cols-10 gap-1">
+                {letters.map(letter => <button type="button" key={letter} onClick={() => setSelectedLetters(x => x.includes(letter) ? (x.length===1 ? x : x.filter(v=>v!==letter)) : [...x,letter])} className={`aspect-square rounded-lg border text-[10px] font-black ${selectedLetters.includes(letter) ? "border-cyan-300/50 bg-cyan-400/10 text-cyan-100" : "border-white/8 bg-black/20 text-white/20"}`}>{letter}</button>)}
+              </div>
             </div>
 
             <Button onClick={create} className="mt-5 h-12 w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 font-black shadow-[0_12px_35px_rgba(124,92,255,.22)] hover:from-violet-500 hover:to-fuchsia-400">
