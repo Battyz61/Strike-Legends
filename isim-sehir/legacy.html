@@ -2584,6 +2584,13 @@ addEventListener('resize',resize,{passive:true});resize();frame()})();
       const codeEl=$('joinCode');
       if(mode==='join'&&codeEl)codeEl.value=code;
       myAvatar=avatar; rememberName(name); rememberAvatar(avatar);
+      if(mode==='create'){
+        const duration=p.get('duration'), wheel=p.get('wheel'), limit=p.get('playerLimit'), rounds=p.get('roundLimit');
+        if(duration && $('durationSelect')) $('durationSelect').value=duration;
+        if(wheel && $('wheelSelect')) $('wheelSelect').value=wheel;
+        if(limit && $('playerLimit')) $('playerLimit').value=limit;
+        if(rounds && $('roundLimit')) $('roundLimit').value=rounds;
+      }
       if(mode==='create') createRoom(); else joinRoom();
       window.history.replaceState({},'',window.location.pathname);
     }catch(err){ console.error('React lobby bridge:',err); toast('Lobi bağlantısında bir sorun oluştu. Tekrar dene.'); }
