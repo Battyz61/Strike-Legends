@@ -347,6 +347,33 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
  *,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}
 }
 </style><style>
+/* === ROOM LOBBY PRO v7 === */
+.room > .card{background:linear-gradient(145deg,rgba(12,21,36,.96),rgba(6,12,22,.98));border-color:rgba(93,113,151,.28);box-shadow:0 30px 90px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.035)}
+.room-hero{background:radial-gradient(circle at 85% 10%,rgba(34,211,238,.13),transparent 28%),linear-gradient(135deg,#111d31,#091321)!important;border-color:rgba(103,232,249,.2)!important}
+.room-code-big{font-variant-numeric:tabular-nums}
+.player-panel{background:rgba(7,13,23,.72)!important;border-color:rgba(72,91,125,.3)!important}
+.player-panel-head b{font-size:13px;letter-spacing:.2px}
+.player-count{background:rgba(124,92,255,.12)!important;border:1px solid rgba(124,92,255,.2);color:#c7bcff!important}
+#players{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px!important}
+#players .player{position:relative;min-height:58px;border-radius:15px!important;background:linear-gradient(135deg,rgba(18,30,49,.92),rgba(10,18,30,.92))!important;border-color:rgba(76,96,132,.32)!important;padding:9px 11px!important}
+#players .player.host{border-color:rgba(167,139,250,.42)!important;background:linear-gradient(135deg,rgba(47,34,82,.42),rgba(12,20,35,.94))!important}
+#netStatus{border-color:rgba(34,211,238,.16)!important;background:linear-gradient(90deg,rgba(34,211,238,.055),rgba(124,92,255,.045))!important;color:#9db5ce!important}
+.room-settings-title{display:flex;align-items:center;gap:8px;margin:18px 0 8px!important;font-size:10px!important;letter-spacing:1.5px!important}
+.room-settings-title:before{content:"";width:4px;height:15px;border-radius:99px;background:linear-gradient(#7c5cff,#22d3ee);box-shadow:0 0 10px rgba(124,92,255,.45)}
+.room-settings-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.room-settings-summary > *{border-radius:13px!important}
+.start-area{padding-top:16px!important}
+#startBtn{min-height:52px;font-size:14px;letter-spacing:.1px;box-shadow:0 12px 35px rgba(37,99,235,.16),inset 0 1px rgba(255,255,255,.1)}
+#botBtn{margin-top:9px!important;border-color:rgba(148,163,184,.16)!important}
+@media(max-width:700px){
+ #players{grid-template-columns:1fr 1fr!important}
+ .room-settings-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .room-hero{padding:16px!important}
+}
+@media(max-width:430px){
+ #players{grid-template-columns:1fr!important}
+}
+</style><style>
 /* === PRO HUD v3 === */
 .game{overflow:hidden}
 .game .roundbar{padding:4px 2px 14px;border-bottom:1px solid rgba(72,88,120,.22)}
