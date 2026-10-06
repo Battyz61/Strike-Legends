@@ -2570,4 +2570,25 @@ function p(){return{x:Math.random()*w,y:h*.5+(Math.random()-.5)*Math.min(h*.65,7
 function noise(a,b){return Math.sin(a*1.7+Math.sin(b*1.3+t*.0012))*Math.cos(b*1.2-a*.7+t*.0008)}
 function frame(){t++;x.clearRect(0,0,w,h);x.globalCompositeOperation='lighter';for(const q of ps){const n=noise(q.x*.003,q.y*.003)*TAU;q.vx+=(Math.cos(n)-q.vx)*.045;q.vy+=(Math.sin(n)-q.vy)*.045;const ox=q.x,oy=q.y;q.x+=q.vx*q.s*2.2;q.y+=q.vy*q.s*2.2;q.life++;const fade=Math.min(1,q.life/18,q.ttl/q.life);x.strokeStyle='hsla('+q.h+',100%,65%,'+Math.max(0,fade*.18)+')';x.lineWidth=q.r; x.beginPath();x.moveTo(ox,oy);x.lineTo(q.x,q.y);x.stroke();if(q.x<0||q.x>w||q.y<0||q.y>h||q.life>q.ttl)Object.assign(q,p())}requestAnimationFrame(frame)}
 addEventListener('resize',resize,{passive:true});resize();frame()})();
+</script><script id="react-lobby-bridge">
+(()=> {
+  function bootReactLobbyBridge(){
+    try{
+      const p=new URLSearchParams(window.location.search), mode=p.get('mode');
+      if(mode!=='create'&&mode!=='join')return;
+      const name=(p.get('name')||'Oyuncu').trim().slice(0,18)||'Oyuncu';
+      const code=(p.get('code')||'').replace(/\s/g,'');
+      const raw=Number(p.get('avatar')), avatar=Number.isFinite(raw)?Math.max(0,Math.min(7,raw)):0;
+      const nameEl=$(mode==='create'?'hostName':'guestName');
+      if(nameEl)nameEl.value=name;
+      const codeEl=$('joinCode');
+      if(mode==='join'&&codeEl)codeEl.value=code;
+      myAvatar=avatar; rememberName(name); rememberAvatar(avatar);
+      if(mode==='create') createRoom(); else joinRoom();
+      window.history.replaceState({},'',window.location.pathname);
+    }catch(err){ console.error('React lobby bridge:',err); toast('Lobi bağlantısında bir sorun oluştu. Tekrar dene.'); }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootReactLobbyBridge,{once:true});
+  else setTimeout(bootReactLobbyBridge,0);
+})();
 </script></body></html>
