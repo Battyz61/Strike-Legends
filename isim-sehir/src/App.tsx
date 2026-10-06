@@ -8,7 +8,7 @@ const avatars = ["Nova", "Pulse", "Vega", "Orbit", "Flux", "Echo", "Lumen", "Ast
 function goToGame(mode: "create" | "join", name: string, code?: string, avatarIndex = 0) {
   const params = new URLSearchParams({ mode, name: name.trim() || "Oyuncu", avatar: String(avatarIndex) })
   if (mode === "join" && code) params.set("code", code.replace(/\s/g, ""))
-  window.location.href = `/legacy.html?${params.toString()}`
+  window.location.href = new URL(`legacy.html?${params.toString()}`, window.location.href).href
 }
 
 export default function App() {
