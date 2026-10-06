@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 
 const avatars = ["Nova", "Pulse", "Vega", "Orbit", "Flux", "Echo", "Lumen", "Astra"]
 
-function goToGame(mode: "create" | "join", name: string, code?: string) {
-  const params = new URLSearchParams({ mode, name: name.trim() || "Oyuncu" })
+function goToGame(mode: "create" | "join", name: string, code?: string, avatarIndex = 0) {
+  const params = new URLSearchParams({ mode, name: name.trim() || "Oyuncu", avatar: String(avatarIndex) })
   if (mode === "join" && code) params.set("code", code.replace(/\s/g, ""))
   window.location.href = `/legacy.html?${params.toString()}`
 }
@@ -28,7 +28,7 @@ export default function App() {
 
   const create = () => {
     setError("")
-    goToGame("create", hostName)
+    goToGame("create", hostName, undefined, avatar)
   }
 
   const join = () => {
@@ -37,7 +37,7 @@ export default function App() {
       setError("6 haneli oda kodunu gir kral.")
       return
     }
-    goToGame("join", guestName, code)
+    goToGame("join", guestName, code, avatar)
   }
 
   return (
