@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button"
 
 const avatars = ["Nova", "Pulse", "Vega", "Orbit", "Flux", "Echo", "Lumen", "Astra"]
 
-function goToGame(mode: "create" | "join", name: string, code?: string, avatarIndex = 0) {
+function goToGame(mode: "create" | "join", name: string, code?: string, avatarIndex = 0, settings?: {duration:string;wheel:string;playerLimit:string;roundLimit:string}) {
   const params = new URLSearchParams({ mode, name: name.trim() || "Oyuncu", avatar: String(avatarIndex) })
   if (mode === "join" && code) params.set("code", code.replace(/\s/g, ""))
+  if (mode === "create" && settings) Object.entries(settings).forEach(([key,value]) => params.set(key,value))
   window.location.href = new URL(`legacy.html?${params.toString()}`, window.location.href).href
 }
 
@@ -17,6 +18,10 @@ export default function App() {
   const [joinCode, setJoinCode] = useState("")
   const [avatar, setAvatar] = useState(0)
   const [error, setError] = useState("")
+  const [duration, setDuration] = useState("120")
+  const [wheel, setWheel] = useState("on")
+  const [playerLimit, setPlayerLimit] = useState("4")
+  const [roundLimit, setRoundLimit] = useState("5")
 
   const recentName = useMemo(() => {
     try { return localStorage.getItem("isimSehirName") || "" } catch { return "" }
@@ -28,7 +33,7 @@ export default function App() {
 
   const create = () => {
     setError("")
-    goToGame("create", hostName, undefined, avatar)
+    goToGame("create", hostName, undefined, avatar, {duration,wheel,playerLimit,roundLimit})
   }
 
   const join = () => {
@@ -117,6 +122,23 @@ export default function App() {
                   className={`aspect-square rounded-xl border p-1 text-[10px] font-bold transition ${avatar === i ? "border-violet-300 bg-violet-500/20 shadow-[0_0_18px_rgba(124,92,255,.25)]" : "border-white/8 bg-white/[.025] hover:border-white/20"}`}>
                   <span className="grid size-full place-items-center rounded-lg bg-gradient-to-br from-violet-500/50 to-cyan-400/30">{name[0]}</span>
                 </button>
+              ))}
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              {[
+                ["Tur süresi", duration, setDuration, [["60","60 sn"],["90","90 sn"],["120","120 sn"],["180","180 sn"]]],
+                ["Çark", wheel, setWheel, [["on","Açık"],["off","Kapalı"]]],
+                ["Oyuncu", playerLimit, setPlayerLimit, [["2","2"],["4","4"],["6","6"],["8","8"],["10","10"]]],
+                ["Tur sayısı", roundLimit, setRoundLimit, [["3","3"],["5","5"],["10","10"]]],
+              ].map(([label,value,setter,options]) => (
+                <label key={label as string} className="rounded-2xl border border-white/8 bg-white/[.025] p-3">
+                  <span className="block text-[9px] font-black uppercase tracking-[.16em] text-white/35">{label as string}</span>
+                  <select value={value as string} onChange={e => (setter as (v:string)=>void)(e.target.value)}
+                    className="mt-2 h-9 w-full rounded-xl border border-white/10 bg-black/30 px-2 text-xs text-white outline-none focus:border-violet-400/60">
+                    {(options as string[][]).map(([v,t]) => <option key={v} value={v}>{t}</option>)}
+                  </select>
+                </label>
               ))}
             </div>
 
