@@ -2590,6 +2590,9 @@ addEventListener('resize',resize,{passive:true});resize();frame()})();
         if(wheel && $('wheelSelect')) $('wheelSelect').value=wheel;
         if(limit && $('playerLimit')) $('playerLimit').value=limit;
         if(rounds && $('roundLimit')) $('roundLimit').value=rounds;
+        const catsParam=p.get('categories'), lettersParam=p.get('letters');
+        if(catsParam) cats=catsParam.split(',').filter(x=>allCats.includes(x));
+        if(lettersParam) selectedLetters=letters.filter(x=>lettersParam.includes(x));
       }
       if(mode==='create') createRoom(); else joinRoom();
       window.history.replaceState({},'',window.location.pathname);
