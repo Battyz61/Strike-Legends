@@ -2972,6 +2972,87 @@ body{background:
   .wheel-center{width:62px;height:62px;font-size:27px!important}
 }
 
+
+/* DESIGN SYSTEM V5 — answer entry / category hierarchy */
+.game .answers{
+  position:relative;
+  padding:18px!important;
+  border:1px solid rgba(255,255,255,.075);
+  border-radius:22px;
+  background:linear-gradient(145deg,rgba(12,15,29,.92),rgba(6,8,15,.96));
+  box-shadow:0 20px 55px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.035);
+}
+.game .answers:before{
+  content:"CEVAPLARINI YAZ";
+  display:block;margin-bottom:13px;
+  color:#8f84e9;font-size:10px;font-weight:950;letter-spacing:1.8px;
+}
+.game .answer{
+  position:relative;
+  padding:13px!important;
+  border-radius:16px!important;
+  background:rgba(255,255,255,.018)!important;
+  border:1px solid rgba(255,255,255,.07)!important;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+.game .answer:hover{
+  transform:translateY(-2px);
+  border-color:rgba(139,92,246,.28)!important;
+  background:rgba(139,92,246,.035)!important;
+}
+.game .answer label{
+  display:flex!important;align-items:center;gap:7px;
+  margin-bottom:7px!important;
+  color:#aeb6cc!important;
+  font-size:11px!important;font-weight:900!important;
+  letter-spacing:.65px;text-transform:uppercase;
+}
+.game .answer label:before{
+  content:"";width:6px;height:6px;border-radius:50%;
+  background:#8b5cf6;box-shadow:0 0 9px rgba(139,92,246,.75);
+}
+.game .answer input{
+  min-height:50px!important;
+  font-size:15px!important;font-weight:700;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.game .answer input::placeholder{color:#566079}
+.game .answer input.valid{
+  border-color:rgba(52,211,153,.65)!important;
+  background:rgba(52,211,153,.035)!important;
+  box-shadow:0 0 0 3px rgba(52,211,153,.07)!important;
+}
+.game .answer input.invalid{
+  border-color:rgba(251,113,133,.65)!important;
+  background:rgba(251,113,133,.035)!important;
+  box-shadow:0 0 0 3px rgba(251,113,133,.07)!important;
+}
+.game .answers + .btn,.game .answers ~ .btn{
+  box-shadow:0 12px 34px rgba(139,92,246,.22)!important;
+}
+.game .status{
+  margin-top:14px!important;
+  font-weight:800;
+}
+.game .status:empty{display:none}
+.game .scorebar{
+  padding:9px;
+  border:1px solid rgba(255,255,255,.065);
+  border-radius:19px;
+  background:rgba(255,255,255,.012);
+}
+.game .score{
+  background:rgba(255,255,255,.025)!important;
+  border-color:rgba(255,255,255,.07)!important;
+}
+.game .score:first-child{border-color:rgba(139,92,246,.18)!important}
+.game .score span{color:#818ba5!important}
+@media(max-width:700px){
+  .game .answers{padding:13px!important;border-radius:18px}
+  .game .answer{padding:11px!important}
+  .game .answer input{min-height:47px!important}
+}
+
 </style><script id="vortex-bg-script">
 (()=>{const c=document.createElement('canvas');c.id='vortex-bg';document.body.prepend(c);document.body.classList.add('vortex-ready');const x=c.getContext('2d');let w=0,h=0,t=0,ps=[];const count=420,TAU=Math.PI*2;
 function resize(){w=c.width=innerWidth*devicePixelRatio;h=c.height=innerHeight*devicePixelRatio;c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';ps=[];for(let i=0;i<count;i++)ps.push(p());}
