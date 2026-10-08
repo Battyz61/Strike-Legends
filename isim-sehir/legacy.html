@@ -2804,15 +2804,19 @@ body.vortex-page{background:radial-gradient(circle at 50% -10%,rgba(139,92,246,.
 #toast{background:linear-gradient(100deg,#6858ff,#8d55f5)!important;color:#fff!important;border:1px solid rgba(255,255,255,.12)!important}
 @media(max-width:700px){#room,#game{padding:12px!important}#room>.card,#game{border-radius:22px!important}}
 </style><style id="screen-layout-refactor">
-/* SCREEN STRUCTURE: consistent grid, spacing and hierarchy */
+/* SCREEN STRUCTURE — final responsive pass */
 #room>.card{padding:18px!important}
-#room>.card>.room-hero{padding:28px!important;margin-bottom:14px!important}
+#room>.card>.room-hero{padding:26px!important;margin-bottom:14px!important}
 #room>.card>.player-panel{padding:18px!important;margin-bottom:10px!important}
 #room>.card>#categoryPanel{padding:20px!important}
-#room .category-options{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important;gap:9px!important}
-#room .letter-options{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(42px,1fr))!important;gap:8px!important}
+#room .category-options{display:flex!important;flex-wrap:wrap!important;gap:9px!important}
+#room .cat-chip{flex:0 0 auto!important;min-height:40px!important;padding:9px 14px!important;border-radius:999px!important}
+#room .letter-options{display:grid!important;grid-template-columns:repeat(10,minmax(0,1fr))!important;gap:7px!important}
+#room .letter-chip{min-height:40px!important;border-radius:12px!important}
 #room .room-settings-title{margin:22px 2px 10px!important}
-#room .room-settings-summary{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
+#room .room-settings-summary{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:9px!important}
+#room .room-setting-pill{min-width:0!important;padding:12px 10px!important}
+#room .room-setting-pill b,#room .room-setting-pill span{display:block!important}
 #room .start-area{margin-top:16px!important;padding-top:16px!important;border-top:1px solid rgba(255,255,255,.07)!important}
 #game{padding:18px!important}
 #game .game-toolbar{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:10px 12px!important;margin-bottom:12px!important}
@@ -2825,17 +2829,20 @@ body.vortex-page{background:radial-gradient(circle at 50% -10%,rgba(139,92,246,.
 #game #finishBtn{display:block!important;width:min(820px,100%)!important;margin:0 auto 14px!important}
 #game .scorebar{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
 #game .score{min-width:0!important;padding:14px!important;border-radius:16px!important}
+#roundTransition .round-transition-card{width:min(420px,calc(100vw - 32px))!important;padding:28px 22px 24px!important}
 @media(max-width:720px){
  #room>.card,#game{padding:12px!important}
  #room>.card>.room-hero{padding:20px!important}
  #room>.card>#categoryPanel{padding:14px!important}
- #room .category-options{grid-template-columns:repeat(2,minmax(0,1fr))!important}
- #room .room-settings-summary{grid-template-columns:1fr 1fr!important}
+ #room .letter-options{grid-template-columns:repeat(8,minmax(0,1fr))!important}
+ #room .room-settings-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
  #game .answers{grid-template-columns:1fr!important}
- #game .scorebar{grid-template-columns:1fr 1fr 1fr!important}
+ #game .scorebar{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
 @media(max-width:430px){
- #room .room-settings-summary{grid-template-columns:1fr!important}
+ #room .cat-chip{padding:8px 11px!important;font-size:12px!important}
+ #room .letter-options{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+ #room .room-settings-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
  #game .scorebar{grid-template-columns:1fr!important}
  #game .roundbar{align-items:flex-start!important}
 }
