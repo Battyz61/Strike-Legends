@@ -53,7 +53,8 @@ export default function App() {
     <main className="relative min-h-screen overflow-hidden bg-[#03040b] text-white selection:bg-violet-500/30">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(139,92,246,.20),transparent_36%),radial-gradient(circle_at_100%_60%,rgba(34,211,238,.08),transparent_32%)]" />
       <div className="pointer-events-none fixed inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
-      <Vortex particleCount={280} rangeY={520} baseHue={245} rangeSpeed={1.1} backgroundColor="#03040b" containerClassName="fixed inset-0 opacity-55" />
+      <Vortex particleCount={280} rangeY={520} baseHue={245} rangeSpeed={1.1} backgroundColor="#03040b" containerClassName="fixed inset-0 opacity-30" />
+      <div className="pointer-events-none fixed inset-0 bg-[#03040b]/35" />
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(124,92,255,.16),transparent_42%)]" />
       <div className="relative z-10 mx-auto min-h-screen max-w-6xl px-4 py-6 md:px-8 md:py-8">
         <header className="mb-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/35 px-4 py-3 backdrop-blur-2xl md:px-5">
