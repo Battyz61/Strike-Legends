@@ -719,6 +719,54 @@ body:before,body:after{display:none!important}
 .hidden{display:none!important}
 @media(max-width:700px){.app-shell{padding:22px 36px 70px}.brand-card{height:136px;padding:20px 28px}.brand-card-icon{width:70px;height:70px}.brand-card-title{font-size:22px;letter-spacing:5px}.brand-card-sub{font-size:18px}.hero-badge{margin-top:70px;font-size:16px;padding:12px 20px}.hero h1{font-size:clamp(58px,14vw,82px)!important;letter-spacing:-5px!important}.hero-sub{font-size:22px!important}.menu-card{padding:42px!important}.menu-card h2{font-size:38px!important}.menu-card p{font-size:21px!important}.ad-label{font-size:17px;right:34px}.avatar-grid{gap:9px}.avatar-choice{height:64px!important}.room-settings-summary{grid-template-columns:repeat(2,1fr)}.letter-options{grid-template-columns:repeat(10,1fr)}}
 @media(max-width:480px){.app-shell{padding:20px 36px 70px}.desktop-only{display:none}.brand-card{height:136px;padding:20px 24px;gap:16px}.brand-card-icon{width:68px;height:68px;font-size:45px}.brand-card-title{font-size:20px;letter-spacing:4px}.brand-card-sub{font-size:17px}.hero-badge{margin-top:72px;font-size:15px;letter-spacing:3px}.hero h1{font-size:58px!important;letter-spacing:-4px!important}.hero-sub{font-size:20px!important;line-height:1.5!important;margin-top:35px!important}.menu-card{padding:34px!important;border-radius:28px!important}.menu-card .card-icon{width:84px;height:84px}.menu-card h2{font-size:35px!important}.menu-card p{font-size:20px!important}.ad-label{right:31px;top:47px;font-size:16px}.avatar-grid{grid-template-columns:repeat(8,1fr);gap:7px}.avatar-choice{height:60px!important;border-radius:15px!important}.settings-row{gap:13px}.setting{padding:19px!important}.setting label{font-size:13px!important}.setting select{font-size:18px!important}.btn{height:76px!important;font-size:23px!important}.quick-info{gap:8px}.quick-item{padding:16px 5px!important}.screen-card{padding:20px!important;border-radius:26px!important}.screen-head h2{font-size:29px}.letter-options{grid-template-columns:repeat(7,1fr)}.answers{grid-template-columns:1fr}.wheel-stage{height:235px}.wheel{width:185px!important;height:185px!important}.room-code-card strong{font-size:42px}.room-settings-summary{grid-template-columns:1fr 1fr}}
+</style><style id="room-rebuild-v1">
+.room{display:none}
+.room .screen-card{max-width:100%;margin:0 auto}
+.room .screen-head{margin-bottom:24px}
+.room .screen-head h2{font-size:42px;line-height:1.05}
+.room .screen-head p{font-size:19px;line-height:1.5;color:#858591}
+.room .icon-button{flex:0 0 auto}
+.room-code-card{padding:38px 24px 28px;border-radius:30px;background:linear-gradient(145deg,#17122d,#0b0d18);border:1px solid rgba(139,92,246,.38);text-align:center;margin-bottom:18px;box-shadow:inset 0 1px rgba(255,255,255,.04),0 20px 45px rgba(0,0,0,.16)}
+.room-code-card>span{font-size:14px;letter-spacing:6px;color:#8b8898}
+.room-code-card strong{display:block;font-size:clamp(48px,10vw,72px);line-height:1;letter-spacing:10px;margin:16px 0 24px;color:#f8f7fb;font-weight:950}
+.room-code-card .small{margin:auto}
+.room .player-panel{padding:24px;margin-bottom:14px}
+.room .section-line>b{font-size:24px;letter-spacing:-.5px}
+.room .player-count{font-size:16px;padding:10px 15px}
+.room .players{margin-top:18px}
+.room .player{min-height:74px;padding:12px 18px;border-radius:20px;font-size:18px}
+.room .player svg{width:52px!important;height:52px!important}
+.room .setup-panel{padding:28px;margin-top:18px}
+.room .setup-panel h3{font-size:34px;margin-top:6px}
+.room .category-options{gap:10px;margin-top:22px}
+.room .cat-chip{font-size:18px!important;padding:11px 20px!important}
+.room .letter-head{margin-top:34px}
+.room .letter-head h3{font-size:27px}
+.room .letter-options{gap:9px;margin-top:18px}
+.room .letter-chip{height:48px!important;font-size:17px}
+.room .room-settings-title{margin-top:26px;font-size:13px}
+.room .room-settings-summary{gap:10px}
+.room .room-setting-pill{padding:15px 9px;border-radius:16px}
+.room .room-setting-pill b{font-size:16px}
+.room .room-setting-pill span{font-size:10px}
+.room>#botBtn{margin-top:4px}
+.room .start-area{margin-top:14px}
+.room .start-hint{font-size:12px;margin-top:10px}
+@media(max-width:480px){
+ .room .screen-card{padding:24px 20px}
+ .room .screen-head h2{font-size:35px}
+ .room .screen-head p{font-size:17px}
+ .room-code-card{padding:32px 18px 24px}
+ .room-code-card strong{font-size:46px;letter-spacing:7px}
+ .room .player-panel,.room .setup-panel{padding:20px}
+ .room .section-line>b{font-size:20px}
+ .room .player-count{font-size:13px}
+ .room .cat-chip{font-size:16px!important;padding:9px 15px!important}
+ .room .setup-panel h3{font-size:28px}
+ .room .letter-options{grid-template-columns:repeat(7,1fr)}
+ .room .letter-chip{height:44px!important;font-size:15px}
+ .room .room-settings-summary{grid-template-columns:repeat(2,1fr)}
+}
 </style></head>
 <body>
 <main class="app-shell">
@@ -750,7 +798,7 @@ body:before,body:after{display:none!important}
           <div class="setting"><label>TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div>
         </div>
       </div>
-      <button id="createRoomBtn" type="button" class="btn primary-btn" onclick="toast('Yeni oda ekranını sıfırdan kuracağız. Şimdilik tasarım ana menüde sabit.')">Oda Oluştur <span>→</span></button>
+      <button id="createRoomBtn" type="button" class="btn primary-btn" onclick="createRoom()">Oda Oluştur <span>→</span></button>
     </article>
 
     <article class="menu-card join">
@@ -763,7 +811,7 @@ body:before,body:after{display:none!important}
       <input id="joinCode" class="input" maxlength="6" placeholder="6 haneli oda kodu" inputmode="numeric">
       <div class="avatar-row-title"><span>AVATARINI SEÇ</span><span id="guestAvatarName">Nova</span></div>
       <div id="guestAvatarGrid" class="avatar-grid"></div>
-      <button id="joinRoomBtn" type="button" class="btn secondary-btn" onclick="toast('Odaya katıl ekranını da sıfırdan kuracağız.')">Odaya Katıl <span>→</span></button>
+      <button id="joinRoomBtn" type="button" class="btn secondary-btn" onclick="joinRoom()">Odaya Katıl <span>→</span></button>
     </article>
 
     <div class="quick-info">
@@ -772,7 +820,41 @@ body:before,body:after{display:none!important}
       <div class="quick-item"><b>Çoklu</b><span>Arkadaşlarınla oyna</span></div>
     </div>
   </section>
-</main>
+<section id="room" class="screen room">
+  <div class="screen-card room-card">
+    <div class="screen-head">
+      <div><span class="eyebrow">ARKADAŞLARINLA OYNA</span><h2>Oda Hazır</h2><p>Arkadaşlarını davet et ve oyunu birlikte hazırla.</p></div>
+      <button class="icon-button" type="button" onclick="returnToMainMenu()">×</button>
+    </div>
+    <div class="room-code-card">
+      <span>ODA KODU</span>
+      <strong id="roomCode">------</strong>
+      <button class="btn secondary-btn small copy-room-btn" type="button" onclick="copyRoom()">Kodu Kopyala</button>
+    </div>
+    <div class="player-panel">
+      <div class="section-line"><b>OYUNCULAR</b><span id="playerCount" class="player-count">1 / 4 kişi</span></div>
+      <div id="players" class="players"></div>
+    </div>
+    <div id="netStatus" class="status">🌐 Oda bağlantısı hazırlanıyor...</div>
+    <div id="categoryPanel" class="setup-panel">
+      <div class="section-line">
+        <div><span class="eyebrow">HOST OYUNU HAZIRLIYOR</span><h3>Kategoriler</h3></div>
+        <button class="text-action" type="button" onclick="shuffleCats()">Karıştır</button>
+      </div>
+      <div id="categoryOptions" class="category-options"></div>
+      <div class="section-line letter-head">
+        <div><span class="eyebrow">HARF HAVUZU</span><h3>Harfler</h3></div>
+        <span id="letterSelectionCount" class="cyan-text">29 / 29</span>
+      </div>
+      <div id="letterOptions" class="letter-options"></div>
+      <div class="letter-actions"><button class="letter-action" type="button" onclick="selectAllLetters()">Tümü</button><button class="letter-action" type="button" onclick="selectCommonLetters()">Yaygın</button></div>
+    </div>
+    <div class="room-settings-title">OYUN AYARLARI</div>
+    <div id="roomSettingsSummary" class="room-settings-summary"></div>
+    <button id="botBtn" class="btn secondary-btn" type="button" onclick="addBot()">🤖 Test Botu Ekle</button>
+    <div class="start-area"><button id="startBtn" class="btn primary-btn" type="button" onclick="startGame()">Oyunu Başlat <span>→</span></button><div class="start-hint">Host oyunu başlatabilir · Ayarlar otomatik senkronlanır</div></div>
+  </div>
+</section></main>
 <script>
 const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','3 harfli kelime','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
