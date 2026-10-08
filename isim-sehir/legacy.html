@@ -646,6 +646,8 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 </style><style id="unified-controls">
 .game-menu-open{position:absolute;right:20px;top:20px;width:44px;height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#151726;color:#b8b7c3;font-weight:900;letter-spacing:3px;z-index:2}
 #game .fresh-card{position:relative}
+</style><style id="fresh-vote-result-theme">
+.fresh-vote-list,.fresh-result-list{display:grid;gap:9px;margin:8px 0 16px}.fresh-vote-card,.fresh-result-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:#10121c}.fresh-vote-card span,.fresh-result-row span{display:block;font-size:10px;letter-spacing:2px;font-weight:900;color:#777683}.fresh-vote-card strong,.fresh-result-row strong{display:block;margin-top:5px;font-size:17px}.fresh-vote-actions{display:flex;gap:7px}.fresh-vote-actions .vote-circle{width:42px;height:42px}.fresh-result-score{text-align:center;padding:24px;border-radius:22px;background:linear-gradient(145deg,#17122d,#0b0d18);border:1px solid rgba(139,92,246,.28);margin-bottom:14px}.fresh-result-score span{display:block;font-size:10px;letter-spacing:3px;color:#777683;font-weight:900}.fresh-result-score strong{display:block;color:#f5d878;font-size:52px;line-height:1.05}.fresh-result-score small{color:#858591}.fresh-result-row.correct{border-color:rgba(53,217,154,.45)}.fresh-result-row.wrong{border-color:rgba(251,113,133,.35)}.fresh-result-row>b{font-size:18px;color:#35d99a}.fresh-result-row.wrong>b{color:#858591}
 </style></head> öncesine yapıştır:
    Eski katmanlar (!important'lı) ile çakışmasın diye hepsi body/#game ile öne alındı. */
 
@@ -915,7 +917,23 @@ body .toast{background:#11131f!important;border:1px solid rgba(167,139,250,.25)!
   </div>
 </section>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-</main>
+<section id="freshVoteScreen" class="fresh-screen hidden">
+  <div class="fresh-card">
+    <span class="fresh-eyebrow">OY VERME</span><h2>Cevapları Değerlendir</h2>
+    <p class="fresh-sub">Her cevabın kategoriye uygun olup olmadığını işaretle.</p>
+    <div id="freshVoteList" class="fresh-vote-list"></div>
+    <button id="freshVotesComplete" class="btn primary-btn" type="button" onclick="finishFreshVotes()">Oyları Tamamla <span>→</span></button>
+  </div>
+</section>
+<section id="freshResultScreen" class="fresh-screen hidden">
+  <div class="fresh-card">
+    <span class="fresh-eyebrow">TUR SONUCU</span><h2>Sonuçlar</h2>
+    <div class="fresh-result-score"><span>BU TUR</span><strong id="freshResultScore">0</strong><small>puan</small></div>
+    <div id="freshResultList" class="fresh-result-list"></div>
+    <button class="btn primary-btn" type="button" onclick="restartFreshGame()">Sonraki Tur <span>→</span></button>
+    <button class="btn secondary-btn" type="button" onclick="backToRoom()">Lobiye Dön</button>
+  </div>
+</section></main>
 <script id="fresh-app">
 const AVATARS=[
 {name:'Nova',bg:'#6d5dfc',fg:'#d9d5ff',shape:'M24 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm-11 28c1-7 5-10 11-10s10 3 11 10'},
@@ -956,11 +974,15 @@ async function freshCopyRoom(){const code=$('freshRoomCode')?.textContent||'';tr
 function freshStartPlaceholder(){$('room')?.classList.add('hidden');$('game')?.classList.remove('hidden');freshBuildGame();freshStartTimer();showRoundTransition()}
 function freshStartTimer(){clearInterval(window.freshTimer);let n=Number($('freshDuration')?.value||120);$('freshGameTimer').textContent=n;window.freshTimer=setInterval(()=>{n=Math.max(0,n-1);$('freshGameTimer').textContent=n;if(n===0){clearInterval(window.freshTimer);freshFinishRound()}},1000)}
 function freshBuildGame(){const box=$('freshAnswers');if(!box)return;box.innerHTML=freshSelectedCats.map(cat=>'<label class="fresh-answer"><span>'+cat+'</span><input maxlength="30" placeholder="'+cat+'..."></label>').join('');$('freshGameLetter').textContent=freshSelectedLetters[Math.floor(Math.random()*freshSelectedLetters.length)]||'A';$('freshGameHint').textContent='Cevaplarını doldur ve gönder.'}
-function freshFinishRound(){const b=$('freshFinishBtn');if(b){b.disabled=true;b.innerHTML='✓ Cevapların Kaydedildi';b.classList.add('submitted')}clearInterval(window.freshTimer);$('freshGameStatus').textContent='Cevapların kaydedildi · Oylama aşamasına geçiliyor';setTimeout(()=>showRoundTransition('Cevaplar tamamlandı','Oylama hazırlanıyor...'),350)}
+
+function showFreshVote(){clearInterval(window.freshTimer);$('game')?.classList.add('hidden');$('freshVoteScreen')?.classList.remove('hidden');const list=$('freshVoteList');if(!list)return;list.innerHTML=[...document.querySelectorAll('#freshAnswers .fresh-answer')].map((row,i)=>{const cat=row.querySelector('span')?.textContent||'Kategori';const val=row.querySelector('input')?.value.trim()||'Cevap yok';return '<div class="fresh-vote-card" data-vote="'+i+'"><div><span>'+cat+'</span><strong>'+val.replace(/</g,'&lt;')+'</strong></div><div class="fresh-vote-actions"><button type="button" class="vote-circle yes" onclick="selectFreshVote('+i+',true)">✓</button><button type="button" class="vote-circle no" onclick="selectFreshVote('+i+',false)">×</button></div></div>'}).join('');window.freshVotes={}}
+function selectFreshVote(i,ok){window.freshVotes=window.freshVotes||{};window.freshVotes[i]=ok;const card=document.querySelector('[data-vote="'+i+'"]');card?.querySelectorAll('.vote-circle').forEach(b=>b.classList.remove('selected'));card?.querySelector(ok?'.yes':'.no')?.classList.add('selected')}
+function finishFreshVotes(){const rows=[...document.querySelectorAll('#freshAnswers .fresh-answer')];const votes=window.freshVotes||{};let score=0;const results=rows.map((row,i)=>{const cat=row.querySelector('span')?.textContent||'Kategori';const val=row.querySelector('input')?.value.trim()||'Cevap yok';const ok=votes[i]===true;const points=ok?10:0;score+=points;return {cat,val,ok,points}});$('freshVoteScreen')?.classList.add('hidden');$('freshResultScreen')?.classList.remove('hidden');$('freshResultScore').textContent='+'+score;$('freshResultList').innerHTML=results.map(r=>'<div class="fresh-result-row '+(r.ok?'correct':'wrong')+'"><div><span>'+r.cat+'</span><strong>'+r.val.replace(/</g,'&lt;')+'</strong></div><b>'+(r.ok?'+10':'0')+'</b></div>').join('')}
+function freshFinishRound(){const b=$('freshFinishBtn');if(b){b.disabled=true;b.innerHTML='✓ Cevapların Kaydedildi';b.classList.add('submitted')}clearInterval(window.freshTimer);$('freshGameStatus').textContent='Cevapların kaydedildi · Oylama aşamasına geçiliyor';setTimeout(showFreshVote,350)}
 function showRoundTransition(title='Tur Başlıyor',sub='Hazırlan...'){const o=$('roundTransition');if(!o)return;$('roundTransitionTitle').textContent=title;$('roundTransitionSub').textContent=sub;o.classList.add('show');setTimeout(()=>o.classList.remove('show'),1400)}
 function openGameMenu(){$('gameMenu')?.classList.add('show')}
 function closeGameMenu(){$('gameMenu')?.classList.remove('show')}
-function backToRoom(){clearInterval(window.freshTimer);closeGameMenu();$('game')?.classList.add('hidden');$('room')?.classList.remove('hidden')}
+function backToRoom(){clearInterval(window.freshTimer);closeGameMenu();['game','freshVoteScreen','freshResultScreen'].forEach(id=>$(id)?.classList.add('hidden'));$('room')?.classList.remove('hidden')}
 function restartFreshGame(){closeGameMenu();$('game')?.classList.remove('hidden');freshBuildGame();freshStartTimer();showRoundTransition('Yeni Tur','Yeni harf hazırlanıyor...')}
 function joinRoom(){toast('Odaya katıl ekranını da aynı DESIGN sisteminde sıfırdan kuracağız.')}
 document.addEventListener('DOMContentLoaded',()=>{const host=$('hostName');if(host){try{host.value=localStorage.getItem('isimSehirName')||''}catch(e){}}});
