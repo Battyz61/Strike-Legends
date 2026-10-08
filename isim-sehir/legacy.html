@@ -769,6 +769,11 @@ body:before,body:after{display:none!important}
 }
 </style><style id="fresh-room-design">
 .fresh-screen{width:min(100%,760px);margin:0 auto}.fresh-screen.hidden{display:none!important}.fresh-card{position:relative;background:#080a14;border:1px solid rgba(255,255,255,.09);border-radius:30px;padding:38px;box-shadow:0 25px 70px rgba(0,0,0,.3)}.fresh-close{position:absolute;right:24px;top:24px;width:50px;height:50px;border-radius:17px;background:#151726;border:1px solid rgba(255,255,255,.1);color:#aaa;font-size:30px}.fresh-eyebrow{display:block;color:#85818f;font-size:12px;font-weight:950;letter-spacing:4px}.fresh-card h2{font-size:42px;margin:12px 0 8px}.fresh-sub{color:#858591;font-size:18px;line-height:1.5;margin:0 0 30px}.fresh-label,.fresh-setting label{display:block;color:#777683;font-size:12px;font-weight:950;letter-spacing:3px;margin-bottom:10px}.fresh-input{width:100%;height:68px;border-radius:21px;background:#070910;border:1px solid rgba(255,255,255,.1);color:#fff;padding:0 22px;font-size:21px;margin-bottom:25px}.fresh-row-title{display:flex;justify-content:space-between;color:#777683;font-size:12px;font-weight:950;letter-spacing:3px;margin-bottom:13px}.fresh-row-title span:last-child{color:#b8a7f2;letter-spacing:0}.fresh-avatar-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:9px;margin-bottom:30px}.fresh-avatar{height:60px;border-radius:16px;background:linear-gradient(145deg,#4d4d94,#12465c);border:2px solid #dddde3;color:#fff;padding:4px}.fresh-avatar.selected{border-color:#bba4ff;box-shadow:0 0 0 2px #8b5cf633}.fresh-settings{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fresh-setting{padding:18px;border-radius:20px;background:#10121c;border:1px solid rgba(255,255,255,.1)}.fresh-setting select{width:100%;background:transparent;border:0;color:#aaa9b5;font-size:17px;outline:0}.fresh-next{margin-top:20px}.fresh-chips{display:flex;flex-wrap:wrap;gap:9px;margin:25px 0 30px}.fresh-chip{padding:11px 17px;border-radius:999px;background:#10121c;border:1px solid #2c2e3b;color:#6f707c;font-size:16px}.fresh-chip.active{background:#30264e;border-color:#9277d9;color:#e5ddff}.fresh-section-head{display:flex;justify-content:space-between;align-items:center;color:#777683;font-size:12px;font-weight:950;letter-spacing:3px;margin-bottom:15px}.fresh-section-head button{background:none;border:0;color:#59dff3;font-weight:800}.fresh-letters{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}.fresh-letter{height:45px;border-radius:12px;background:#10242a;border:1px solid #277f90;color:#8fbcc4;font-weight:900}.fresh-letter.active{background:#173c45;border-color:#39b9d0;color:#d1f7fb}@media(max-width:480px){.fresh-screen{width:100%}.fresh-card{padding:28px 22px;border-radius:28px}.fresh-card h2{font-size:35px}.fresh-sub{font-size:17px}.fresh-avatar-grid{gap:7px}.fresh-avatar{height:54px}.fresh-settings{gap:10px}.fresh-setting{padding:15px}.fresh-setting select{font-size:15px}.fresh-letters{grid-template-columns:repeat(7,1fr)}}
+</style><style id="fresh-lobby-design">
+.fresh-lobby-card{padding:38px}
+.fresh-code{margin:28px 0 18px;padding:34px 20px 25px;text-align:center;border-radius:28px;background:linear-gradient(145deg,#17122d,#0b0d18);border:1px solid rgba(139,92,246,.38);box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.fresh-code>span{display:block;color:#8b8898;font-size:13px;letter-spacing:6px}.fresh-code strong{display:block;font-size:clamp(46px,10vw,68px);letter-spacing:9px;line-height:1;margin:15px 0 24px}.fresh-copy{width:auto!important;height:52px!important;padding:0 24px!important;font-size:16px!important;margin:0 auto}
+.fresh-lobby-panel{padding:22px;border-radius:22px;background:#0e101b;border:1px solid rgba(255,255,255,.08);margin-bottom:14px}.fresh-section-head{margin-bottom:14px}.fresh-section-head>b{padding:8px 13px;border-radius:999px;background:#201b3a;color:#c7baff;font-size:12px}.fresh-players{display:flex;flex-direction:column;gap:9px}.fresh-player{min-height:72px;padding:10px 16px;border-radius:18px;background:linear-gradient(145deg,#1a1630,#111421);border:1px solid rgba(139,92,246,.45);display:flex;align-items:center;gap:12px;font-size:18px}.fresh-player svg{width:48px!important;height:48px!important}.fresh-player b{color:#8fd7f4;font-size:13px;margin-left:4px}.fresh-online{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;padding:15px;border-radius:16px;background:#0b1720;border:1px solid rgba(86,223,245,.18);color:#9bb1c9;margin-bottom:14px}.fresh-online i{width:13px;height:13px;border-radius:50%;background:#12df2d;box-shadow:0 0 12px #12df2d;display:block}.fresh-online small{color:#777f8e}.fresh-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.fresh-summary>div{padding:13px 7px;text-align:center;border-radius:14px;background:#10121d;border:1px solid rgba(255,255,255,.07)}.fresh-summary b{display:block;font-size:14px}.fresh-summary span{font-size:9px;color:#72727d}@media(max-width:480px){.fresh-lobby-card{padding:28px 22px}.fresh-code{padding:30px 15px 23px}.fresh-code strong{font-size:44px;letter-spacing:6px}.fresh-summary{grid-template-columns:1fr 1fr}}
 </style></head>
 <body>
 <main class="app-shell">
@@ -841,7 +846,28 @@ body:before,body:after{display:none!important}
     <button class="btn primary-btn fresh-next" type="button" onclick="openFreshCategoryScreen()">Devam Et <span>→</span></button>
   </div>
 </section>
-<section id="freshCategoryScreen" class="fresh-screen hidden">
+<section id="freshLobbyScreen" class="fresh-screen hidden">
+  <div class="fresh-card fresh-lobby-card">
+    <button class="fresh-close" type="button" onclick="closeFreshScreens()">×</button>
+    <span class="fresh-eyebrow">ARKADAŞLARINLA OYNA</span>
+    <h2>Oda Hazır</h2>
+    <p class="fresh-sub">Kodu arkadaşlarınla paylaş, oyuncular katıldığında oyunu başlat.</p>
+    <div class="fresh-code">
+      <span>ODA KODU</span><strong id="freshRoomCode">------</strong>
+      <button class="btn secondary-btn fresh-copy" type="button" onclick="freshCopyRoom()">Kodu Kopyala</button>
+    </div>
+    <div class="fresh-lobby-panel">
+      <div class="fresh-section-head"><span>OYUNCULAR</span><b id="freshPlayerCount">1 / 4</b></div>
+      <div id="freshPlayers" class="fresh-players"></div>
+    </div>
+    <div class="fresh-online"><i></i><span>Oda çevrimiçi</span><small>Kodu arkadaşlarınla paylaş</small></div>
+    <div class="fresh-lobby-panel">
+      <div class="fresh-section-head"><span>OYUN AYARLARI</span></div>
+      <div id="freshSettingsSummary" class="fresh-summary"></div>
+    </div>
+    <button class="btn primary-btn" type="button" onclick="freshStartPlaceholder()">Oyunu Başlat <span>→</span></button>
+  </div>
+</section><section id="freshCategoryScreen" class="fresh-screen hidden">
   <div class="fresh-card">
     <button class="fresh-close" type="button" onclick="closeFreshScreens()">×</button>
     <span class="fresh-eyebrow">OYUNU HAZIRLA</span>
@@ -2487,5 +2513,28 @@ function renderFreshLetters(){
 }
 function freshSelectAllLetters(){freshSelectedLetters=[...freshLetters];renderFreshLetters()}
 function openFreshCategoryScreen(){document.getElementById('createRoomScreen')?.classList.add('hidden');document.getElementById('freshCategoryScreen')?.classList.remove('hidden');renderFreshCategories();renderFreshLetters()}
-function finishFreshCreateRoom(){toast('Oda ekranını bundan sonra sıfırdan kuracağız.');}
+function finishFreshCreateRoom(){
+ const name=(document.getElementById('freshHostName')?.value||'').trim()||'Oyuncu';
+ const code=String(Math.floor(100000+Math.random()*900000));
+ const s={
+  duration:document.getElementById('freshDuration')?.value||'120',
+  wheel:document.getElementById('freshWheel')?.value||'on',
+  players:document.getElementById('freshPlayers')?.value||'4',
+  rounds:document.getElementById('freshRounds')?.value||'5'
+ };
+ document.getElementById('createRoomScreen')?.classList.add('hidden');
+ document.getElementById('freshCategoryScreen')?.classList.add('hidden');
+ document.getElementById('freshLobbyScreen')?.classList.remove('hidden');
+ const codeEl=document.getElementById('freshRoomCode');if(codeEl)codeEl.textContent=code;
+ const count=document.getElementById('freshPlayerCount');if(count)count.textContent='1 / '+s.players;
+ const players=document.getElementById('freshPlayers');
+ if(players)players.innerHTML='<div class="fresh-player">'+(typeof avatarSvg==='function'?avatarSvg(freshSelectedAvatar,true):'')+'<span>'+name+' <b>HOST</b></span></div>';
+ const summary=document.getElementById('freshSettingsSummary');
+ if(summary)summary.innerHTML='<div><b>'+s.duration+' sn</b><span>Tur süresi</span></div><div><b>'+(s.wheel==='on'?'Açık':'Kapalı')+'</b><span>Harf çarkı</span></div><div><b>'+s.players+'</b><span>Oyuncu</span></div><div><b>'+s.rounds+'</b><span>Tur</span></div>';
+}
+async function freshCopyRoom(){
+ const code=document.getElementById('freshRoomCode')?.textContent||'';
+ try{await navigator.clipboard.writeText(code);toast('Oda kodu kopyalandı: '+code)}catch(e){toast('Oda kodu: '+code)}
+}
+function freshStartPlaceholder(){toast('Bir sonraki adımda oyun ekranını sıfırdan kuracağız.');}
 </script>
