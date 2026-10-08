@@ -678,46 +678,142 @@ body{overflow-x:hidden;background:
 @media(max-width:390px){
  .settings-row{grid-template-columns:1fr!important}.wheel-wrap{height:202px!important}.wheel{width:174px!important;height:174px!important}.hero h1{font-size:42px!important}
 }
+</style><style id="rebuild-v1">
+:root{
+ --bg:#343548;--bg2:#252735;--card:#080a14;--card2:#101221;--line:rgba(255,255,255,.10);
+ --text:#f8f8fb;--muted:#858595;--soft:#b7b3c8;--purple:#9d83ff;--purple2:#d83ee9;--cyan:#56dff5;
+ --green:#35d99a;--red:#fb7185;--gold:#f5d878;
+}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#05060d!important;color:var(--text)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+body{overflow-x:hidden;background:linear-gradient(180deg,#3d3d59 0%,#303243 46%,#242632 100%)!important}
+body:before,body:after{display:none!important}
+.app-shell{width:min(100%,760px);margin:0 auto;padding:24px 36px 80px}
+.hero{padding:0 0 42px;text-align:center}
+.brand-card{height:136px;border-radius:30px;background:rgba(25,25,40,.78);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;gap:22px;padding:22px 32px;text-align:left;box-shadow:0 20px 50px rgba(0,0,0,.15)}
+.brand-card-icon{width:82px;height:82px;border-radius:22px;display:grid;place-items:center;border:2px solid #7058c9;color:#b9a9ff;font-size:55px;font-weight:300}
+.brand-card-title{font-size:26px;font-weight:950;letter-spacing:7px}.brand-card-sub{margin-top:5px;font-size:22px;color:#898996}
+.hero-badge{display:inline-flex;margin:86px auto 28px;padding:13px 25px;border:2px solid rgba(167,139,250,.28);border-radius:999px;color:#c9c1e6;font-size:18px;font-weight:900;letter-spacing:4px;background:rgba(75,67,107,.24)}
+.hero h1{font-size:clamp(64px,12vw,108px)!important;line-height:.9!important;letter-spacing:-6px!important;margin:0!important;font-weight:950!important;background:linear-gradient(100deg,#fff 15%,#ddd7ff 58%,#56dcf2)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+.hero-sub{margin:42px auto 0!important;font-size:25px!important;line-height:1.55!important;color:#96969f!important;max-width:680px}
+.lobby-stack{display:flex;flex-direction:column;gap:34px}
+.menu-card{position:relative;overflow:hidden;background:rgba(5,7,17,.96)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:30px!important;padding:42px!important;box-shadow:0 25px 70px rgba(0,0,0,.26)!important}
+.ad-label{position:absolute;right:38px;top:48px;color:#b5a6e5;font-size:18px;line-height:1.55}
+.menu-card .card-icon{width:92px;height:92px;border-radius:23px;display:grid;place-items:center;background:#1c1739;border:1px solid #55439d;color:#b8a8ff;font-size:43px;margin-bottom:34px}
+.menu-card .card-icon.cyan{background:#0b2931;border-color:#075e70;color:#59e4f8}
+.menu-card h2{font-size:39px!important;letter-spacing:-1.5px;margin:0 0 14px!important}.menu-card p{font-size:22px!important;line-height:1.75!important;color:#878791!important;margin:0 0 38px!important;max-width:620px}
+.name-hint{display:none!important}
+.input{width:100%;height:78px!important;background:#070910!important;border:2px solid rgba(255,255,255,.10)!important;border-radius:25px!important;padding:0 34px!important;color:#e9e9ef!important;font-size:26px!important;margin-bottom:26px}
+.input::placeholder{color:#9a9aa4!important}
+.avatar-row-title{display:flex;justify-content:space-between;align-items:center;margin:4px 0 16px;color:#72727e;font-size:17px;font-weight:950;letter-spacing:3px}.avatar-row-title span:last-child{color:#b7a7f3;letter-spacing:0;font-weight:500}
+.avatar-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-bottom:32px}
+.avatar-choice{height:66px!important;border-radius:17px!important;background:linear-gradient(145deg,#4d4d94,#12465c)!important;border:2px solid #dddde3!important;display:grid;place-items:center;padding:0!important;color:#fff!important;font-weight:900}.avatar-choice.selected{border-color:#c3aaff!important;box-shadow:0 0 0 2px rgba(139,92,246,.25)!important}.avatar-svg{width:100%;height:100%}
+.setup-settings{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}.settings-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}.setting{background:#10111c!important;border:2px solid rgba(255,255,255,.10)!important;border-radius:24px!important;padding:23px!important}.setting label{display:block;font-size:16px!important;color:#73737e!important;font-weight:950!important;letter-spacing:3px!important;margin-bottom:12px}.setting select{width:100%;background:transparent!important;border:0!important;color:#a9a9b5!important;font-size:21px!important;padding:4px 0!important;outline:none}
+.btn{width:100%;height:82px!important;border-radius:28px!important;border:0!important;font-size:25px!important;font-weight:950!important;cursor:pointer}.primary-btn{background:linear-gradient(100deg,#7339ee,#d63ee8)!important;color:#fff!important;box-shadow:0 18px 35px rgba(131,57,238,.22)!important}.secondary-btn{background:#121523!important;color:#b8b7c3!important;border:1px solid rgba(255,255,255,.12)!important;box-shadow:none!important}.menu-card .btn{margin-top:10px}.menu-card.join .btn{margin-top:10px}
+.quick-info{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.quick-item{padding:20px 10px!important;background:rgba(8,9,18,.55)!important;border:1px solid rgba(255,255,255,.06)!important;border-radius:18px!important;text-align:center}.quick-item b{display:block;font-size:18px;color:#f5d878}.quick-item span{display:block;margin-top:5px;color:#777784;font-size:12px}
+.room{display:none}.screen-card{background:#080a14!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:30px!important;padding:30px!important;box-shadow:0 25px 70px rgba(0,0,0,.30)!important}.screen-head{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px}.screen-head h2{font-size:35px;margin:7px 0 0}.screen-head p{margin:7px 0 0;color:#777885;font-size:15px}.screen-head.compact{margin-bottom:18px}.eyebrow{display:block;color:#777784;font-size:11px;font-weight:950;letter-spacing:3px}.icon-button{width:48px;height:48px;border-radius:15px;background:#151726;border:1px solid rgba(255,255,255,.10);color:#aaa9b5;font-size:21px}
+.room-code-card{padding:26px;border-radius:23px;background:linear-gradient(145deg,#19152d,#0d1020);border:1px solid rgba(139,92,246,.28);text-align:center;margin-bottom:14px}.room-code-card>span{font-size:11px;letter-spacing:3px;color:#777784}.room-code-card strong{display:block;font-size:54px;letter-spacing:9px;margin:4px 0 16px}.small{height:44px!important;width:auto!important;padding:0 18px!important;border-radius:13px!important;font-size:12px!important}
+.player-panel,.setup-panel{background:#0e101b!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:22px!important;padding:20px!important;margin-bottom:14px}.section-line{display:flex;justify-content:space-between;align-items:center;gap:12px}.section-line h3{margin:5px 0 0;font-size:23px}.player-count{padding:7px 11px;border-radius:999px;background:#201b3a;color:#c7baff;font-size:11px}.players{display:flex;flex-direction:column;gap:9px;margin-top:14px}.player{padding:12px 14px;border-radius:14px;background:#151722;border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}.player.host{border-color:rgba(167,139,250,.42);background:#211b37}.waiting-card{padding:13px;color:#73737f}.status{padding:13px 15px!important;border-radius:14px!important;background:#111926!important;border:1px solid rgba(86,223,245,.16)!important;color:#8fdfea!important;font-size:13px!important;margin:10px 0!important}
+.category-options{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.cat-chip{padding:10px 17px!important;border-radius:999px!important;background:#10121c!important;border:1px solid #2b2d39!important;color:#676874!important;font-size:15px!important}.cat-chip.active{background:#30264e!important;border-color:#9277d9!important;color:#e4dcff!important}.text-action{background:none;border:0;color:#b8a7ee}.letter-head{margin-top:28px}.cyan-text{color:#55d9ef}.letter-options{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;margin-top:17px}.letter-chip{height:44px!important;border-radius:12px!important;background:#10242a!important;border:2px solid #277f90!important;color:#bcecf3!important;font-weight:900}.letter-chip.active{background:#173c45!important;border-color:#39b9d0!important}.letter-actions{display:flex;gap:8px;margin-top:12px}.letter-action{flex:1;padding:11px;border-radius:12px;background:#151722;border:1px solid rgba(255,255,255,.08);color:#8b8b97}.room-settings-title{margin:22px 0 9px;font-size:11px;font-weight:950;letter-spacing:3px;color:#747480}.room-settings-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.room-setting-pill{padding:11px;border-radius:13px;background:#10121d;border:1px solid rgba(255,255,255,.07);text-align:center}.room-setting-pill b{display:block;color:#eee;font-size:14px}.room-setting-pill span{font-size:9px;color:#72727d}.start-area{margin-top:14px}.start-hint{text-align:center;margin-top:9px;color:#696974;font-size:11px}
+.game{margin-top:22px}.head-actions{display:flex;align-items:center;gap:10px}.roundnum{padding:9px 13px;border-radius:12px;background:#241c3e;color:#c9bcff;font-size:12px}.wheel-stage{height:270px;display:grid;place-items:center;position:relative}.wheel{width:210px!important;height:210px!important;border:7px solid #8b5cf6!important;background:radial-gradient(circle,#211b38,#080912)!important;box-shadow:0 0 45px rgba(139,92,246,.28),inset 0 0 45px #000!important}.wheel-center{color:#f5d878!important;background:#0b0c14!important}.wheel-pointer{position:absolute;top:18px;z-index:4;color:#f5d878}.wheel-label{text-align:center;color:#777783;font-size:12px;letter-spacing:2px}.timer-hud{margin:18px 0;padding:17px;border-radius:18px;background:#0d101a;border:1px solid rgba(255,255,255,.08)}.timer-row{display:flex;justify-content:space-between;color:#777783;font-size:11px;letter-spacing:2px}.timer-row strong{color:#f5d878;font-size:18px;letter-spacing:0}.timer-track{height:6px;background:#20222d;border-radius:99px;margin-top:12px;overflow:hidden}.timer-fill{height:100%;background:linear-gradient(90deg,#8b5cf6,#22d3ee);border-radius:99px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.answer{padding:15px;border-radius:16px;background:#10121c;border:1px solid rgba(255,255,255,.08)}.answer label{display:block;color:#777783;font-size:11px;margin-bottom:7px}.answer input{width:100%;height:46px;background:#080a10;border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#fff;padding:0 12px}.scorebar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.score{padding:13px;text-align:center;border-radius:14px;background:#10121d}.score span{display:block;color:#71717d;font-size:9px;letter-spacing:1px}.score b{font-size:22px}
+.menu-overlay,.round-transition{background:rgba(4,5,12,.82)!important;backdrop-filter:blur(12px)}.menu-box,.round-transition-card{width:min(92%,480px);background:#0b0d17!important;border:1px solid rgba(167,139,250,.28)!important;border-radius:25px!important;padding:28px!important;box-shadow:0 30px 90px #0009!important}.menu-box h2{font-size:28px}.menu-box p{color:#777783}.menu-box .btn{margin-top:10px}.danger-btn{background:linear-gradient(100deg,#a92b4d,#fb7185)!important}.round-transition-card{text-align:center}.round-transition-card>div{font-size:54px;font-weight:950;margin:12px 0}.round-transition-card p{color:#898894}.round-transition-progress{display:flex;justify-content:center;gap:7px}.round-transition-dot{width:8px;height:8px;border-radius:50%;background:#383b48}.round-transition-dot.active{background:#a78bfa;box-shadow:0 0 12px #a78bfa}.toast{background:#11131f!important;border:1px solid rgba(167,139,250,.25)!important;color:#fff!important;border-radius:13px!important}
+.hidden{display:none!important}
+@media(max-width:700px){.app-shell{padding:22px 36px 70px}.brand-card{height:136px;padding:20px 28px}.brand-card-icon{width:70px;height:70px}.brand-card-title{font-size:22px;letter-spacing:5px}.brand-card-sub{font-size:18px}.hero-badge{margin-top:70px;font-size:16px;padding:12px 20px}.hero h1{font-size:clamp(58px,14vw,82px)!important;letter-spacing:-5px!important}.hero-sub{font-size:22px!important}.menu-card{padding:42px!important}.menu-card h2{font-size:38px!important}.menu-card p{font-size:21px!important}.ad-label{font-size:17px;right:34px}.avatar-grid{gap:9px}.avatar-choice{height:64px!important}.room-settings-summary{grid-template-columns:repeat(2,1fr)}.letter-options{grid-template-columns:repeat(10,1fr)}}
+@media(max-width:480px){.app-shell{padding:20px 36px 70px}.desktop-only{display:none}.brand-card{height:136px;padding:20px 24px;gap:16px}.brand-card-icon{width:68px;height:68px;font-size:45px}.brand-card-title{font-size:20px;letter-spacing:4px}.brand-card-sub{font-size:17px}.hero-badge{margin-top:72px;font-size:15px;letter-spacing:3px}.hero h1{font-size:58px!important;letter-spacing:-4px!important}.hero-sub{font-size:20px!important;line-height:1.5!important;margin-top:35px!important}.menu-card{padding:34px!important;border-radius:28px!important}.menu-card .card-icon{width:84px;height:84px}.menu-card h2{font-size:35px!important}.menu-card p{font-size:20px!important}.ad-label{right:31px;top:47px;font-size:16px}.avatar-grid{grid-template-columns:repeat(8,1fr);gap:7px}.avatar-choice{height:60px!important;border-radius:15px!important}.settings-row{gap:13px}.setting{padding:19px!important}.setting label{font-size:13px!important}.setting select{font-size:18px!important}.btn{height:76px!important;font-size:23px!important}.quick-info{gap:8px}.quick-item{padding:16px 5px!important}.screen-card{padding:20px!important;border-radius:26px!important}.screen-head h2{font-size:29px}.letter-options{grid-template-columns:repeat(7,1fr)}.answers{grid-template-columns:1fr}.wheel-stage{height:235px}.wheel{width:185px!important;height:185px!important}.room-code-card strong{font-size:42px}.room-settings-summary{grid-template-columns:1fr 1fr}}
 </style></head>
-<body><main class="wrap">
-<section class="hero main-menu"><span class="hero-logo-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M37 4 13 36h16l-4 24 26-35H35z"/></svg></span><div class="hero-badge"><span class="badge-mark">+</span> ARKADAŞLARLA OYNA <i></i> TÜRKÇE</div><h1>İsim Şehir</h1><p class="hero-sub">Harfini seç, cevaplarını doldur, arkadaşlarının cevaplarını değerlendir ve en yüksek puanı topla.</p></section>
-<section id="lobby" class="grid">
-<div class="card menu-card"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6v10M24 32v10M6 24h10M32 24h10M11 11l7 7M30 30l7 7M37 11l-7 7M18 30l-7 7"/><circle cx="24" cy="24" r="8"/></svg></div><h2>Oda Kur</h2><p>Sen host ol, ayarları belirle ve oda kodunu arkadaşlarınla paylaş.</p><div class="name-hint"><span>Oyuncu adı</span><span id="hostRecent"></span></div><input id="hostName" class="input" maxlength="18" placeholder="Adını yaz"><div class="avatar-picker-label">Avatarını seç</div><div id="hostAvatarGrid" class="avatar-grid"></div><div class="setup-settings">
-<div class="setup-settings-head"><div><small>OYUN AYARLARI</small><b>Maç başlamadan önce belirle</b></div><span>HOST</span></div>
-<div class="settings-row">
-<div class="setting"><label>TUR SÜRESİ</label><select id="durationSelect"><option value="30">30 saniye</option><option value="60">1 dakika</option><option value="120" selected>2 dakika</option><option value="180">3 dakika</option></select></div>
-<div class="setting"><label>HARF ÇARKI</label><select id="wheelSelect"><option value="on" selected>Açık</option><option value="off">Kapalı</option></select></div>
-<div class="setting"><label>OYUNCU SAYISI</label><select id="playerLimit"><option value="2">2 Oyuncu</option><option value="3">3 Oyuncu</option><option value="4" selected>4 Oyuncu</option><option value="5">5 Oyuncu</option><option value="6">6 Oyuncu</option><option value="7">7 Oyuncu</option><option value="8">8 Oyuncu</option><option value="9">9 Oyuncu</option><option value="10">10 Oyuncu</option></select></div>
-<div class="setting"><label>TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div>
-</div>
-</div>
-<button id="createRoomBtn" type="button" class="btn" onclick="createRoom()">Oda Oluştur <span class="button-arrow">→</span></button></div>
-<div class="card menu-card join"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 9h18v30H19M29 24H6m0 0 9-9m-9 9 9 9"/></svg></div><h2>Odaya Katıl</h2><p>Arkadaşından aldığın 6 haneli kodu gir ve yarışa katıl.</p><div class="name-hint"><span>Oyuncu adı</span><span id="guestRecent"></span></div><input id="guestName" class="input" maxlength="18" placeholder="Adını yaz"><input id="joinCode" class="input" maxlength="6" placeholder="6 haneli oda kodu" inputmode="numeric"><div class="avatar-picker-label">Avatarını seç</div><div id="guestAvatarGrid" class="avatar-grid"></div><button id="joinRoomBtn" type="button" class="btn secondary" onclick="joinRoom()">Odaya Katıl <span class="button-arrow">→</span></button></div>
-</section>
-<div class="quick-info"><div class="quick-item"><b>Puan</b><span>Yeşil oy = +10</span></div><div class="quick-item"><b>Harf</b><span>Her tur yeni harf</span></div><div class="quick-item"><b>Çoklu</b><span>Arkadaşlarınla oyna</span></div></div>
-<section id="room" class="room">
-<div class="card"><div class="room-hero"><div class="room-kicker">ARKADAŞLARINLA OYNA</div><div class="room-code-big" id="roomCode"></div><div class="room-share">Bu kodu arkadaşlarınla paylaş</div><div style="display:flex;gap:7px;margin-top:12px"><button class="btn secondary small copy-room-btn" onclick="copyRoom()">📋 Kodu Kopyala</button><button class="btn secondary small menu-btn" onclick="openGameMenu()">☰ Menü</button></div></div>
-<div class="player-panel"><div class="player-panel-head"><b>👥 Oyuncular</b><span id="playerCount" class="player-count">1 kişi</span></div><div id="players" class="players"></div></div><div id="netStatus" class="status" style="margin:10px 0">🌐 Oda bağlantısı hazırlanıyor...</div>
-<div id="categoryPanel" class="card category-panel" style="margin-top:16px">
-<div class="cat-head menu-section-title"><div><small>OYUNU HAZIRLA</small><h2 style="margin:4px 0 0">🎯 Kategoriler</h2></div><span class="lang">🇹🇷 Türkçe</span></div>
-<div id="categoryOptions" class="category-options"></div>
-<button class="btn secondary shuffle" onclick="shuffleCats()">🔀 Karıştır</button>
-<div class="selected-title letter-select-head"><span>🔤 Harfler</span><span id="letterSelectionCount">29 / 29 seçili</span></div>
-<div id="letterOptions" class="letter-options"></div>
-<div class="letter-actions"><button type="button" class="letter-action" onclick="selectAllLetters()">Tümünü Seç</button><button type="button" class="letter-action" onclick="selectCommonLetters()">Yaygın Harfler</button></div>
+<body>
+<main class="app-shell">
+  <section class="hero main-menu">
+    <div class="brand-card">
+      <span class="brand-card-icon">ϟ</span>
+      <div><div class="brand-card-title">İSİM ŞEHİR</div><div class="brand-card-sub">Arkadaşlarla oyna</div></div>
+    </div>
+    <div class="hero-badge">✦ &nbsp; ARKADAŞLARLA OYNA</div>
+    <h1>İsim Şehir</h1>
+    <p class="hero-sub">Harfini seç, cevaplarını doldur, arkadaşlarının<br class="desktop-only"> cevaplarını değerlendir ve en yüksek puanı topla.</p>
+  </section>
 
-</div><div class="room-settings-title">OYUN AYARLARI</div><div id="roomSettingsSummary" class="room-settings-summary"></div><button id="botBtn" class="btn secondary" onclick="addBot()">🤖 Test Botu Ekle</button><div class="start-area"><button id="startBtn" class="btn" onclick="startGame()">🚀 Oyunu Başlat</button><div class="start-hint">Host oyunu başlatabilir · Ayarlar tüm oyunculara otomatik senkronlanır</div></div></div>
-<div id="game" class="card game hidden"><div class="game-toolbar"><span class="game-over-badge"><span class="brand-dot"></span> İsim Şehir</span><button class="btn secondary small menu-btn" onclick="openGameMenu()">Menü</button></div><div class="roundbar"><h2 style="margin:0">Yarış</h2><span id="roundNo" class="roundnum">1. Tur</span></div>
-<div id="wheelArea" class="wheel-wrap"><div class="wheel-pointer"></div><div id="wheel" class="wheel"><div id="letter" class="wheel-center">?</div></div><div id="wheelBurst" class="wheel-burst">HARF HAZIR</div></div><div id="wheelLabel" class="wheel-label">Harf seçiliyor...</div><div class="timer-hud" id="timerHud"><div class="timer-row"><span class="timer-caption">Kalan süre</span><span id="timer" class="timer">120 sn</span></div><div class="timer-track"><div id="timerFill" class="timer-fill"></div></div></div><div id="status" class="status">Cevaplarını seçilen harfle doldur.</div><div id="answers" class="answers"></div>
-<button id="finishBtn" class="btn" onclick="finishRound()">Cevapları Gönder <span class="button-arrow">→</span></button><div class="scorebar"><div class="score"><span>Toplam Puan</span><b id="myScore">0</b></div><div class="score"><span>2. Oyuncu</span><b id="enemyScore">0</b></div><div class="score"><span>Fark</span><b id="roundScore">0</b></div></div></div>
-</section></main><div id="gameMenu" class="menu-overlay" onclick="if(event.target===this)closeGameMenu()"><div class="menu-box"><h2>Oyun Menüsü</h2><p>Oyundan çıkabilir, ana menüye dönebilir veya oyuna devam edebilirsin.</p><button class="btn cancel-btn" onclick="closeGameMenu()">Oyuna Devam Et</button><button class="btn secondary" onclick="returnToMainMenu()">Ana Menüye Dön</button><button class="btn danger-btn" onclick="leaveGame()">Odadan Çık</button></div></div><div id="roundTransition" class="round-transition" aria-hidden="true">
-  <div class="round-transition-card">
-    <div class="round-transition-kicker">YENİ TUR HAZIRLANIYOR</div>
-    <div id="roundTransitionTitle" class="round-transition-title">3. TUR</div>
-    <div id="roundTransitionSub" class="round-transition-sub">Harf hazırlanıyor...</div>
-    <div class="round-transition-progress"><span class="round-transition-dot"></span><span class="round-transition-dot"></span><span class="round-transition-dot"></span></div>
-  </div>
-</div><div id="toast" class="toast"></div>
+  <section id="lobby" class="lobby-stack">
+    <article class="menu-card">
+      <div class="ad-label">Son ad:<br>Oyuncu</div>
+      <div class="card-icon">🎮</div>
+      <h2>Oda Kur</h2>
+      <p>Host ol, ayarları belirle ve arkadaşlarını davet et.</p>
+      <div class="name-hint"><span>Oyuncu adın</span><span id="hostRecent"></span></div>
+      <input id="hostName" class="input" maxlength="18" placeholder="Oyuncu adın">
+      <div class="avatar-row-title"><span>AVATARINI SEÇ</span><span id="hostAvatarName">Nova</span></div>
+      <div id="hostAvatarGrid" class="avatar-grid"></div>
+
+      <div class="setup-settings">
+        <div class="settings-row">
+          <div class="setting"><label>TUR SÜRESİ</label><select id="durationSelect"><option value="30">30 saniye</option><option value="60">1 dakika</option><option value="120" selected>2 dakika</option><option value="180">3 dakika</option></select></div>
+          <div class="setting"><label>ÇARK</label><select id="wheelSelect"><option value="on" selected>Açık</option><option value="off">Kapalı</option></select></div>
+          <div class="setting"><label>OYUNCU</label><select id="playerLimit"><option value="2">2 Oyuncu</option><option value="3">3 Oyuncu</option><option value="4" selected>4 Oyuncu</option><option value="5">5 Oyuncu</option><option value="6">6 Oyuncu</option><option value="7">7 Oyuncu</option><option value="8">8 Oyuncu</option><option value="9">9 Oyuncu</option><option value="10">10 Oyuncu</option></select></div>
+          <div class="setting"><label>TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div>
+        </div>
+      </div>
+      <button id="createRoomBtn" type="button" class="btn primary-btn" onclick="createRoom()">Oda Oluştur <span>→</span></button>
+    </article>
+
+    <article class="menu-card join">
+      <div class="ad-label">Son ad:<br>Oyuncu</div>
+      <div class="card-icon cyan">♧</div>
+      <h2>Odaya Katıl</h2>
+      <p>Arkadaşından aldığın 6 haneli kodu gir ve yarışa gir.</p>
+      <div class="name-hint"><span>Oyuncu adın</span><span id="guestRecent"></span></div>
+      <input id="guestName" class="input" maxlength="18" placeholder="Oyuncu adın">
+      <input id="joinCode" class="input" maxlength="6" placeholder="6 haneli oda kodu" inputmode="numeric">
+      <div class="avatar-row-title"><span>AVATARINI SEÇ</span><span id="guestAvatarName">Nova</span></div>
+      <div id="guestAvatarGrid" class="avatar-grid"></div>
+      <button id="joinRoomBtn" type="button" class="btn secondary-btn" onclick="joinRoom()">Odaya Katıl <span>→</span></button>
+    </article>
+
+    <div class="quick-info">
+      <div class="quick-item"><b>Puan</b><span>Yeşil oy = +10</span></div>
+      <div class="quick-item"><b>Harf</b><span>Her tur yeni harf</span></div>
+      <div class="quick-item"><b>Çoklu</b><span>Arkadaşlarınla oyna</span></div>
+    </div>
+  </section>
+
+  <section id="room" class="screen room">
+    <div class="screen-card">
+      <div class="screen-head">
+        <div><span class="eyebrow">ARKADAŞLARINLA OYNA</span><h2>Oda Hazır</h2><p>Arkadaşlarını davet et ve oyunu birlikte hazırla.</p></div>
+        <button class="icon-button" onclick="openGameMenu()">☰</button>
+      </div>
+      <div class="room-code-card"><span>ODA KODU</span><strong id="roomCode"></strong><button class="btn secondary-btn small copy-room-btn" onclick="copyRoom()">Kodu Kopyala</button></div>
+      <div class="player-panel"><div class="section-line"><b>OYUNCULAR</b><span id="playerCount" class="player-count">1 kişi</span></div><div id="players" class="players"></div></div>
+      <div id="netStatus" class="status">🌐 Oda bağlantısı hazırlanıyor...</div>
+
+      <div id="categoryPanel" class="setup-panel">
+        <div class="section-line"><div><span class="eyebrow">OYUNU HAZIRLA</span><h3>Kategoriler</h3></div><button class="text-action shuffle" onclick="shuffleCats()">Karıştır</button></div>
+        <div id="categoryOptions" class="category-options"></div>
+        <div class="section-line letter-head"><div><span class="eyebrow">HARF HAVUZU</span><h3>Harfler</h3></div><span id="letterSelectionCount" class="cyan-text">29 / 29</span></div>
+        <div id="letterOptions" class="letter-options"></div>
+        <div class="letter-actions"><button type="button" class="letter-action" onclick="selectAllLetters()">Tümü</button><button type="button" class="letter-action" onclick="selectCommonLetters()">Yaygın</button></div>
+      </div>
+
+      <div class="room-settings-title">OYUN AYARLARI</div>
+      <div id="roomSettingsSummary" class="room-settings-summary"></div>
+      <button id="botBtn" class="btn secondary-btn" onclick="addBot()">🤖 Test Botu Ekle</button>
+      <div class="start-area"><button id="startBtn" class="btn primary-btn" onclick="startGame()">Oyunu Başlat <span>→</span></button><div class="start-hint">Host oyunu başlatabilir · Ayarlar otomatik senkronlanır</div></div>
+    </div>
+
+    <div id="game" class="screen-card game hidden">
+      <div class="screen-head compact"><div><span class="eyebrow">İSİM ŞEHİR</span><h2>Yarış</h2></div><div class="head-actions"><span id="roundNo" class="roundnum">1. Tur</span><button class="icon-button" onclick="openGameMenu()">☰</button></div></div>
+      <div class="wheel-stage" id="wheelArea"><div class="wheel-pointer">▼</div><div id="wheel" class="wheel"><div id="letter" class="wheel-center">?</div></div><div id="wheelBurst" class="wheel-burst">HARF HAZIR</div></div>
+      <div id="wheelLabel" class="wheel-label">Harf seçiliyor...</div>
+      <div class="timer-hud" id="timerHud"><div class="timer-row"><span>KALAN SÜRE</span><strong id="timer">120 sn</strong></div><div class="timer-track"><div id="timerFill" class="timer-fill"></div></div></div>
+      <div id="status" class="status">Cevaplarını seçilen harfle doldur.</div>
+      <div id="answers" class="answers"></div>
+      <button id="finishBtn" class="btn primary-btn" onclick="finishRound()">Cevapları Gönder <span>→</span></button>
+      <div class="scorebar"><div class="score"><span>TOPLAM PUAN</span><b id="myScore">0</b></div><div class="score"><span>2. OYUNCU</span><b id="enemyScore">0</b></div><div class="score"><span>FARK</span><b id="roundScore">0</b></div></div>
+    </div>
+  </section>
+</main>
+
+<div id="gameMenu" class="menu-overlay" onclick="if(event.target===this)closeGameMenu()"><div class="menu-box"><span class="eyebrow">OYUN MENÜSÜ</span><h2>Ne yapmak istiyorsun?</h2><p>Oyuna devam edebilir veya ana menüye dönebilirsin.</p><button class="btn primary-btn cancel-btn" onclick="closeGameMenu()">Oyuna Devam Et</button><button class="btn secondary-btn" onclick="returnToMainMenu()">Ana Menüye Dön</button><button class="btn danger-btn" onclick="leaveGame()">Odadan Çık</button></div></div>
+<div id="roundTransition" class="round-transition" aria-hidden="true"><div class="round-transition-card"><span class="eyebrow">YENİ TUR</span><div id="roundTransitionTitle">3. TUR</div><p id="roundTransitionSub">Harf hazırlanıyor...</p><div class="round-transition-progress"><span class="round-transition-dot"></span><span class="round-transition-dot"></span><span class="round-transition-dot"></span></div></div></div>
+<div id="toast" class="toast"></div>
 <script>
 const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','3 harfli kelime','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
