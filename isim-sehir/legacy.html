@@ -2750,6 +2750,140 @@ body{background:
   .room-code-big{font-size:36px!important}
 }
 
+
+/* DESIGN SYSTEM V3 — in-game HUD */
+.game-toolbar{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:auto 1fr auto!important;
+  gap:12px!important;
+  align-items:center!important;
+  min-height:58px!important;
+  padding:9px 11px!important;
+  margin-bottom:16px!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:18px!important;
+  background:rgba(8,10,20,.82)!important;
+  box-shadow:0 16px 45px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.045)!important;
+  backdrop-filter:blur(16px)!important;
+}
+.game-toolbar:after{
+  content:"";position:absolute;left:16px;right:16px;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(139,92,246,.48),rgba(34,211,238,.32),transparent);
+}
+.game-toolbar .menu-btn{
+  min-width:44px!important;min-height:40px!important;border-radius:12px!important;
+}
+.roundbar{
+  min-width:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:10px!important;padding:0!important;
+}
+.roundnum{
+  border:1px solid rgba(139,92,246,.28)!important;
+  background:rgba(139,92,246,.10)!important;
+  color:#d4ceff!important;
+}
+.game-toolbar .timer{
+  justify-self:end;
+  min-width:86px;padding:8px 12px;border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;background:rgba(255,255,255,.025);
+  font-variant-numeric:tabular-nums;
+}
+.game-toolbar .timer.danger{
+  color:#ff8ba3!important;border-color:rgba(255,85,119,.32)!important;
+  background:rgba(255,85,119,.07)!important;
+}
+.game{
+  position:relative;
+}
+.game > .card{
+  border-radius:26px!important;
+  border-color:rgba(255,255,255,.085)!important;
+  background:linear-gradient(145deg,rgba(12,15,29,.97),rgba(5,7,14,.98))!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.40),inset 0 1px rgba(255,255,255,.045)!important;
+}
+.roundbar + .letter,
+.game .letter{
+  margin:20px auto 12px!important;
+  width:min(220px,55vw);
+  height:min(220px,55vw);
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%;
+  border:1px solid rgba(139,92,246,.30);
+  background:
+    radial-gradient(circle at 35% 28%,rgba(255,255,255,.09),transparent 28%),
+    radial-gradient(circle,rgba(139,92,246,.14),rgba(5,7,14,.96) 67%);
+  box-shadow:
+    0 0 0 7px rgba(139,92,246,.035),
+    0 0 55px rgba(139,92,246,.20),
+    inset 0 0 45px rgba(34,211,238,.055);
+  font-size:clamp(72px,13vw,118px)!important;
+  line-height:1!important;
+  text-shadow:0 0 24px rgba(139,92,246,.72),0 0 65px rgba(34,211,238,.28)!important;
+}
+.timer{
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.4px;
+}
+.status{
+  border-radius:14px!important;
+  border-color:rgba(255,255,255,.08)!important;
+  background:linear-gradient(90deg,rgba(139,92,246,.075),rgba(34,211,238,.035))!important;
+}
+.answers{
+  gap:12px!important;
+  margin-top:18px;
+}
+.answer{
+  padding:14px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;
+  background:rgba(255,255,255,.018);
+}
+.answer label{
+  color:#9ea7c0!important;
+  font-weight:800;
+  letter-spacing:.1px;
+}
+.answer input{
+  min-height:48px!important;
+  background:#050711!important;
+  border-color:rgba(255,255,255,.09)!important;
+}
+.answer input:focus{
+  border-color:rgba(139,92,246,.70)!important;
+  box-shadow:0 0 0 3px rgba(139,92,246,.12),0 0 22px rgba(139,92,246,.08)!important;
+}
+.game .btn{
+  min-height:48px;
+}
+.scorebar{
+  gap:10px!important;
+  margin-top:18px!important;
+}
+.score{
+  min-height:76px;
+  display:flex;flex-direction:column;justify-content:center;
+  border-radius:16px!important;
+}
+.score b{font-variant-numeric:tabular-nums}
+@media(max-width:700px){
+  .game-toolbar{grid-template-columns:auto 1fr auto!important;gap:7px!important;padding:8px!important}
+  .roundbar{font-size:12px}
+  .game .letter{margin:16px auto 10px!important}
+  .answer{padding:12px}
+  .answers{gap:9px!important}
+  .scorebar{grid-template-columns:repeat(3,1fr)!important;gap:7px!important}
+  .score{padding:10px 7px;min-height:68px}
+  .score b{font-size:19px}
+}
+@media(max-width:390px){
+  .game-toolbar .timer{min-width:70px;padding:7px 8px;font-size:20px}
+  .roundnum{padding:6px 8px}
+}
+
 </style><script id="vortex-bg-script">
 (()=>{const c=document.createElement('canvas');c.id='vortex-bg';document.body.prepend(c);document.body.classList.add('vortex-ready');const x=c.getContext('2d');let w=0,h=0,t=0,ps=[];const count=420,TAU=Math.PI*2;
 function resize(){w=c.width=innerWidth*devicePixelRatio;h=c.height=innerHeight*devicePixelRatio;c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';ps=[];for(let i=0;i<count;i++)ps.push(p());}
