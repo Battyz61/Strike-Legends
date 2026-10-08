@@ -50,7 +50,9 @@ export default function App() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#03040b] text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#03040b] text-white selection:bg-violet-500/30">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(139,92,246,.20),transparent_36%),radial-gradient(circle_at_100%_60%,rgba(34,211,238,.08),transparent_32%)]" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
       <Vortex
         particleCount={280}
         rangeY={520}
