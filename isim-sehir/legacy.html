@@ -3268,6 +3268,31 @@ main,.main-menu{background:transparent!important}
 .room .room-settings-title{color:rgba(255,255,255,.42)!important}.room .room-settings-title:before{background:linear-gradient(#8b5cf6,#22d3ee)!important}
 .room .start-area{border-color:rgba(255,255,255,.07)!important}.room .start-hint{color:rgba(255,255,255,.38)!important}
 .room .quick-item b{color:#f5d878!important}.room .quick-item span{color:rgba(255,255,255,.38)!important}
+
+/* GLOBAL NEON ARENA THEME — setup + every non-room state */
+.setup-card,.join-card,.game-shell,.game-card,.results-card,.score-card,.category-panel,.player-panel,.settings-panel,.vote-card,.scorebar,.roundbar,.quick-info,.quick-item,.waiting-card{
+ background:linear-gradient(145deg,rgba(14,16,29,.95),rgba(6,8,15,.98))!important;
+ border-color:rgba(255,255,255,.085)!important;
+ box-shadow:0 22px 70px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.035)!important;
+ color:#f7f8fc!important;
+}
+.setup-card h1,.setup-card h2,.setup-card h3,.join-card h1,.join-card h2,.category-panel h3,.settings-panel h3{color:#f7f8fc!important}
+.setup-card .field-label,.setup-card .setting label,.setup-card .section-title,.category-panel .section-title,.settings-panel .section-title{color:rgba(255,255,255,.40)!important;letter-spacing:.16em!important}
+.setup-card input,.setup-card select,.join-card input,.join-card select,.settings-panel select,.setting select,.input,select,input,textarea{background:#050711!important;color:#f7f8fc!important;border-color:rgba(255,255,255,.09)!important}
+.setup-card input:focus,.setup-card select:focus,.join-card input:focus,.join-card select:focus,.settings-panel select:focus{border-color:rgba(139,92,246,.68)!important;box-shadow:0 0 0 4px rgba(139,92,246,.10)!important}
+.setup-card .avatar-choice,.setup-card .avatar-option,.avatar-choice,.avatar-option{background:rgba(255,255,255,.025)!important;border-color:rgba(255,255,255,.10)!important;color:#fff!important}
+.setup-card .avatar-choice.selected,.setup-card .avatar-option.selected,.avatar-choice.selected,.avatar-option.selected{background:rgba(139,92,246,.12)!important;border-color:#c4b5fd!important;box-shadow:0 0 0 2px rgba(139,92,246,.14),0 0 22px rgba(139,92,246,.12)!important}
+.setup-card .cat-chip,.setup-card .category-chip,.setup-card .category-option,.setup-card .option-chip,.category-panel .cat-chip,.category-panel .category-chip{background:rgba(255,255,255,.018)!important;border-color:rgba(255,255,255,.09)!important;color:rgba(255,255,255,.42)!important;border-radius:999px!important}
+.setup-card .cat-chip.active,.setup-card .category-chip.active,.setup-card .category-option.active,.setup-card .option-chip.active,.category-panel .cat-chip.active,.category-panel .category-chip.active{background:rgba(139,92,246,.16)!important;border-color:rgba(167,139,250,.72)!important;color:#eee9ff!important}
+.setup-card .letter-chip,.setup-card .letter-option,.letter-options .letter-chip,.letter-options .letter-option{background:rgba(34,211,238,.025)!important;border-color:rgba(34,211,238,.28)!important;color:#8e9ab1!important;border-radius:10px!important}
+.setup-card .letter-chip.active,.setup-card .letter-option.active,.letter-options .letter-chip.active,.letter-options .letter-option.active{background:rgba(34,211,238,.10)!important;border-color:rgba(34,211,238,.72)!important;color:#cffafe!important}
+.setup-card .btn,.setup-card .create-room-btn,.setup-card .start-game-btn,.setup-card .main-action,.join-card .btn,.join-card .join-btn{background:linear-gradient(110deg,#7c3aed,#d946ef)!important;color:#fff!important;border:0!important;box-shadow:0 14px 38px rgba(139,92,246,.22)!important;border-radius:15px!important}
+.setup-card .btn.secondary,.join-card .btn.secondary,.setup-card .back-btn,.join-card .back-btn{background:rgba(34,211,238,.06)!important;border:1px solid rgba(34,211,238,.20)!important;color:#cffafe!important}
+.setup-settings,.room-settings-summary,.room-setting-pill{background:rgba(255,255,255,.018)!important;border-color:rgba(255,255,255,.07)!important}
+.setup-settings-head span{color:#c4b5fd!important;background:rgba(139,92,246,.10)!important;border-color:rgba(139,92,246,.28)!important}
+.setup-card .quick-item b,.quick-item b{color:#f5d878!important}.setup-card .quick-item span,.quick-item span{color:rgba(255,255,255,.38)!important}
+:root{--bg:#03040b!important;--panel:#090b15!important;--line:rgba(255,255,255,.09)!important;--text:#f7f8fc!important;--muted:rgba(255,255,255,.48)!important;--blue:#8b5cf6!important;--cyan:#22d3ee!important;--green:#34d399!important;--red:#fb7185!important}
+body{background:#03040b!important;color:#f7f8fc!important}
 </style>
 <script id="vortex-bg-script">
 (()=>{const c=document.createElement('canvas');c.id='vortex-bg';document.body.prepend(c);document.body.classList.add('vortex-ready');const x=c.getContext('2d');let w=0,h=0,t=0,ps=[];const count=420,TAU=Math.PI*2;
