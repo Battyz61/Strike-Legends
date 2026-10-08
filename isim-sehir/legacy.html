@@ -3243,6 +3243,31 @@ main,.main-menu{background:transparent!important}
 @media(max-width:380px){
  .wheel-wrap{height:202px!important}.wheel{width:174px!important;height:174px!important}
 }
+
+/* FINAL NEON ARENA OVERRIDE — must be last */
+.room .card,.room .room-hero,.room #categoryPanel,.room .player-panel,.room .player,.room .room-settings-summary > *, .room .setup-settings,.room .setting,.room .quick-item{
+ background:linear-gradient(145deg,rgba(14,16,29,.95),rgba(6,8,15,.98))!important;
+ border-color:rgba(255,255,255,.085)!important;
+ box-shadow:0 20px 60px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.035)!important;
+}
+.room .room-hero{
+ background:radial-gradient(circle at 86% 8%,rgba(34,211,238,.10),transparent 30%),radial-gradient(circle at 8% 92%,rgba(139,92,246,.13),transparent 38%),linear-gradient(145deg,#17122f,#070b16)!important;
+ border-color:rgba(139,92,246,.32)!important;
+}
+.room .room-kicker{color:#c4b5fd!important}.room .room-code-big{color:#f7f8fc!important;text-shadow:0 0 30px rgba(139,92,246,.3)!important}
+.room .player-panel{background:rgba(5,7,17,.72)!important}.room #players .player{background:linear-gradient(145deg,rgba(17,19,34,.94),rgba(8,10,18,.98))!important;border-color:rgba(255,255,255,.075)!important}
+.room #players .player.host{background:linear-gradient(145deg,rgba(42,28,75,.48),rgba(8,10,18,.98))!important;border-color:rgba(167,139,250,.52)!important}
+.room .room-settings-summary > *,.room .setup-settings,.room .setting{background:rgba(255,255,255,.018)!important}
+.room #categoryPanel{background:linear-gradient(145deg,rgba(14,16,29,.96),rgba(6,8,15,.99))!important}
+.room .cat-chip.active,.room .selected-cat{background:rgba(139,92,246,.16)!important;border-color:rgba(167,139,250,.72)!important;color:#eee9ff!important}
+.room .letter-chip.active{background:rgba(34,211,238,.10)!important;border-color:rgba(34,211,238,.72)!important;color:#cffafe!important;box-shadow:0 0 16px rgba(34,211,238,.10)!important}
+.room #startBtn{background:linear-gradient(110deg,#7c3aed,#d946ef)!important;box-shadow:0 14px 38px rgba(139,92,246,.24)!important}
+.room #botBtn,.room .copy-room-btn,.room .menu-btn{background:rgba(34,211,238,.06)!important;border-color:rgba(34,211,238,.20)!important;color:#cffafe!important}
+.room .player-count{background:rgba(139,92,246,.10)!important;border-color:rgba(139,92,246,.28)!important;color:#c4b5fd!important}
+.room #netStatus{background:rgba(34,211,238,.045)!important;border-color:rgba(34,211,238,.16)!important;color:#a5f3fc!important}
+.room .room-settings-title{color:rgba(255,255,255,.42)!important}.room .room-settings-title:before{background:linear-gradient(#8b5cf6,#22d3ee)!important}
+.room .start-area{border-color:rgba(255,255,255,.07)!important}.room .start-hint{color:rgba(255,255,255,.38)!important}
+.room .quick-item b{color:#f5d878!important}.room .quick-item span{color:rgba(255,255,255,.38)!important}
 </style>
 <script id="vortex-bg-script">
 (()=>{const c=document.createElement('canvas');c.id='vortex-bg';document.body.prepend(c);document.body.classList.add('vortex-ready');const x=c.getContext('2d');let w=0,h=0,t=0,ps=[];const count=420,TAU=Math.PI*2;
