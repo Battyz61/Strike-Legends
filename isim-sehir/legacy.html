@@ -876,7 +876,7 @@ body{min-height:100dvh}
           <div class="setting"><label>TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div>
         </div>
       </div>
-      <button id="createRoomBtn" type="button" class="btn primary-btn" onclick="openCreateRoomScreen()">Oda Oluştur <span>→</span></button>
+      <button id="createRoomBtn" type="button" class="btn primary-btn" onclick="openFreshCategoryScreen()">Oda Oluştur <span>→</span></button>
     </article>
 
     <article class="menu-card join">
@@ -974,7 +974,17 @@ function renderFreshAvatars(){const box=$('freshAvatarGrid');if(!box)return;box.
 function renderFreshCategories(){const box=$('freshCategoryOptions');if(!box)return;box.innerHTML=freshCats.map(x=>'<button type="button" class="fresh-chip '+(freshSelectedCats.includes(x)?'active':'')+'">'+x+'</button>').join('');box.querySelectorAll('.fresh-chip').forEach((b,i)=>b.onclick=()=>{const x=freshCats[i];if(freshSelectedCats.includes(x)){if(freshSelectedCats.length>1)freshSelectedCats=freshSelectedCats.filter(v=>v!==x)}else freshSelectedCats.push(x);renderFreshCategories()})}
 function renderFreshLetters(){const box=$('freshLetterOptions');if(!box)return;box.innerHTML=freshLetters.map(x=>'<button type="button" class="fresh-letter '+(freshSelectedLetters.includes(x)?'active':'')+'">'+x+'</button>').join('');box.querySelectorAll('.fresh-letter').forEach((b,i)=>b.onclick=()=>{const x=freshLetters[i];if(freshSelectedLetters.includes(x)){if(freshSelectedLetters.length>1)freshSelectedLetters=freshSelectedLetters.filter(v=>v!==x)}else freshSelectedLetters.push(x);renderFreshLetters()})}
 function freshSelectAllLetters(){freshSelectedLetters=[...freshLetters];renderFreshLetters()}
-function openFreshCategoryScreen(){ $('createRoomScreen')?.classList.add('hidden');$('freshCategoryScreen')?.classList.remove('hidden');renderFreshCategories();renderFreshLetters()}
+function openFreshCategoryScreen(){
+  const visibleName=$('hostName')?.value?.trim()||'Oyuncu';
+  const freshName=$('freshHostName');
+  if(freshName) freshName.value=visibleName;
+  const maps=[['durationSelect','freshDuration'],['wheelSelect','freshWheel'],['playerLimit','freshPlayers'],['roundLimit','freshRounds']];
+  maps.forEach(([from,to])=>{const a=$(from),b=$(to);if(a&&b)b.value=a.value});
+  $('lobby')?.classList.add('hidden');
+  $('createRoomScreen')?.classList.add('hidden');
+  $('freshCategoryScreen')?.classList.remove('hidden');
+  renderFreshCategories();renderFreshLetters();
+}
 function finishFreshCreateRoom(){const name=($('freshHostName')?.value||'').trim()||'Oyuncu';const code=String(Math.floor(100000+Math.random()*900000));const s={duration:$('freshDuration')?.value||'120',wheel:$('freshWheel')?.value||'on',players:$('freshPlayers')?.value||'4',rounds:$('freshRounds')?.value||'5'};$('freshCategoryScreen')?.classList.add('hidden');$('freshLobbyScreen')?.classList.remove('hidden');$('freshRoomCode').textContent=code;$('freshPlayerCount').textContent='1 / '+s.players;$('freshPlayers').innerHTML='<div class="fresh-player">'+avatarSvg(freshSelectedAvatar)+'<span>'+name+' <b>HOST</b></span></div>';$('freshSettingsSummary').innerHTML='<div><b>'+s.duration+' sn</b><span>Tur süresi</span></div><div><b>'+(s.wheel==='on'?'Açık':'Kapalı')+'</b><span>Harf çarkı</span></div><div><b>'+s.players+'</b><span>Oyuncu</span></div><div><b>'+s.rounds+'</b><span>Tur</span></div>'}
 async function freshCopyRoom(){const code=$('freshRoomCode')?.textContent||'';try{await navigator.clipboard.writeText(code);toast('Oda kodu kopyalandı: '+code)}catch(e){toast('Oda kodu: '+code)}}
 function freshStartPlaceholder(){$('freshLobbyScreen')?.classList.add('hidden');$('freshGameScreen')?.classList.remove('hidden');freshBuildGame()}
@@ -1017,7 +1027,15 @@ function renderFreshLetters(){
  box.querySelectorAll('.fresh-letter').forEach((b,i)=>b.onclick=()=>{const x=freshLetters[i];if(freshSelectedLetters.includes(x)){if(freshSelectedLetters.length>1)freshSelectedLetters=freshSelectedLetters.filter(v=>v!==x)}else freshSelectedLetters.push(x);renderFreshLetters()});
 }
 function freshSelectAllLetters(){freshSelectedLetters=[...freshLetters];renderFreshLetters()}
-function openFreshCategoryScreen(){document.getElementById('createRoomScreen')?.classList.add('hidden');document.getElementById('freshCategoryScreen')?.classList.remove('hidden');renderFreshCategories();renderFreshLetters()}
+function openFreshCategoryScreen(){
+ const visibleName=document.getElementById('hostName')?.value?.trim()||'Oyuncu';
+ const freshName=document.getElementById('freshHostName'); if(freshName)freshName.value=visibleName;
+ [['durationSelect','freshDuration'],['wheelSelect','freshWheel'],['playerLimit','freshPlayers'],['roundLimit','freshRounds']].forEach(([from,to])=>{const a=document.getElementById(from),b=document.getElementById(to);if(a&&b)b.value=a.value});
+ document.getElementById('lobby')?.classList.add('hidden');
+ document.getElementById('createRoomScreen')?.classList.add('hidden');
+ document.getElementById('freshCategoryScreen')?.classList.remove('hidden');
+ renderFreshCategories();renderFreshLetters();
+}
 function finishFreshCreateRoom(){
  const name=(document.getElementById('freshHostName')?.value||'').trim()||'Oyuncu';
  const code=String(Math.floor(100000+Math.random()*900000));
