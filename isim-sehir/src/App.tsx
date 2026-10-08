@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { ArrowRight, Gamepad2, Globe2, Sparkles, Users, Zap } from "lucide-react"
 import { Vortex } from "@/components/ui/vortex"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 const avatars = ["Nova", "Pulse", "Vega", "Orbit", "Flux", "Echo", "Lumen", "Astra"]
 const categories = ["İsim","Hayvan","Şehir","Eşya","Bitki","Ülke","Ünlü","Meslek","Dizi/Film","Sanatçı","Futbolcu","Yemek malzemesi","3 harfli kelime","8 harfli kelime","Şarkı","Erkek ismi","Renk","Yabancı isim","Makyaj malzemesi","Yiyecek","Tatlı"]
@@ -93,7 +94,7 @@ export default function App() {
         </section>
 
         <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[26px] border border-violet-300/10 bg-[#090b15]/85 p-5 shadow-[0_25px_80px_rgba(0,0,0,.45)] backdrop-blur-xl">
+          <Card className="rounded-[26px] border border-violet-300/10 bg-[#090b15]/85 p-5 shadow-[0_25px_80px_rgba(0,0,0,.45)] backdrop-blur-xl">
             <div className="mb-5 flex items-start justify-between">
               <div>
                 <div className="mb-3 grid size-12 place-items-center rounded-2xl border border-violet-400/20 bg-violet-500/10">
@@ -167,7 +168,7 @@ export default function App() {
             </Button>
           </div>
 
-          <div className="rounded-[26px] border border-cyan-300/10 bg-[#090b15]/85 p-5 shadow-[0_25px_80px_rgba(0,0,0,.45)] backdrop-blur-xl">
+          <Card className="rounded-[26px] border border-cyan-300/10 bg-[#090b15]/85 p-5 shadow-[0_25px_80px_rgba(0,0,0,.45)] backdrop-blur-xl">
             <div className="mb-5 flex items-start justify-between">
               <div>
                 <div className="mb-3 grid size-12 place-items-center rounded-2xl border border-cyan-400/20 bg-cyan-500/10">
