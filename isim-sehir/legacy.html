@@ -2835,4 +2835,81 @@ body.vortex-page{background:radial-gradient(circle at 50% -10%,rgba(139,92,246,.
  #game .scorebar{grid-template-columns:1fr!important}
  #game .roundbar{align-items:flex-start!important}
 }
-</style></body></html>
+</style><style id="final-screen-hard-override">
+/* FINAL SCREEN OVERRIDE — no legacy green/gold bleed */
+html,body{background:#03040b!important;color:#f7f8fc!important}
+body.vortex-page{background:
+radial-gradient(circle at 50% -10%,rgba(139,92,246,.18),transparent 38%),
+radial-gradient(circle at 100% 60%,rgba(34,211,238,.08),transparent 32%),
+#03040b!important}
+#room,#game{background:transparent!important;color:#f7f8fc!important}
+#room .room-shell,#game .game-shell{
+ background:linear-gradient(145deg,rgba(16,20,38,.94),rgba(7,10,19,.97))!important;
+ border:1px solid rgba(255,255,255,.09)!important;
+ box-shadow:0 30px 90px rgba(0,0,0,.55),inset 0 1px rgba(255,255,255,.035)!important;
+ border-radius:26px!important;
+}
+#room .room-header,#game .game-header{
+ background:rgba(8,10,20,.72)!important;
+ border:1px solid rgba(255,255,255,.09)!important;
+ border-radius:20px!important;
+}
+#room .room-surface{
+ background:rgba(9,11,21,.72)!important;
+ border:1px solid rgba(255,255,255,.09)!important;
+ border-radius:20px!important;
+}
+#room .room-eyebrow,#room .surface-heading>div>span,#room .selection-heading span,
+#room .room-start span,#game .game-intro>span,#game .timer-row>span,
+#game .score>span{color:rgba(255,255,255,.52)!important}
+#room h1,#room h2,#game h1{color:#f7f8fc!important}
+#room h1 span{background:linear-gradient(90deg,#fff,#a99eff,#61e8ff)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important}
+#room .room-code-box strong{background:linear-gradient(90deg,#fff,#b9b1ff,#61e8ff)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important}
+#room .room-icon-btn,#room .subtle-action,#room .selection-actions button,#room #botBtn{
+ background:rgba(8,10,20,.82)!important;border:1px solid rgba(255,255,255,.10)!important;color:rgba(255,255,255,.72)!important;
+}
+#room .player{background:rgba(16,20,38,.78)!important;border:1px solid rgba(255,255,255,.09)!important}
+#room .player.host{background:linear-gradient(90deg,rgba(109,93,252,.16),rgba(34,211,238,.04))!important;border-color:rgba(139,92,246,.35)!important}
+#room .category-options button,#room .cat-chip,#room .category-chip,#room .letter-chip{
+ background:rgba(8,10,20,.82)!important;border:1px solid rgba(255,255,255,.10)!important;color:rgba(255,255,255,.72)!important;
+}
+#room .category-options button.active,#room .cat-chip.active,#room .category-chip.active,#room .letter-chip.active{
+ background:linear-gradient(135deg,#6858ff,#8d55f5)!important;border-color:#a99eff!important;color:#fff!important;
+ box-shadow:0 0 22px rgba(109,93,252,.28)!important;
+}
+#room .room-setting-pill{background:rgba(8,10,20,.72)!important;border:1px solid rgba(255,255,255,.09)!important}
+#room #startBtn{
+ background:linear-gradient(100deg,#6858ff,#8d55f5)!important;color:#fff!important;border:0!important;
+ box-shadow:0 9px 28px rgba(109,93,252,.25)!important;
+}
+#game .game-brand{color:#f7f8fc!important}
+#game .game-brand span{background:#22d3ee!important;box-shadow:0 0 16px rgba(34,211,238,.7)!important}
+#game .game-intro{text-align:center!important}
+#game .game-intro h1{color:#f7f8fc!important}
+#game .roundnum{background:rgba(109,93,252,.10)!important;border:1px solid rgba(139,92,246,.25)!important;color:#ddd6fe!important}
+#game .wheel{border-color:rgba(139,92,246,.55)!important;background:conic-gradient(#30236b 0 30deg,#11152a 30deg 60deg,#5b2b78 60deg 90deg,#11152a 90deg 120deg,#30236b 120deg 150deg,#11152a 150deg 180deg,#5b2b78 180deg 210deg,#11152a 210deg 240deg,#30236b 240deg 270deg,#11152a 270deg 300deg,#5b2b78 300deg 330deg,#11152a 330deg 360deg)!important;box-shadow:0 0 38px rgba(109,93,252,.25),0 0 80px rgba(34,211,238,.08)!important}
+#game .wheel:after{background:#050711!important;border-color:rgba(139,92,246,.55)!important}
+#game .wheel-pointer{border-top-color:#67e8ff!important;filter:drop-shadow(0 0 8px #22d3ee)!important}
+#game .wheel-center{color:#fff!important}
+#game .wheel-label{color:#9b9fba!important}
+#game .timer-hud{background:rgba(8,10,20,.82)!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:18px!important}
+#game .timer-row strong{color:#dfe3ff!important}
+#game .timer-track{background:rgba(255,255,255,.08)!important}
+#game .timer-fill{background:linear-gradient(90deg,#6858ff,#22d3ee)!important}
+#game .status{background:linear-gradient(90deg,rgba(109,93,252,.10),rgba(34,211,238,.04))!important;border:1px solid rgba(139,92,246,.18)!important;color:#c9c3ff!important}
+#game .answer{background:rgba(9,11,21,.72)!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:18px!important}
+#game .answer label{color:#a9aec5!important}
+#game .answer input{background:#050711!important;border:1px solid rgba(255,255,255,.10)!important;color:#fff!important}
+#game .game-submit-btn{
+ background:linear-gradient(100deg,#6858ff,#8d55f5)!important;color:#fff!important;border:0!important;
+ box-shadow:0 9px 28px rgba(109,93,252,.25)!important;border-radius:15px!important;
+}
+#game .score{background:linear-gradient(145deg,rgba(16,20,38,.9),rgba(7,10,19,.96))!important;border:1px solid rgba(255,255,255,.09)!important}
+#game .score b{color:#f7f8fc!important}
+@media(max-width:700px){
+ #room .room-shell,#game .game-shell{border-radius:22px!important}
+ #room .room-header,#game .game-header{border-radius:18px!important}
+ #game .game-intro h1{font-size:28px!important;line-height:1.15!important}
+}
+</style>
+</body></html>
