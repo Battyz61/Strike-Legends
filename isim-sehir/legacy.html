@@ -3053,7 +3053,29 @@ body{background:
   .game .answer input{min-height:47px!important}
 }
 
-</style><script id="vortex-bg-script">
+<style id="vote-polish-v6">
+.vote-title{font-size:clamp(22px,3vw,28px);letter-spacing:-.03em;margin-bottom:6px;color:#fff}
+.vote-help{max-width:680px;line-height:1.55;color:rgba(255,255,255,.56)}
+.vote-category{margin:22px 0 26px}
+.vote-category-title{display:flex;align-items:center;gap:9px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.62);margin:0 0 10px}
+.vote-category-title::before{content:"";width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#22d3ee);box-shadow:0 0 14px rgba(139,92,246,.55)}
+.vote-card{border:1px solid rgba(255,255,255,.09);border-radius:20px;background:linear-gradient(145deg,rgba(18,20,37,.96),rgba(8,10,20,.98));box-shadow:0 18px 50px rgba(0,0,0,.2)}
+.vote-player{min-height:76px;padding:13px 15px;border-bottom:1px solid rgba(255,255,255,.065);transition:background .18s ease}
+.vote-player:hover{background:rgba(139,92,246,.045)}
+.vote-name{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.42)}
+.vote-value{font-size:19px;color:#fff}
+.vote-note{color:rgba(255,255,255,.38)}
+.vote-actions{gap:7px}
+.own-answer-label{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045)}
+.vote-circle{width:44px;height:44px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.055);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.vote-circle.yes:hover,.vote-circle.yes.selected{background:rgba(52,211,153,.18);border-color:rgba(52,211,153,.7);box-shadow:0 0 22px rgba(52,211,153,.2)}
+.vote-circle.no:hover,.vote-circle.no.selected{background:rgba(251,113,133,.16);border-color:rgba(251,113,133,.7);box-shadow:0 0 22px rgba(251,113,133,.18)}
+.vote-circle.selected{transform:scale(1.06)}
+.vote-summary{padding:14px 16px;border:1px solid rgba(139,92,246,.18);border-radius:16px;background:linear-gradient(90deg,rgba(139,92,246,.08),rgba(34,211,238,.035))}
+.vote-summary b{font-size:20px;color:#fff}
+.vote-discussion-note{border-color:rgba(34,211,238,.13);background:linear-gradient(90deg,rgba(139,92,246,.08),rgba(34,211,238,.055));color:rgba(255,255,255,.62)}
+@media(max-width:700px){.vote-category{margin:18px 0 22px}.vote-card{border-radius:16px}.vote-player{min-height:70px}.vote-value{font-size:17px}.vote-circle{width:42px;height:42px}}
+</style></style><script id="vortex-bg-script">
 (()=>{const c=document.createElement('canvas');c.id='vortex-bg';document.body.prepend(c);document.body.classList.add('vortex-ready');const x=c.getContext('2d');let w=0,h=0,t=0,ps=[];const count=420,TAU=Math.PI*2;
 function resize(){w=c.width=innerWidth*devicePixelRatio;h=c.height=innerHeight*devicePixelRatio;c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';ps=[];for(let i=0;i<count;i++)ps.push(p());}
 function p(){return{x:Math.random()*w,y:h*.5+(Math.random()-.5)*Math.min(h*.65,700),vx:0,vy:0,life:Math.random()*180,ttl:70+Math.random()*150,s:0.3+Math.random()*1.7,r:.5+Math.random()*1.8,h:235+Math.random()*95}}
