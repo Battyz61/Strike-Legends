@@ -2645,6 +2645,111 @@ body{background:radial-gradient(900px 600px at 50% -12%,#173c29 0,transparent 66
 <style id="vortex-bg-style">
 #vortex-bg{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:.72;mix-blend-mode:screen}
 body.vortex-ready{background:#03040b!important}
+
+/* DESIGN SYSTEM V2 — lobby / room polish */
+:root{
+  --game-bg:#03040b;--game-surface:#090b15;--game-raised:#101426;
+  --game-border:rgba(255,255,255,.09);--game-violet:#8b5cf6;--game-cyan:#22d3ee;
+}
+body{background:
+  radial-gradient(900px 520px at 50% -18%,rgba(139,92,246,.16),transparent 60%),
+  radial-gradient(650px 480px at 100% 55%,rgba(34,211,238,.07),transparent 58%),
+  #03040b;
+}
+.wrap{max-width:1180px}
+.room .top,.room .room-hero,.room .player-panel,.room #categoryPanel,.room .settings-row,.room .start-area{
+  position:relative;
+}
+.room .top{
+  padding:12px 14px;margin-bottom:14px;border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;background:rgba(9,11,21,.72);backdrop-filter:blur(14px);
+}
+.room .top:after{
+  content:"";position:absolute;left:18px;right:18px;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(139,92,246,.55),rgba(34,211,238,.35),transparent);
+}
+.room-hero{
+  border-radius:24px!important;padding:22px!important;
+  background:linear-gradient(145deg,rgba(21,19,53,.96),rgba(7,20,31,.96))!important;
+  border:1px solid rgba(139,92,246,.28)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.06)!important;
+}
+.room-hero:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,rgba(139,92,246,.10),transparent 42%,rgba(34,211,238,.06));
+}
+.room-kicker{color:#a79cff!important;letter-spacing:1.8px}
+.room-code-big{
+  font-size:clamp(38px,8vw,58px)!important;letter-spacing:9px!important;
+  color:#fff!important;text-shadow:0 0 22px rgba(139,92,246,.65),0 0 55px rgba(34,211,238,.18)!important;
+}
+.room-share{color:#a7afc4!important}
+.copy-room-btn{border:1px solid rgba(139,92,246,.35)!important}
+.player-panel{
+  padding:16px!important;border-radius:20px!important;
+  background:linear-gradient(145deg,rgba(13,17,32,.95),rgba(7,10,18,.95))!important;
+  border-color:rgba(255,255,255,.09)!important;
+}
+.player-panel-head{margin-bottom:12px!important}
+.player-panel-head strong{font-size:15px;letter-spacing:.1px}
+.player-count{background:rgba(139,92,246,.12)!important;color:#c9c1ff!important;border:1px solid rgba(139,92,246,.2)}
+.players{gap:9px!important}
+.player{
+  min-height:48px;padding:10px 12px!important;border-radius:14px!important;
+  background:rgba(255,255,255,.025)!important;border-color:rgba(255,255,255,.08)!important;
+}
+.player.host{
+  background:linear-gradient(100deg,rgba(139,92,246,.13),rgba(34,211,238,.035))!important;
+  border-color:rgba(139,92,246,.34)!important;
+}
+.waiting-card{
+  background:rgba(255,255,255,.018);border-color:rgba(255,255,255,.09)!important;
+  color:#858eaa!important;padding:12px!important;
+}
+.room #categoryPanel{
+  margin-top:14px!important;padding:18px!important;border-radius:20px!important;
+  background:linear-gradient(145deg,rgba(13,17,32,.96),rgba(7,10,18,.96))!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.04);
+}
+.room #categoryPanel:before{color:#8f84e9!important}
+.room-settings-title{color:#a7afc4!important;letter-spacing:.5px}
+.settings-row{gap:10px!important}
+.setting{
+  border-radius:15px!important;background:rgba(255,255,255,.025)!important;
+  border-color:rgba(255,255,255,.08)!important;
+}
+.setting label{color:#8f98b5!important}
+.setting select{
+  background:#080a13!important;border-color:rgba(255,255,255,.10)!important;
+}
+.start-area{
+  margin-top:16px!important;padding-top:16px!important;
+  border-top:1px solid rgba(255,255,255,.08)!important;
+}
+.start-area .btn{
+  min-height:50px;font-size:15px;letter-spacing:.1px;
+}
+.room .category-options,.room .selected-cats,.room .letter-options{gap:7px}
+.room .cat-chip,.room .letter-chip{
+  transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.room .cat-chip.active,.room .letter-chip.active{
+  box-shadow:0 0 20px rgba(139,92,246,.20)!important;
+}
+@media(max-width:700px){
+  .wrap{padding:12px!important}
+  .room .top{padding:10px 11px}
+  .room-hero{padding:18px!important}
+  .room-code-big{letter-spacing:6px!important}
+  .player-panel,#categoryPanel{padding:14px!important}
+  .settings-row{grid-template-columns:1fr 1fr!important}
+}
+@media(max-width:390px){
+  .settings-row{grid-template-columns:1fr!important}
+  .room-code-big{font-size:36px!important}
+}
+
 </style><script id="vortex-bg-script">
 (()=>{const c=document.createElement('canvas');c.id='vortex-bg';document.body.prepend(c);document.body.classList.add('vortex-ready');const x=c.getContext('2d');let w=0,h=0,t=0,ps=[];const count=420,TAU=Math.PI*2;
 function resize(){w=c.width=innerWidth*devicePixelRatio;h=c.height=innerHeight*devicePixelRatio;c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';ps=[];for(let i=0;i<count;i++)ps.push(p());}
