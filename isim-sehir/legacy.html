@@ -847,6 +847,8 @@ body{min-height:100dvh}
 @media(max-width:390px){.fresh-card{padding:18px;border-radius:22px}.fresh-avatar{height:45px}.fresh-settings{gap:8px}.fresh-setting{padding:12px}.fresh-setting select{font-size:15px}}
 </style><style id="fresh-theme">
 
+</style><style id="fresh-game-theme">
+.fresh-game-card{max-width:760px}.fresh-game-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.fresh-game-top h2{margin:4px 0 0}.fresh-game-timer{min-width:86px;padding:12px 10px;text-align:center;border:1px solid rgba(245,216,120,.25);border-radius:18px;background:#11121c}.fresh-game-timer span{display:block;font-size:9px;font-weight:900;letter-spacing:2px;color:#777683}.fresh-game-timer strong{display:block;margin-top:3px;color:#f5d878;font-size:25px}.fresh-game-letter-wrap{display:grid;place-items:center;padding:22px 16px 20px;margin-bottom:16px;border:1px solid rgba(139,92,246,.28);border-radius:24px;background:radial-gradient(circle at 50% 35%,#211b38,#080a14 68%);box-shadow:inset 0 0 45px #000}.fresh-game-letter-wrap>span{font-size:10px;font-weight:900;letter-spacing:3px;color:#858595}.fresh-game-letter-wrap>strong{font-size:82px;line-height:1;color:#f8f8fb;text-shadow:0 0 35px rgba(139,92,246,.35)}.fresh-game-letter-wrap small{color:#858595;font-size:13px}.fresh-answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.fresh-answer{display:block;padding:14px 15px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:#10121c}.fresh-answer span{display:block;margin-bottom:8px;font-size:10px;font-weight:900;letter-spacing:2px;color:#777683}.fresh-answer input{width:100%;height:48px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:#070910;color:#f8f8fb;padding:0 13px;outline:0}.fresh-answer input:focus{border-color:#9277d9;box-shadow:0 0 0 3px rgba(146,119,217,.12)}.fresh-game-status{margin-top:12px;padding:12px 14px;border-radius:15px;background:#111926;border:1px solid rgba(86,223,245,.14);color:#8fdfea;text-align:center;font-size:12px}@media(max-width:600px){.fresh-answers{grid-template-columns:1fr}.fresh-game-letter-wrap>strong{font-size:70px}.fresh-game-card{padding:18px}}
 </style></head>
 <body>
 <main class="app-shell">
@@ -951,6 +953,17 @@ body{min-height:100dvh}
     <div id="freshLetterOptions" class="fresh-letters"></div>
     <button class="btn primary-btn fresh-next" type="button" onclick="finishFreshCreateRoom()">Odayı Oluştur <span>→</span></button>
   </div>
+</section><section id="freshGameScreen" class="fresh-screen hidden">
+  <div class="fresh-card fresh-game-card">
+    <div class="fresh-game-top">
+      <div><span class="fresh-eyebrow">TUR <b id="freshGameRound">1</b></span><h2>İsim Şehir</h2></div>
+      <div class="fresh-game-timer"><span>SÜRE</span><strong id="freshGameTimer">120</strong></div>
+    </div>
+    <div class="fresh-game-letter-wrap"><span>HARF</span><strong id="freshGameLetter">A</strong><small id="freshGameHint">Cevaplarını doldur ve gönder.</small></div>
+    <div id="freshAnswers" class="fresh-answers"></div>
+    <button id="freshFinishBtn" class="btn primary-btn" type="button" onclick="freshFinishRound()">Cevapları Gönder <span>→</span></button>
+    <div id="freshGameStatus" class="fresh-game-status">Tur başladı.</div>
+  </div>
 </section></main>
 <script id="fresh-app">
 const AVATARS=[
@@ -989,9 +1002,9 @@ function openFreshCategoryScreen(){
 }
 function finishFreshCreateRoom(){const name=($('freshHostName')?.value||'').trim()||'Oyuncu';const code=String(Math.floor(100000+Math.random()*900000));const s={duration:$('freshDuration')?.value||'120',wheel:$('freshWheel')?.value||'on',players:$('freshPlayers')?.value||'4',rounds:$('freshRounds')?.value||'5'};$('freshCategoryScreen')?.classList.add('hidden');$('freshLobbyScreen')?.classList.remove('hidden');$('freshRoomCode').textContent=code;$('freshPlayerCount').textContent='1 / '+s.players;$('freshPlayers').innerHTML='<div class="fresh-player">'+avatarSvg(freshSelectedAvatar)+'<span>'+name+' <b>HOST</b></span></div>';$('freshSettingsSummary').innerHTML='<div><b>'+s.duration+' sn</b><span>Tur süresi</span></div><div><b>'+(s.wheel==='on'?'Açık':'Kapalı')+'</b><span>Harf çarkı</span></div><div><b>'+s.players+'</b><span>Oyuncu</span></div><div><b>'+s.rounds+'</b><span>Tur</span></div>'}
 async function freshCopyRoom(){const code=$('freshRoomCode')?.textContent||'';try{await navigator.clipboard.writeText(code);toast('Oda kodu kopyalandı: '+code)}catch(e){toast('Oda kodu: '+code)}}
-function freshStartPlaceholder(){$('freshLobbyScreen')?.classList.add('hidden');$('freshGameScreen')?.classList.remove('hidden');freshBuildGame()}
-function freshBuildGame(){const box=$('freshAnswers');if(!box)return;box.innerHTML=freshSelectedCats.map(cat=>'<label class="fresh-answer"><span>'+cat+'</span><input maxlength="30" placeholder="'+cat+'..."></label>').join('');$('freshGameLetter').textContent=freshSelectedLetters[Math.floor(Math.random()*freshSelectedLetters.length)]||'A';$('freshGameHint').textContent='Cevaplarını doldur ve gönder.'}
-function freshFinishRound(){const b=$('freshFinishBtn');if(b){b.disabled=true;b.innerHTML='✓ Cevapların Kaydedildi'}$('freshGameStatus').textContent='Cevapların kaydedildi · Diğer oyuncular bekleniyor'}
+function freshStartPlaceholder(){$('freshLobbyScreen')?.classList.add('hidden');$('freshGameScreen')?.classList.remove('hidden');freshBuildGame();freshStartTimer()}
+function freshStartTimer(){clearInterval(window.freshTimer);let n=Number($('freshDuration')?.value||120);$('freshGameTimer').textContent=n;window.freshTimer=setInterval(()=>{n=Math.max(0,n-1);$('freshGameTimer').textContent=n;if(n===0){clearInterval(window.freshTimer);freshFinishRound()}},1000)}\nfunction freshBuildGame(){const box=$('freshAnswers');if(!box)return;box.innerHTML=freshSelectedCats.map(cat=>'<label class="fresh-answer"><span>'+cat+'</span><input maxlength="30" placeholder="'+cat+'..."></label>').join('');$('freshGameLetter').textContent=freshSelectedLetters[Math.floor(Math.random()*freshSelectedLetters.length)]||'A';$('freshGameHint').textContent='Cevaplarını doldur ve gönder.'}
+function freshFinishRound(){const b=$('freshFinishBtn');if(b){b.disabled=true;b.innerHTML='✓ Cevapların Kaydedildi';b.classList.add('submitted')}$('freshGameStatus').textContent='Cevapların kaydedildi · Diğer oyuncular bekleniyor';clearInterval(window.freshTimer);}$('freshGameStatus').textContent='Cevapların kaydedildi · Diğer oyuncular bekleniyor'}
 function joinRoom(){toast('Odaya katıl ekranını da aynı DESIGN sisteminde sıfırdan kuracağız.')}
 document.addEventListener('DOMContentLoaded',()=>{const host=$('hostName');if(host){try{host.value=localStorage.getItem('isimSehirName')||''}catch(e){}}});
 </script></html>
