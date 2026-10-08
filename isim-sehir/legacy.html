@@ -742,7 +742,6 @@ body:before,body:after{display:none!important}
       <input id="hostName" class="input" maxlength="18" placeholder="Oyuncu adın">
       <div class="avatar-row-title"><span>AVATARINI SEÇ</span><span id="hostAvatarName">Nova</span></div>
       <div id="hostAvatarGrid" class="avatar-grid"></div>
-
       <div class="setup-settings">
         <div class="settings-row">
           <div class="setting"><label>TUR SÜRESİ</label><select id="durationSelect"><option value="30">30 saniye</option><option value="60">1 dakika</option><option value="120" selected>2 dakika</option><option value="180">3 dakika</option></select></div>
@@ -773,47 +772,7 @@ body:before,body:after{display:none!important}
       <div class="quick-item"><b>Çoklu</b><span>Arkadaşlarınla oyna</span></div>
     </div>
   </section>
-
-  <section id="room" class="screen room">
-    <div class="screen-card">
-      <div class="screen-head">
-        <div><span class="eyebrow">ARKADAŞLARINLA OYNA</span><h2>Oda Hazır</h2><p>Arkadaşlarını davet et ve oyunu birlikte hazırla.</p></div>
-        <button class="icon-button" onclick="openGameMenu()">☰</button>
-      </div>
-      <div class="room-code-card"><span>ODA KODU</span><strong id="roomCode"></strong><button class="btn secondary-btn small copy-room-btn" onclick="copyRoom()">Kodu Kopyala</button></div>
-      <div class="player-panel"><div class="section-line"><b>OYUNCULAR</b><span id="playerCount" class="player-count">1 kişi</span></div><div id="players" class="players"></div></div>
-      <div id="netStatus" class="status">🌐 Oda bağlantısı hazırlanıyor...</div>
-
-      <div id="categoryPanel" class="setup-panel">
-        <div class="section-line"><div><span class="eyebrow">OYUNU HAZIRLA</span><h3>Kategoriler</h3></div><button class="text-action shuffle" onclick="shuffleCats()">Karıştır</button></div>
-        <div id="categoryOptions" class="category-options"></div>
-        <div class="section-line letter-head"><div><span class="eyebrow">HARF HAVUZU</span><h3>Harfler</h3></div><span id="letterSelectionCount" class="cyan-text">29 / 29</span></div>
-        <div id="letterOptions" class="letter-options"></div>
-        <div class="letter-actions"><button type="button" class="letter-action" onclick="selectAllLetters()">Tümü</button><button type="button" class="letter-action" onclick="selectCommonLetters()">Yaygın</button></div>
-      </div>
-
-      <div class="room-settings-title">OYUN AYARLARI</div>
-      <div id="roomSettingsSummary" class="room-settings-summary"></div>
-      <button id="botBtn" class="btn secondary-btn" onclick="addBot()">🤖 Test Botu Ekle</button>
-      <div class="start-area"><button id="startBtn" class="btn primary-btn" onclick="startGame()">Oyunu Başlat <span>→</span></button><div class="start-hint">Host oyunu başlatabilir · Ayarlar otomatik senkronlanır</div></div>
-    </div>
-
-    <div id="game" class="screen-card game hidden">
-      <div class="screen-head compact"><div><span class="eyebrow">İSİM ŞEHİR</span><h2>Yarış</h2></div><div class="head-actions"><span id="roundNo" class="roundnum">1. Tur</span><button class="icon-button" onclick="openGameMenu()">☰</button></div></div>
-      <div class="wheel-stage" id="wheelArea"><div class="wheel-pointer">▼</div><div id="wheel" class="wheel"><div id="letter" class="wheel-center">?</div></div><div id="wheelBurst" class="wheel-burst">HARF HAZIR</div></div>
-      <div id="wheelLabel" class="wheel-label">Harf seçiliyor...</div>
-      <div class="timer-hud" id="timerHud"><div class="timer-row"><span>KALAN SÜRE</span><strong id="timer">120 sn</strong></div><div class="timer-track"><div id="timerFill" class="timer-fill"></div></div></div>
-      <div id="status" class="status">Cevaplarını seçilen harfle doldur.</div>
-      <div id="answers" class="answers"></div>
-      <button id="finishBtn" class="btn primary-btn" onclick="finishRound()">Cevapları Gönder <span>→</span></button>
-      <div class="scorebar"><div class="score"><span>TOPLAM PUAN</span><b id="myScore">0</b></div><div class="score"><span>2. OYUNCU</span><b id="enemyScore">0</b></div><div class="score"><span>FARK</span><b id="roundScore">0</b></div></div>
-    </div>
-  </section>
 </main>
-
-<div id="gameMenu" class="menu-overlay" onclick="if(event.target===this)closeGameMenu()"><div class="menu-box"><span class="eyebrow">OYUN MENÜSÜ</span><h2>Ne yapmak istiyorsun?</h2><p>Oyuna devam edebilir veya ana menüye dönebilirsin.</p><button class="btn primary-btn cancel-btn" onclick="closeGameMenu()">Oyuna Devam Et</button><button class="btn secondary-btn" onclick="returnToMainMenu()">Ana Menüye Dön</button><button class="btn danger-btn" onclick="leaveGame()">Odadan Çık</button></div></div>
-<div id="roundTransition" class="round-transition" aria-hidden="true"><div class="round-transition-card"><span class="eyebrow">YENİ TUR</span><div id="roundTransitionTitle">3. TUR</div><p id="roundTransitionSub">Harf hazırlanıyor...</p><div class="round-transition-progress"><span class="round-transition-dot"></span><span class="round-transition-dot"></span><span class="round-transition-dot"></span></div></div></div>
-<div id="toast" class="toast"></div>
 <script>
 const allCats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke','Ünlü','Meslek','Dizi/Film','Sanatçı','Futbolcu','Yemek malzemesi','3 harfli kelime','8 harfli kelime','Şarkı','Erkek ismi','Renk','Yabancı isim','Makyaj malzemesi','Yiyecek','Tatlı'];
 let cats=['İsim','Hayvan','Şehir','Eşya','Bitki','Ülke'];
@@ -2327,11 +2286,11 @@ document.addEventListener('DOMContentLoaded',()=>{
  restoreRememberedName();restoreAvatar();renderAvatarPickers();
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGameMenu()});
  bindGameSettingSync();
- $('answers').addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')});
+ const answerBox=$('answers'); if(answerBox) answerBox.addEventListener('click',e=>{const btn=e.target.closest('[data-vote-action]');if(!btn||btn.disabled)return;vote(btn,btn.dataset.voteAction==='yes')});
  document.addEventListener('visibilitychange',handleVisibilityConnection);
  window.addEventListener('pageshow',handleVisibilityConnection);
  window.addEventListener('beforeunload',()=>{if(isHost&&roomId)persistHostSession()});
- if(!restoreHostSession())restoreGuestSession();
+ // Room/game screens are intentionally disabled during the visual rebuild. Keep lobby-only initialization active. 
  setInterval(()=>{
    if(document.visibilityState!=='visible')return;
    if(isHost){
