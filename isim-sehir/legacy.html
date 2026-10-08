@@ -1000,12 +1000,7 @@ function startGame(){
   $('finishBtn').disabled=false;
   showRoundTransition('1. TUR',$('freshGameLetter').textContent+' harfi ile başlıyoruz');
 }
-function finishRound(){
-  const source=$('answers'), target=$('freshAnswers');
-  if(source&&target)target.innerHTML=source.innerHTML;
-  $('finishBtn').disabled=true;$('finishBtn').textContent='✓ Cevaplar Gönderildi';
-  freshFinishRound();
-}
+function finishRound(){const source=$('answers'),target=$('freshAnswers');if(source&&target){const vals=[...source.querySelectorAll('input')].map(i=>i.value);target.innerHTML=source.innerHTML;[...target.querySelectorAll('input')].forEach((i,n)=>i.value=vals[n]||'')}$('finishBtn').disabled=true;$('finishBtn').textContent='✓ Cevaplar Gönderildi';freshFinishRound()}
 function returnToMainMenu(){clearInterval(window.freshTimer);closeGameMenu();closeFreshScreens()}
 function leaveGame(){returnToMainMenu();toast('Oyundan çıkıldı')}
 
