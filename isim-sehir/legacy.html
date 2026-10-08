@@ -3089,6 +3089,31 @@ body{background:
 .answer-decision.wrong{background:rgba(251,113,133,.07)!important;border-color:rgba(251,113,133,.18)!important}
 .result-next{margin-top:14px!important}
 @media(max-width:700px){.round-details{padding:13px!important;border-radius:17px!important}.detail-title{font-size:17px!important}}
+</style><style id="final-results-v9">
+.result-panel{padding:6px 0 14px!important}
+.result-hero{position:relative;padding:18px 16px 22px!important;text-align:center!important;border:1px solid rgba(139,92,246,.16);border-radius:22px;background:radial-gradient(circle at 50% 0,rgba(139,92,246,.14),transparent 55%),linear-gradient(145deg,rgba(18,20,37,.95),rgba(7,9,17,.98));box-shadow:0 25px 70px rgba(0,0,0,.3)}
+.final-trophy{font-size:40px!important;margin:0 0 5px!important}
+.result-hero>div:first-child{font-size:12px!important;letter-spacing:.13em;text-transform:uppercase;color:#a59bd8}
+.big-score{font-size:clamp(42px,10vw,58px)!important;text-shadow:0 0 28px rgba(139,92,246,.18)}
+.result-sub{margin-top:4px}
+.result-score-row{gap:8px}
+.score-pill{border-color:rgba(255,255,255,.09)!important;background:rgba(255,255,255,.035)!important}
+.leaderboard{margin:18px 0!important;gap:8px!important}
+.leader-row{min-height:68px;padding:12px 14px!important;border-color:rgba(255,255,255,.07)!important;background:linear-gradient(145deg,rgba(17,19,34,.9),rgba(8,10,18,.96))!important;transition:transform .16s ease,border-color .16s ease}
+.leader-row:hover{transform:translateX(2px);border-color:rgba(139,92,246,.25)!important}
+.leader-row:first-child{border-color:rgba(251,191,36,.42)!important;background:linear-gradient(90deg,rgba(251,191,36,.09),rgba(18,20,32,.94))!important;box-shadow:0 0 30px rgba(251,191,36,.05)}
+.rank{font-weight:900}
+.leader-name{font-size:15px}
+.leader-gain{font-size:19px}
+.final-summary{margin-top:8px}
+.result-next .btn{min-height:48px}
+@media(max-width:700px){
+ .result-hero{padding:16px 12px 20px!important;border-radius:18px}
+ .leader-row{grid-template-columns:38px 36px minmax(0,1fr) auto;padding:11px 10px!important}
+ .leader-avatar,.leader-avatar .avatar-svg{width:34px;height:34px}
+ .leader-name{font-size:14px}
+ .leader-gain{font-size:17px}
+}
 </style></style><script id="vortex-bg-script">
 (()=>{const c=document.createElement('canvas');c.id='vortex-bg';document.body.prepend(c);document.body.classList.add('vortex-ready');const x=c.getContext('2d');let w=0,h=0,t=0,ps=[];const count=420,TAU=Math.PI*2;
 function resize(){w=c.width=innerWidth*devicePixelRatio;h=c.height=innerHeight*devicePixelRatio;c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';ps=[];for(let i=0;i<count;i++)ps.push(p());}
