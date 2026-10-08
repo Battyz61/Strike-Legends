@@ -855,28 +855,18 @@ body .toast{background:#11131f!important;border:1px solid rgba(167,139,250,.25)!
     <button class="btn primary-btn fresh-next" type="button" onclick="openFreshCategoryScreen()">Devam Et <span>→</span></button>
   </div>
 </section>
-<section id="room" class="fresh-screen hidden">
-  <div class="fresh-card fresh-lobby-card">
-    <button class="fresh-close" type="button" onclick="closeFreshScreens()">×</button>
-    <span class="fresh-eyebrow">ARKADAŞLARINLA OYNA</span>
-    <h2>Oda Hazır</h2>
-    <p class="fresh-sub">Kodu arkadaşlarınla paylaş, oyuncular katıldığında oyunu başlat.</p>
-    <div class="fresh-code">
-      <span>ODA KODU</span><strong id="freshRoomCode">------</strong>
-      <button class="btn secondary-btn fresh-copy" type="button" onclick="freshCopyRoom()">Kodu Kopyala</button>
-    </div>
-    <div class="fresh-lobby-panel">
-      <div class="fresh-section-head"><span>OYUNCULAR</span><b id="freshPlayerCount">1 / 4</b></div>
-      <div id="freshPlayers" class="fresh-players"></div>
-    </div>
-    <div class="fresh-online"><i></i><span>Oda çevrimiçi</span><small>Kodu arkadaşlarınla paylaş</small></div>
-    <div class="fresh-lobby-panel">
-      <div class="fresh-section-head"><span>OYUN AYARLARI</span></div>
-      <div id="freshSettingsSummary" class="fresh-summary"></div>
-    </div>
-    <button class="btn primary-btn" type="button" onclick="freshStartPlaceholder()">Oyunu Başlat <span>→</span></button>
-  </div>
-</section><section id="freshCategoryScreen" class="fresh-screen hidden">
+<section id="room" class="room hidden">
+<div class="screen-card">
+<div class="screen-head"><div><span class="eyebrow">ODA LOBİSİ</span><h2>Oda Hazır</h2><p>Kodu arkadaşlarınla paylaş, herkes katılınca başlat.</p></div><button class="icon-button" onclick="returnToMainMenu()">×</button></div>
+<div class="room-code-card"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="btn secondary-btn small" onclick="copyRoom()">Kodu Kopyala</button></div>
+<div class="player-panel"><div class="section-line"><b>Oyuncular</b><span id="playerCount" class="player-count">1 / 4</span></div><div id="players" class="players"></div></div>
+<div id="netStatus" class="status">🟢 Oda hazırlanıyor...</div>
+<div id="categoryPanel" class="setup-panel"><div class="section-line"><h3>Kategoriler</h3><button class="btn small secondary-btn" onclick="shuffleCats()">🔀 Karıştır</button></div><div id="categoryOptions" class="category-options"></div>
+<div class="letter-head"><div class="section-line"><h3 class="cyan-text">Harf Havuzu</h3><span id="letterSelectionCount" class="player-count"></span></div><div id="letterOptions" class="letter-options"></div><div class="letter-actions"><button class="letter-action" onclick="selectAllLetters()">Tümü</button><button class="letter-action" onclick="selectCommonLetters()">Yaygın</button></div></div></div>
+<div class="room-settings-title">OYUN AYARLARI</div><div id="roomSettingsSummary" class="room-settings-summary"></div>
+<button id="botBtn" class="btn secondary-btn" onclick="addBot()">🤖 Bot Ekle</button>
+<div class="start-area"><button id="startBtn" class="btn primary-btn" onclick="startGame()">Oyunu Başlat →</button><p class="start-hint">Tüm oyuncular katıldığında başlatabilirsin</p></div>
+</div></section><section id="freshCategoryScreen" class="fresh-screen hidden">
   <div class="fresh-card">
     <button class="fresh-close" type="button" onclick="closeFreshScreens()">×</button>
     <span class="fresh-eyebrow">OYUNU HAZIRLA</span>
@@ -887,17 +877,13 @@ body .toast{background:#11131f!important;border:1px solid rgba(167,139,250,.25)!
     <div id="freshLetterOptions" class="fresh-letters"></div>
     <button class="btn primary-btn fresh-next" type="button" onclick="finishFreshCreateRoom()">Odayı Oluştur <span>→</span></button>
   </div>
-</section><section id="game" class="fresh-screen hidden">
-  <div class="fresh-card fresh-game-card">
-    <button class="game-menu-open" type="button" onclick="openGameMenu()" aria-label="Oyun menüsü">•••</button><div class="fresh-game-top">
-      <div><span class="fresh-eyebrow">TUR <b id="freshGameRound">1</b></span><h2>İsim Şehir</h2></div>
-      <div class="fresh-game-timer"><span>SÜRE</span><strong id="freshGameTimer">120</strong></div>
-    </div>
-    <div class="fresh-game-letter-wrap"><span>HARF</span><strong id="freshGameLetter">A</strong><small id="freshGameHint">Cevaplarını doldur ve gönder.</small></div>
-    <div id="freshAnswers" class="fresh-answers"></div>
-    <button id="freshFinishBtn" class="btn primary-btn" type="button" onclick="freshFinishRound()">Cevapları Gönder <span>→</span></button>
-    <div id="freshGameStatus" class="fresh-game-status">Tur başladı.</div>
-  </div>
+</section><section id="game" class="game hidden">
+<div class="game-toolbar"><div class="roundbar"><h2 id="roundNo">1. Tur</h2><span id="roundnum" class="roundnum"></span></div><div class="head-actions"><span id="gameOverBadge" class="game-over-badge hidden">OYUN BİTTİ</span><button class="menu-btn" onclick="openGameMenu()">☰</button></div></div>
+<div id="wheelArea" class="wheel-stage"><div class="wheel"><div id="wheelCenter" class="wheel-center">?</div></div><div class="wheel-pointer">▼</div><div id="wheelBurst" class="wheel-burst"></div></div><div id="wheelLabel" class="wheel-label">Harf seçiliyor...</div>
+<div id="letter" class="letter">?</div><div id="timerHud" class="timer-hud"><div class="timer-row"><span class="timer-caption">KALAN SÜRE</span><strong id="timer">120 sn</strong></div><div class="timer-track"><div id="timerFill" class="timer-fill" style="width:100%"></div></div></div>
+<div id="status" class="status">Hazırlanıyor...</div><div id="answers" class="answers"></div>
+<button id="finishBtn" class="btn primary-btn" disabled onclick="finishRound()">Cevapları Gönder</button>
+<div class="scorebar"><div class="score"><span>PUANIN</span><b id="myScore">0</b></div><div class="score"><span>RAKİP</span><b id="enemyScore">0</b></div><div class="score"><span>FARK</span><b id="roundScore">0</b></div></div>
 </section>
 <section id="roundTransition" class="round-transition" aria-hidden="true">
   <div class="round-transition-card">
@@ -986,4 +972,41 @@ function backToRoom(){clearInterval(window.freshTimer);closeGameMenu();['game','
 function restartFreshGame(){closeGameMenu();$('freshVoteScreen')?.classList.add('hidden');$('freshResultScreen')?.classList.add('hidden');$('game')?.classList.remove('hidden');freshBuildGame();freshStartTimer();showRoundTransition('Yeni Tur','Yeni harf hazırlanıyor...')}
 function joinRoom(){toast('Odaya katıl ekranını da aynı DESIGN sisteminde sıfırdan kuracağız.')}
 document.addEventListener('DOMContentLoaded',()=>{const host=$('hostName');if(host){try{host.value=localStorage.getItem('isimSehirName')||''}catch(e){}}});
+
+// Compatibility layer: screenshot'taki oda/oyun akışını tek fresh state'e bağlar.
+function syncLegacyRoomView(){
+  const code=$('freshRoomCode')?.textContent||'------', players=$('freshPlayers')?.innerHTML||'';
+  $('roomCode').textContent=code;
+  $('players').innerHTML=players;
+  $('playerCount').textContent=$('freshPlayerCount')?.textContent||'1 / 4';
+  $('roomSettingsSummary').innerHTML=$('freshSettingsSummary')?.innerHTML||'';
+  $('netStatus').textContent='🟢 Oda çevrimiçi';
+  $('letterSelectionCount').textContent=freshSelectedLetters.length+' harf';
+  $('categoryOptions').innerHTML=freshSelectedCats.map(x=>'<button type="button" class="cat-chip active">'+x+'</button>').join('');
+  $('letterOptions').innerHTML=freshLetters.map(x=>'<button type="button" class="letter-chip '+(freshSelectedLetters.includes(x)?'active':'')+'">'+x+'</button>').join('');
+}
+function copyRoom(){freshCopyRoom()}
+function selectAllLetters(){freshSelectAllLetters();syncLegacyRoomView()}
+function selectCommonLetters(){freshSelectedLetters=[...freshLetters].filter(x=>'AEİKLMNORSŞTU'.includes(x));if(!freshSelectedLetters.length)freshSelectedLetters=[...freshLetters];renderFreshLetters();syncLegacyRoomView()}
+function shuffleCats(){freshSelectedCats=[...freshSelectedCats].sort(()=>Math.random()-.5);renderFreshCategories();syncLegacyRoomView();toast('Kategoriler karıştırıldı')}
+function addBot(){toast('Bot sistemi sonraki multiplayer adımında bağlanacak.')}
+function startGame(){
+  $('room')?.classList.add('hidden');$('game')?.classList.remove('hidden');
+  freshBuildGame();freshStartTimer();
+  $('roundNo').textContent='1. Tur';$('roundnum').textContent='1 / '+($('freshRounds')?.value||'5');
+  $('status').textContent='Cevaplarını doldur ve gönder.';
+  $('answers').innerHTML=$('freshAnswers').innerHTML;
+  $('letter').textContent=$('freshGameLetter').textContent;
+  $('finishBtn').disabled=false;
+  showRoundTransition('1. TUR',$('freshGameLetter').textContent+' harfi ile başlıyoruz');
+}
+function finishRound(){
+  const source=$('answers'), target=$('freshAnswers');
+  if(source&&target)target.innerHTML=source.innerHTML;
+  $('finishBtn').disabled=true;$('finishBtn').textContent='✓ Cevaplar Gönderildi';
+  freshFinishRound();
+}
+function returnToMainMenu(){clearInterval(window.freshTimer);closeGameMenu();closeFreshScreens()}
+function leaveGame(){returnToMainMenu();toast('Oyundan çıkıldı')}
+
 </script></html>
