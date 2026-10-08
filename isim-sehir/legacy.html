@@ -2683,4 +2683,35 @@ addEventListener('resize',resize,{passive:true});resize();frame()})();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootReactLobbyBridge,{once:true});
   else setTimeout(bootReactLobbyBridge,0);
 })();
-</script></body></html>
+</script><style id="room-master-style">
+/* ANA MENÜ MASTER TASARIMI — ODA LOBİSİ */
+#room{background:transparent!important}
+#room>.card{background:var(--panel)!important;border:1px solid var(--line)!important;border-radius:20px!important;box-shadow:0 20px 55px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.035)!important;padding:16px!important}
+#room .room-hero{background:linear-gradient(145deg,#111b2d,#0b1220)!important;border:1px solid #2c3d56!important;border-radius:17px!important;box-shadow:none!important;padding:16px!important}
+#room .room-kicker{color:#a78bfa!important;font-size:10px!important;letter-spacing:1.5px!important;font-weight:900!important}
+#room .room-code-big{color:var(--text)!important;font-size:clamp(34px,9vw,48px)!important;letter-spacing:.16em!important;margin:5px 0!important;text-shadow:none!important}
+#room .room-share{color:var(--muted)!important;font-size:13px!important}
+#room .player-panel{background:#0a1220!important;border:1px solid var(--line)!important;border-radius:15px!important;box-shadow:none!important;padding:14px!important;margin-top:12px!important}
+#room .player-panel-head{color:var(--text)!important}
+#room .player{background:#101a2b!important;border:1px solid #2a3a52!important;border-radius:13px!important;box-shadow:none!important}
+#room #netStatus{background:#0b1724!important;border:1px solid #23384e!important;border-radius:12px!important;color:#9fb1c6!important}
+#room #categoryPanel{background:#0b1220!important;border:1px solid var(--line)!important;border-radius:17px!important;box-shadow:none!important;padding:15px!important}
+#room .menu-section-title small,#room .room-settings-title{color:#8f98b5!important;letter-spacing:1.5px!important;font-weight:900!important}
+#room .menu-section-title h2{color:var(--text)!important;font-size:20px!important}
+#room .lang{color:#a78bfa!important}
+#room .category-options{display:flex;flex-wrap:wrap;gap:8px!important}
+#room .category-options button,#room .category-chip{border:1px solid #3b4161!important;background:#12182a!important;color:#9ea7bb!important;border-radius:999px!important}
+#room .category-options button.active,#room .category-chip.active{background:#241c42!important;border-color:#806ee0!important;color:#ddd6fe!important}
+#room .letter-options{gap:6px!important}
+#room .letter-action{border:1px solid #2b4660!important;background:#0d1928!important;color:#9fb4ca!important;border-radius:11px!important}
+#room .letter-action:hover{border-color:#4f8cff!important;color:#fff!important}
+#room .room-settings-summary>*{background:#0b1220!important;border:1px solid var(--line)!important;border-radius:13px!important}
+#room #botBtn{background:#101a2b!important;border:1px solid #2a3a52!important;color:#b7c2d2!important;border-radius:13px!important}
+#room #startBtn{background:linear-gradient(135deg,#6d5dfc,#8b5cf6)!important;border-radius:13px!important;min-height:52px!important;box-shadow:0 10px 28px rgba(109,93,252,.22)!important}
+#room .start-hint{color:#727e94!important}
+@media(max-width:700px){
+ #room>.card{padding:14px!important;border-radius:20px!important}
+ #room .room-code-big{font-size:clamp(32px,10vw,43px)!important}
+ #room #categoryPanel{padding:13px!important}
+}
+</style></body></html>
