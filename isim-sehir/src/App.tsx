@@ -125,7 +125,7 @@ export default function App() {
             </div>
             <div className="mt-2 grid grid-cols-8 gap-1.5">
               {avatars.map((name, i) => (
-                <button key={name} onClick={() => setAvatar(i)} aria-label={name}
+                <button key={name} type="button" onClick={() => setAvatar(i)} aria-label={name} aria-pressed={avatar === i}
                   className={`aspect-square rounded-xl border p-1 text-[10px] font-bold transition ${avatar === i ? "border-violet-300 bg-violet-500/20 shadow-[0_0_18px_rgba(124,92,255,.25)]" : "border-white/8 bg-white/[.025] hover:border-white/20"}`}>
                   <span className="grid size-full place-items-center rounded-lg bg-gradient-to-br from-violet-500/50 to-cyan-400/30">{name[0]}</span>
                 </button>
@@ -155,11 +155,11 @@ export default function App() {
                 <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedCategories([...categories].sort(() => Math.random()-.5).slice(0,6))} className="h-7 rounded-full px-2.5 text-[10px] text-violet-300 hover:bg-violet-500/10 hover:text-violet-200">Karıştır</Button>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {categories.map(cat => <button type="button" key={cat} onClick={() => setSelectedCategories(x => x.includes(cat) ? (x.length===1 ? x : x.filter(v=>v!==cat)) : [...x,cat])} className={`rounded-full border px-2.5 py-1 text-[10px] transition ${selectedCategories.includes(cat) ? "border-violet-300/60 bg-violet-500/20 text-violet-100" : "border-white/10 bg-black/20 text-white/35"}`}>{cat}</button>)}
+                {categories.map(cat => <button type="button" key={cat} aria-pressed={selectedCategories.includes(cat)} onClick={() => setSelectedCategories(x => x.includes(cat) ? (x.length===1 ? x : x.filter(v=>v!==cat)) : [...x,cat])} className={`rounded-full border px-2.5 py-1 text-[10px] transition ${selectedCategories.includes(cat) ? "border-violet-300/60 bg-violet-500/20 text-violet-100" : "border-white/10 bg-black/20 text-white/35"}`}>{cat}</button>)}
               </div>
               <div className="mt-4 flex items-center justify-between"><span className="text-[9px] font-black uppercase tracking-[.16em] text-white/35">Harf havuzu · {selectedLetters.length}</span><Button type="button" variant="ghost" size="sm" onClick={() => setSelectedLetters([...letters])} className="h-7 rounded-full px-2.5 text-[10px] text-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-200">Tümü</Button></div>
               <div className="mt-2 grid grid-cols-10 gap-1">
-                {letters.map(letter => <button type="button" key={letter} onClick={() => setSelectedLetters(x => x.includes(letter) ? (x.length===1 ? x : x.filter(v=>v!==letter)) : [...x,letter])} className={`aspect-square rounded-lg border text-[10px] font-black ${selectedLetters.includes(letter) ? "border-cyan-300/50 bg-cyan-400/10 text-cyan-100" : "border-white/8 bg-black/20 text-white/20"}`}>{letter}</button>)}
+                {letters.map(letter => <button type="button" key={letter} aria-pressed={selectedLetters.includes(letter)} onClick={() => setSelectedLetters(x => x.includes(letter) ? (x.length===1 ? x : x.filter(v=>v!==letter)) : [...x,letter])} className={`aspect-square rounded-lg border text-[10px] font-black ${selectedLetters.includes(letter) ? "border-cyan-300/50 bg-cyan-400/10 text-cyan-100" : "border-white/8 bg-black/20 text-white/20"}`}>{letter}</button>)}
               </div>
             </div>
 
