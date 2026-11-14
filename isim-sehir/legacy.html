@@ -1453,7 +1453,7 @@ function resumeActiveRound(data){
 }
 function newRound(forcedLetter=null,announce=true){
  if(!cats.length){toast('Kategori seçilmedi.');return}
- clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;votingFinalizedRound=0;submittedPlayers={};playUiSound('start');votingDone={};localVotes={};remoteVotes={};
+ clearInterval(timerId);roundToken++;const token=roundToken;roundState={token,phase:'round'};votingOpenedRound=0;votingFinalizedRound=0;submittedPlayers={};playUiSound('start');votingDone={};localVotes={};remoteVotes={};const gameEl=$("game");if(gameEl){gameEl.classList.add('round-phase');gameEl.classList.remove('voting-phase','results-phase');}const answersEl=$("answers");if(answersEl){answersEl.classList.add('round-mode');answersEl.classList.remove('voting-mode','results-mode');}
  const availableLetters=selectedLetters.length?selectedLetters:letters;
  letterNow=forcedLetter||availableLetters[Math.floor(Math.random()*availableLetters.length)];
  // Each round gets a completely fresh bot answer set. This prevents the
@@ -1786,15 +1786,35 @@ function showVoting(sync=null){
  bots.forEach(b=>{if(!netAnswers[b.name]){b.answers=botAnswers();b.votes={};netAnswers[b.name]=b.answers}});
  const humanPlayers=Object.keys(onlinePlayers).filter(n=>n!==me&&!bots.some(b=>b.name===n));
  const playerNames=[...new Set([...Object.keys(netAnswers),...humanPlayers])];
- let html='<div class="vote-title">Cevapları Değerlendir</div><div class="vote-help">Süre sınırı yok — cevapları arkadaşlarınla tartış, sonra doğru veya yanlış olarak işaretle.</div><div class="vote-discussion-note">💬 Tartışma modu · Acele etmeden karar ver</div>';
- cats.forEach(cat=>{html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';const mineCat=answerForCategory(mine,cat)||{cat,val:''};html+=voteRow('me',mineCat,!mineCat.val);bots.forEach((bot,bi)=>{const x=answerForCategory(netAnswers[bot.name]||bot.answers||[],cat);if(x)html+=voteRow('bot'+bi,x,false)});
- playerNames.filter(n=>n!==me&&!bots.some(b=>b.name===n)).forEach(name=>{
- const list=netAnswers[name]||[];
- const found=answerForCategory(list,cat);
- const x=found||{cat,val:'Cevap yok'};
- html+=voteRow('human:'+name,x,!found);
-});html+='</div></div>'});
- html+='<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+document.querySelectorAll('#answers .answer input').length+'</b></div>';
+ const gameEl=$('game');if(gameEl){gameEl.classList.add('voting-phase');gameEl.classList.remove('round-phase','results-phase');}
+ const answersEl=$('answers');if(answersEl){answersEl.classList.add('voting-mode');answersEl.classList.remove('round-mode','results-mode');}
+ let html='<div class="vote-shell">' +
+  '<header class="vote-header">' +
+    '<div class="vote-letter-badge">SEÇİLEN HARF: <span>'+esc(letterNow)+'</span></div>' +
+    '<h2 class="vote-title">Cevapları Değerlendir</h2>' +
+    '<p class="vote-help">Süre sınırı yok — cevapları arkadaşlarınla tartış, sonra doğru veya yanlış olarak işaretle.</p>' +
+    '<div class="vote-discussion-note">💬 Tartışma modu · Acele etmeden karar ver</div>' +
+  '</header>' +
+  '<div class="vote-grid">';
+ cats.forEach(cat=>{
+  html+='<div class="vote-category"><div class="vote-category-title">'+esc(letterNow)+' ile '+esc(cat)+'</div><div class="vote-card">';
+  const mineCat=answerForCategory(mine,cat)||{cat,val:''};
+  html+=voteRow('me',mineCat,!mineCat.val);
+  bots.forEach((bot,bi)=>{
+    const x=answerForCategory(netAnswers[bot.name]||bot.answers||[],cat);
+    if(x)html+=voteRow('bot'+bi,x,false);
+  });
+  playerNames.filter(n=>n!==me&&!bots.some(b=>b.name===n)).forEach(name=>{
+    const list=netAnswers[name]||[];
+    const found=answerForCategory(list,cat);
+    const x=found||{cat,val:'Cevap yok'};
+    html+=voteRow('human:'+name,x,!found);
+  });
+  html+='</div></div>';
+ });
+ html+='</div>' +
+  '<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+(cats.length||6)+'</b></div>' +
+ '</div>';
  $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
  // Rehydrate votes after a reconnect so a player does not lose their progress.
  Object.entries(syncedVotes).forEach(([key,val])=>{
@@ -2015,7 +2035,7 @@ function pointsRuleText(d){
  return '✨ Benzersiz cevap · 10 puan';
 }
 function showResults(gains,details=[],scoresOverride=null){
- roundState.phase='results';
+ roundState.phase='results';const gameEl=$("game");if(gameEl){gameEl.classList.add('results-phase');gameEl.classList.remove('round-phase','voting-phase');}const answersEl=$("answers");if(answersEl){answersEl.classList.add('results-mode');answersEl.classList.remove('round-mode','voting-mode');}
  if(isHost)persistHostSession();else persistGuestSession();
  const list=Object.entries(gains).sort((a,b)=>b[1]-a[1]);
  const scores=scoresOverride||netScores||{};
@@ -2652,76 +2672,214 @@ body.vortex-page {
 }
 
 /* ==========================================================================
-   VOTING PHASE — Unified with First Page Aesthetic
+   VOTING & RESULTS PHASES — Clean Responsive Grid & First-Page Dark Theme
    ========================================================================== */
+
+/* Hide round countdown and large wheel during voting and results */
+#game:has(.vote-shell) #wheelArea,
+#game:has(.vote-shell) #wheelLabel,
+#game:has(.vote-shell) #timerHud,
+#game:has(.vote-shell) .game-intro,
+#game:has(.vote-shell) #status,
+#game.voting-phase #wheelArea,
+#game.voting-phase #wheelLabel,
+#game.voting-phase #timerHud,
+#game.voting-phase .game-intro,
+#game.voting-phase #status,
+#game:has(.result-panel) #wheelArea,
+#game:has(.result-panel) #wheelLabel,
+#game:has(.result-panel) #timerHud,
+#game:has(.result-panel) .game-intro,
+#game:has(.result-panel) #status,
+#game.results-phase #wheelArea,
+#game.results-phase #wheelLabel,
+#game.results-phase #timerHud,
+#game.results-phase .game-intro,
+#game.results-phase #status {
+  display: none !important;
+}
+
+/* Switch #answers from 2-column input grid to full-width block container */
+#answers:has(.vote-shell),
+#answers.voting-mode,
+#game.voting-phase #answers,
+#answers:has(.result-panel),
+#answers.results-mode,
+#game.results-phase #answers {
+  display: block !important;
+  width: 100% !important;
+  max-width: 960px !important;
+  margin: 0 auto 16px !important;
+}
+
+/* Voting Container */
+.vote-shell {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Centered Header */
+.vote-header {
+  text-align: center !important;
+  margin: 4px 0 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.vote-letter-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 18px !important;
+  border-radius: 999px !important;
+  background: rgba(139, 92, 246, 0.15) !important;
+  border: 1px solid rgba(139, 92, 246, 0.35) !important;
+  color: #c4b5fd !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2) !important;
+}
+
+.vote-letter-badge span {
+  font-size: 18px !important;
+  font-weight: 1000 !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #c4b5fd, #67e8f9) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
 .vote-title {
-  font-size: 26px !important;
-  font-weight: 900 !important;
+  font-size: clamp(26px, 4vw, 34px) !important;
+  font-weight: 950 !important;
   color: #f7f8fc !important;
   text-align: center !important;
-  margin: 10px 0 6px !important;
+  margin: 0 0 6px !important;
+  letter-spacing: -0.02em !important;
 }
 
 .vote-help {
   font-size: 13px !important;
-  color: rgba(255,255,255,0.45) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
   text-align: center !important;
-  margin-bottom: 12px !important;
+  margin: 0 0 12px !important;
+  max-width: 600px !important;
+  line-height: 1.45 !important;
 }
 
 .vote-discussion-note {
   font-size: 11px !important;
   font-weight: 800 !important;
   color: #ddd6fe !important;
-  background: rgba(139,92,246,0.12) !important;
-  border: 1px solid rgba(139,92,246,0.3) !important;
-  padding: 6px 14px !important;
+  background: rgba(139, 92, 246, 0.12) !important;
+  border: 1px solid rgba(139, 92, 246, 0.28) !important;
+  padding: 6px 16px !important;
   border-radius: 999px !important;
-  margin: 0 auto 20px !important;
+  margin: 0 auto !important;
   width: fit-content !important;
-  display: block !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+}
+
+/* Responsive Balanced Category Grid */
+.vote-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  width: 100% !important;
+  margin-bottom: 16px !important;
+}
+
+@media (max-width: 768px) {
+  .vote-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
 }
 
 .vote-category {
-  margin-bottom: 22px !important;
-}
-
-.vote-category-title {
-  font-size: 14px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.08em !important;
-  text-transform: uppercase !important;
-  color: #c4b5fd !important;
-  margin-bottom: 10px !important;
-}
-
-.vote-card {
-  background: rgba(9,11,21,0.85) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  border-radius: 20px !important;
-  padding: 12px !important;
-  box-shadow: 0 15px 45px rgba(0,0,0,0.4) !important;
-  backdrop-filter: blur(16px) !important;
+  margin-bottom: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 8px !important;
+  min-width: 0 !important;
+}
+
+.vote-category-title {
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: #c4b5fd !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding-left: 2px !important;
+}
+
+.vote-category-title::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 4px !important;
+  height: 14px !important;
+  border-radius: 2px !important;
+  background: #a78bfa !important;
+  box-shadow: 0 0 8px #a78bfa !important;
+}
+
+.vote-card {
+  background: linear-gradient(145deg, rgba(16, 20, 38, 0.95), rgba(9, 11, 21, 0.98)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px !important;
+  padding: 14px !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(16px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  min-width: 0 !important;
 }
 
 .vote-player {
-  background: rgba(255,255,255,0.03) !important;
-  border: 1px solid rgba(255,255,255,0.07) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
   border-radius: 14px !important;
   padding: 12px 14px !important;
   transition: all 0.18s ease !important;
+  display: grid !important;
+  grid-template-columns: 44px minmax(0, 1fr) auto !important;
+  grid-template-rows: auto auto !important;
+  gap: 10px 14px !important;
+  align-items: center !important;
+  min-width: 0 !important;
 }
 
 .vote-player:hover {
-  background: rgba(139,92,246,0.06) !important;
-  border-color: rgba(139,92,246,0.3) !important;
+  background: rgba(139, 92, 246, 0.06) !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+
+.vote-player > .avatar {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+
+.vote-player > .vote-info {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
 }
 
 .vote-name {
-  color: rgba(255,255,255,0.5) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
   font-size: 11px !important;
   font-weight: 700 !important;
 }
@@ -2730,18 +2888,36 @@ body.vortex-page {
   color: #f7f8fc !important;
   font-size: 17px !important;
   font-weight: 800 !important;
+  word-break: break-word !important;
+}
+
+.vote-player > .vote-actions {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.vote-player > .ai-info {
+  grid-column: 2 / -1 !important;
+  grid-row: 2 !important;
+  width: 100% !important;
+  margin-top: 4px !important;
 }
 
 .vote-circle {
   width: 36px !important;
   height: 36px !important;
   border-radius: 12px !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
   color: #fff !important;
   font-weight: 800 !important;
   cursor: pointer !important;
   transition: all 0.16s ease !important;
+  display: grid !important;
+  place-items: center !important;
 }
 
 .vote-circle:hover {
@@ -2751,18 +2927,18 @@ body.vortex-page {
 .vote-circle.selected[data-vote-action="yes"] {
   background: #10b981 !important;
   border-color: #34d399 !important;
-  box-shadow: 0 0 16px rgba(52,211,153,0.45) !important;
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.45) !important;
 }
 
 .vote-circle.selected[data-vote-action="no"] {
   background: #f43f5e !important;
   border-color: #fb7185 !important;
-  box-shadow: 0 0 16px rgba(251,113,133,0.45) !important;
+  box-shadow: 0 0 16px rgba(251, 113, 133, 0.45) !important;
 }
 
 .ai-info-btn {
-  background: rgba(139,92,246,0.12) !important;
-  border: 1px solid rgba(139,92,246,0.3) !important;
+  background: rgba(139, 92, 246, 0.12) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
   color: #ddd6fe !important;
   border-radius: 10px !important;
   padding: 6px 10px !important;
@@ -2773,21 +2949,21 @@ body.vortex-page {
 }
 
 .ai-info-btn:hover {
-  background: rgba(139,92,246,0.22) !important;
+  background: rgba(139, 92, 246, 0.22) !important;
   border-color: #a78bfa !important;
 }
 
 .ai-info-panel {
   background: #090b15 !important;
-  border: 1px solid rgba(139,92,246,0.3) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
   border-radius: 14px !important;
   color: #e2e8f0 !important;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.6) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6) !important;
 }
 
 .ai-info-tag {
-  background: rgba(34,211,238,0.15) !important;
-  border: 1px solid rgba(34,211,238,0.35) !important;
+  background: rgba(34, 211, 238, 0.15) !important;
+  border: 1px solid rgba(34, 211, 238, 0.35) !important;
   color: #67e8f9 !important;
   border-radius: 999px !important;
   padding: 2px 8px !important;
@@ -2796,13 +2972,33 @@ body.vortex-page {
 }
 
 .vote-summary {
-  background: rgba(139,92,246,0.08) !important;
-  border: 1px solid rgba(139,92,246,0.25) !important;
-  border-radius: 14px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background: linear-gradient(135deg, rgba(109, 93, 252, 0.12), rgba(34, 211, 238, 0.04)) !important;
+  border: 1px solid rgba(139, 92, 246, 0.25) !important;
+  border-radius: 16px !important;
   color: #ddd6fe !important;
-  padding: 12px 18px !important;
-  margin-top: 14px !important;
+  padding: 14px 20px !important;
+  margin: 12px 0 16px !important;
   font-weight: 800 !important;
+  font-size: 14px !important;
+}
+
+.vote-summary b {
+  font-size: 18px !important;
+  color: #fff !important;
+  letter-spacing: 0.05em !important;
+}
+
+#game:has(.vote-shell) #finishBtn,
+#game.voting-phase #finishBtn {
+  display: block !important;
+  width: 100% !important;
+  max-width: 480px !important;
+  margin: 0 auto 24px !important;
+  font-size: 15px !important;
+  min-height: 52px !important;
 }
 
 /* ==========================================================================
