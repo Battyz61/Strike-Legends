@@ -972,6 +972,21 @@ function bindConnection(conn){
  conn.on('data',data=>{
     if(!data)return;
     if(data.type==='reaction'){if(data.sender!==me)showFloatingReaction(data.emoji,data.sender||'Oyuncu',data.text||'');if(isHost)broadcast(data);return;}
+    if(data.type==='rushCountdown'){
+      const senderName=data.sender||'Bir oyuncu';
+      if(data.sender!==me){
+        playUiSound('urgent');
+        showFloatingReaction('🛑',senderName,'DURDU!');
+        toast('🛑 '+senderName+' bitirdi! Son '+Math.min(seconds,15)+' saniye!');
+        const targetSec=Math.min(seconds,Number(data.remaining)||15);
+        if(seconds>targetSec){
+          seconds=targetSec;
+          const t=$('timer');if(t){t.textContent=seconds+' sn';t.classList.add('danger');if(seconds<=5)t.classList.add('critical');}
+        }
+      }
+      if(isHost)broadcast(data);
+      return;
+    }
    if(data.type==='roomFull'&&!isHost){
      roomRejected=true;
      const limit=Number(data.limit||4);
@@ -1639,6 +1654,12 @@ function finishRound(){
  $('finishBtn').disabled=true;clearInterval(timerId);$('timer').classList.remove('danger');
  const mine=[...$('answers').querySelectorAll('input')].map(i=>({cat:i.dataset.cat,val:i.value.trim()}));
  netAnswers[me]=mine;
+ if(seconds>15){
+   const rushMsg={type:'rushCountdown',remaining:15,sender:me,round};
+   if(isHost)broadcast(rushMsg);else sendNet(rushMsg);
+   showFloatingReaction('🛑',me,'DURDU!');
+   toast('🛑 Cevaplarını gönderdin! Diğer oyuncular için son 15 saniye başladı!');
+ }
  if(isHost){
    submittedPlayers[me]=true;
    persistHostSession();
@@ -1837,9 +1858,9 @@ function showVoting(sync=null){
   html+='</div></div>';
  });
  html+='</div>' +
-  '<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / '+(cats.length||6)+'</b></div>' +
+  '<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / 0</b></div>' +
  '</div>';
- $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').textContent='🗳️ Oyları Tamamla · 0/'+document.querySelectorAll('#answers .vote-player [data-vote-action]').length;$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
+ $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
  // Rehydrate votes after a reconnect so a player does not lose their progress.
  Object.entries(syncedVotes).forEach(([key,val])=>{
    const parts=key.split('|');if(parts.length<3)return;
@@ -1855,6 +1876,22 @@ function showVoting(sync=null){
    }else{
      const box=[...row.querySelectorAll('.remote-vote')].find(x=>x.dataset.voter===voter);
      if(box){box.classList.remove('pending','yes','no');box.classList.add(yes?'yes':'no');box.style.display='inline-flex'}
+   }
+ });
+ // Pre-approve own answers with YES by default (player can still change to NO)
+ $('answers').querySelectorAll('.vote-player[data-answer="me"]').forEach(row=>{
+   const cat=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent?.replace(letterNow+' ile ','')||'';
+   if(!syncedVotes[me+'|me|'+cat]&&!localVotes['me|'+cat]){
+     row.dataset.vote='yes';
+     row.querySelectorAll('.vote-circle').forEach(x=>x.classList.toggle('selected',x.dataset.voteAction==='yes'));
+     localVotes['me|'+cat]='yes';
+     netVotes[me+'|me|'+cat]='yes';
+     votedCount++;
+     if(!isHost){
+       sendNet({type:'vote',round,voter:me,answer:'me',cat,correct:true,owner:me});
+     }else{
+       registerNetworkVote(me,'me',cat,true,me);
+     }
    }
  });
  revealBotVotes();updateVoteSummary();if(bots.length){setTimeout(()=>{const b=bots[Math.floor(Math.random()*bots.length)];const em=['🤖','🔥','👀','👑','⚡'];showFloatingReaction(em[Math.floor(Math.random()*em.length)],b.name);},1200+Math.random()*1500);}
@@ -1881,9 +1918,9 @@ function revealBotVotes(){
  if(status&&botTotal)status.textContent='🤖 '+botTotal+' bot oyunu otomatik kullandı. Şimdi sen oyla.';
 }
 function updateVoteSummary(){
- const actionRows=$('answers')?[...$('answers').querySelectorAll('.vote-player [data-vote-action]')]:[];
- const localRequired=actionRows.length;
- const localDone=actionRows.reduce((n,r)=>n+(r.closest('.vote-player')?.dataset.vote?1:0),0);
+ const actionPlayers=$('answers')?[...$('answers').querySelectorAll('.vote-player')].filter(r=>r.querySelector('[data-vote-action]')):[];
+ const localRequired=actionPlayers.length;
+ const localDone=actionPlayers.reduce((n,r)=>n+(r.dataset.vote?1:0),0);
  const el=$('voteCount');if(el)el.textContent=localDone+' / '+localRequired;
  const btn=$('finishBtn');
  if(btn&&!btn.classList.contains('hidden')&&!votingDone[me]){
@@ -1892,6 +1929,11 @@ function updateVoteSummary(){
  }
  const status=$('status');
  if(status){
+   if(localDone<localRequired) status.textContent='Değerlendirmen: '+localDone+'/'+localRequired;
+   else if(!votingDone[me]) status.textContent='Tüm cevapları değerlendirdin.';
+   else status.textContent='Oyların tamamlandı. Sonuçlar bekleniyor...';
+ }
+}
    if(localDone<localRequired) status.textContent='Değerlendirmen: '+localDone+'/'+localRequired;
    else if(!votingDone[me]) status.textContent='Tüm cevapları değerlendirdin.';
    else status.textContent='Oyların tamamlandı. Sonuçlar bekleniyor...';
@@ -2126,6 +2168,8 @@ function nextRound(ev){
 }
 function showFinalResults(announce=true){
  gameFinished=true;roundState=roundState||{};roundState.phase='results';
+ const gameEl=$('game');if(gameEl){gameEl.classList.add('results-phase');gameEl.classList.remove('round-phase','voting-phase');}
+ const answersEl=$('answers');if(answersEl){answersEl.classList.add('results-mode');answersEl.classList.remove('round-mode','voting-mode');}
  if(isHost&&announce)broadcast({type:'gameFinished',round,scores:netScores});
  const all=[...new Set([...Object.keys(onlinePlayers),...bots.map(b=>b.name),me,...Object.keys(netScores)])].map(name=>({name,score:Number(netScores[name]||0)})).sort((a,b)=>b.score-a.score);
  $('answers').innerHTML='<div class="result-panel"><div class="result-hero final-hero"><div class="result-kicker">MAÇ TAMAMLANDI</div><div class="final-trophy">🏆</div><div class="big-score">'+(netScores[me]||0)+'</div><div class="result-sub">Toplam puanın</div></div><div class="round-details final-summary"><div class="detail-title">Tüm turlar tamamlandı</div><p style="color:var(--muted);margin:6px 0 0">Final skorları ve oyuncu sıralaması.</p></div><div class="leaderboard">'+all.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x.name))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+x.score+'</div></div>').join('')+'</div><div class="end-actions"><button class="btn" onclick="returnToMainMenu()">🏠 Ana Menü</button><button class="btn secondary" onclick="location.reload()">🔄 Yeni Oyun</button></div></div>';
@@ -2540,7 +2584,7 @@ body.vortex-page{background:radial-gradient(circle at 50% -10%,rgba(139,92,246,.
 #game .status{max-width:760px!important;margin:10px auto 14px!important;padding:11px 14px!important}
 #game .answers{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;max-width:820px!important;margin:0 auto 14px!important}
 #game .answer{min-width:0!important}
-#game #finishBtn{display:block!important;width:min(820px,100%)!important;margin:0 auto 14px!important}
+#game #finishBtn:not(.hidden){display:block!important;width:min(820px,100%)!important;margin:0 auto 14px!important}
 #game .scorebar{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
 #game .score{min-width:0!important;padding:14px!important;border-radius:16px!important}
 #roundTransition .round-transition-card{width:min(420px,calc(100vw - 32px))!important;padding:28px 22px 24px!important}
@@ -3206,6 +3250,24 @@ body.vortex-page {
   margin: 0 auto 24px !important;
   font-size: 15px !important;
   min-height: 52px !important;
+}
+
+#finishBtn.hidden,
+#game #finishBtn.hidden,
+#game:has(.result-panel) #finishBtn,
+#game.results-phase #finishBtn,
+#game:has(.final-hero) #finishBtn {
+  display: none !important;
+}
+
+#game .game-shell {
+  padding-bottom: 74px !important;
+}
+
+@media (max-width: 600px) {
+  #game .game-shell {
+    padding-bottom: 84px !important;
+  }
 }
 
 /* ==========================================================================
