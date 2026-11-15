@@ -2061,6 +2061,8 @@ function showVoting(sync=null){
      row.querySelectorAll('.vote-circle').forEach(x=>x.classList.toggle('selected',(x.dataset.voteAction==='yes')===yes));
      localVotes[owner+'|'+cat]=val;
      votedCount++;
+     const myBox=row.querySelector('.my-vote');
+     if(myBox){myBox.classList.remove('pending','yes','no');myBox.classList.add(yes?'yes':'no');myBox.style.display='inline-flex'}
    }else{
      const box=[...row.querySelectorAll('.remote-vote')].find(x=>x.dataset.voter===voter);
      if(box){box.classList.remove('pending','yes','no');box.classList.add(yes?'yes':'no');box.style.display='inline-flex'}
@@ -2075,6 +2077,8 @@ function showVoting(sync=null){
      localVotes['me|'+cat]='yes';
      netVotes[me+'|me|'+cat]='yes';
      votedCount++;
+     const myBox=row.querySelector('.my-vote');
+     if(myBox){myBox.classList.remove('pending','yes','no');myBox.classList.add('yes');myBox.style.display='inline-flex'}
      if(!isHost){
        sendNet({type:'vote',round,voter:me,answer:'me',cat,correct:true,owner:me});
      }else{
@@ -2200,11 +2204,15 @@ function calculateVotingResult(){
 
  rows.forEach(row=>{
    const owner=row.dataset.answer;if(!owner)return;
-   // Oyuncunun kendi cevabına verdiği oy artık da sonuca dahil.
-   // Diğer oyuncu/bot oyları .player-vote kutularında tutuluyor.
+   // Diğer oyuncu/bot oyları .remote-vote ve .bot-vote kutularında tutuluyor.
+   // Kendi oyumuz ownVote veya .my-vote üzerinden eklenir, asla çift sayılmaz.
    const ownVote=row.dataset.vote;
-   const greenBoxes=row.querySelectorAll('.player-vote.yes').length+(ownVote==='yes'?1:0);
-   const redBoxes=row.querySelectorAll('.player-vote.no').length+(ownVote==='no'?1:0);
+   const otherGreen=row.querySelectorAll('.player-vote.remote-vote.yes, .player-vote.bot-vote.yes').length;
+   const ownGreen=ownVote==='yes'?1:(row.querySelector('.my-vote.yes')?1:0);
+   const greenBoxes=otherGreen+ownGreen;
+   const otherRed=row.querySelectorAll('.player-vote.remote-vote.no, .player-vote.bot-vote.no').length;
+   const ownRed=ownVote==='no'?1:(row.querySelector('.my-vote.no')?1:0);
+   const redBoxes=otherRed+ownRed;
    const catTitle=row.closest('.vote-category')?.querySelector('.vote-category-title')?.textContent||'';
    const cat=catTitle.replace(letterNow+' ile ','');
    const answer=(row.querySelector('.vote-value')?.textContent||'').trim();
