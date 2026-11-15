@@ -632,7 +632,9 @@ body, input, button, select, textarea {
 .mute-btn{font-size:14px!important;padding:6px 10px!important;border-radius:12px!important;background:rgba(109,93,252,.12)!important;border:1px solid rgba(139,92,246,.25)!important;cursor:pointer;transition:transform .15s,background .15s;line-height:1}
 .mute-btn:hover{transform:scale(1.08);background:rgba(109,93,252,.25)!important}
 .mute-btn.muted{opacity:.7;filter:grayscale(1)}
-.rush-banner{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;max-width:680px!important;margin:0 auto 10px!important;padding:9px 15px!important;border-radius:14px!important;background:linear-gradient(135deg,rgba(239,68,68,.3),rgba(245,158,11,.22))!important;border:1px solid rgba(239,68,68,.65)!important;box-shadow:0 0 28px rgba(239,68,68,.35)!important;animation:rushPulse .85s ease-in-out infinite alternate!important;color:#fff!important;text-align:center!important}
+.rush-banner{display:none!important}
+.rush-banner.show:not(.hidden){display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;max-width:680px!important;margin:0 auto 10px!important;padding:9px 15px!important;border-radius:14px!important;background:linear-gradient(135deg,rgba(239,68,68,.3),rgba(245,158,11,.22))!important;border:1px solid rgba(239,68,68,.65)!important;box-shadow:0 0 28px rgba(239,68,68,.35)!important;animation:rushPulse .85s ease-in-out infinite alternate!important;color:#fff!important;text-align:center!important}
+.rush-banner.hidden{display:none!important}
 .rush-kicker{font-size:13px!important;font-weight:900!important;letter-spacing:1px!important;color:#fca5a5!important}
 .rush-sub{font-size:12px!important;font-weight:700!important;color:#fef08a!important}
 @keyframes rushPulse{0%{transform:scale(.985);box-shadow:0 0 15px rgba(239,68,68,.3)}100%{transform:scale(1.015);box-shadow:0 0 35px rgba(239,68,68,.65)}}
@@ -1074,7 +1076,7 @@ function bindConnection(conn){
           const t=$('timer');if(t){t.textContent=seconds+' sn';t.classList.add('danger');if(seconds<=5)t.classList.add('critical');}
         }
         const rush=$('rushBanner'),rushTxt=$('rushText');
-        if(rush){rush.classList.remove('hidden');if(rushTxt)rushTxt.textContent=senderName+' bitirdi! Son '+seconds+' saniye!';}
+        if(rush){rush.classList.remove('hidden');rush.classList.add('show');if(rushTxt)rushTxt.textContent=senderName+' bitirdi! Son '+seconds+' saniye!';}
         const hud=$('timerHud');if(hud)hud.classList.add('rush-active');
       }
       if(isHost)broadcast(data);
@@ -1537,6 +1539,7 @@ function bindGameSettingSync(){
 
 function focusWheelOnScreen(){const el=$('wheelArea');if(!el)return;requestAnimationFrame(()=>setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'}),80));}
 function startGame(){
+ const rush=$('rushBanner');if(rush){rush.classList.add('hidden');rush.classList.remove('show');}
  const settings=currentGameSettings();
  usedLetters=[];totalRounds=settings.totalRounds;round=1;gameFinished=false;myScore=0;netScores={[me]:0};bots.forEach(b=>{b.score=0;netScores[b.name]=0});$('myScore').textContent='0';
  $('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('game').classList.remove('hidden');
@@ -1606,7 +1609,7 @@ function newRound(forcedLetter=null,announce=true){
  $('letter').textContent='?';$('roundNo').textContent=round+'. Tur';$('roundNo').classList.remove('round-start');void $('roundNo').offsetWidth;$('roundNo').classList.add('round-start');
  if(isHost&&announce){const s=currentGameSettings();broadcast({type:'roundStart',round,letter:letterNow,duration:s.duration,wheel:s.wheel,totalRounds:s.totalRounds,cats:[...cats],letters:[...selectedLetters]});}
  $('answers').innerHTML=cats.map(c=>'<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..."></div>').join('');
- $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger','critical');const rush=$('rushBanner');if(rush)rush.classList.add('hidden');const hud=$('timerHud');if(hud)hud.classList.remove('rush-active');$('status').textContent='Harf çarkı dönüyor...';
+ $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger','critical');const rush=$('rushBanner');if(rush){rush.classList.add('hidden');rush.classList.remove('show');}const hud=$('timerHud');if(hud)hud.classList.remove('rush-active');$('status').textContent='Harf çarkı dönüyor...';
  // A previous results screen hides this button. Every new round must restore it,
  // including rounds reached after a reconnect on a guest device.
  $('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').textContent='Cevapları Gönder';$('finishBtn').disabled=true;$('finishBtn').onclick=finishRound;
@@ -1779,7 +1782,7 @@ function finishRound(){
    showFloatingReaction('🛑',me,'DURDU!');
    toast('🛑 Cevaplarını gönderdin! Diğer oyuncular için son 15 saniye başladı!');
    const rush=$('rushBanner'),rushTxt=$('rushText');
-   if(rush){rush.classList.remove('hidden');if(rushTxt)rushTxt.textContent='Cevapların kaydedildi! Diğer oyuncular bekleniyor...';}
+   if(rush){rush.classList.remove('hidden');rush.classList.add('show');if(rushTxt)rushTxt.textContent='Cevapların kaydedildi! Diğer oyuncular bekleniyor...';}
  }
  if(isHost){
    submittedPlayers[me]=true;
@@ -1944,6 +1947,7 @@ function voteRow(owner,x,empty=false){
  return '<div class="vote-player" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+avatarSvg(ownerAvatar,true)+'</div><div class="vote-info"><div class="vote-name">'+esc(answerOwner)+'</div><div class="vote-value">'+esc(x.val||'Cevap yok')+'</div><div class="vote-note">'+(empty?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div><div class="ai-info"><button type="button" class="ai-info-btn" data-ai-category="'+encodeURIComponent(x.cat)+'" data-ai-answer="'+encodeURIComponent(x.val||'')+'" onclick="toggleAiInfo(this)">✦ AI Bilgisi</button><div class="ai-info-panel"><div class="ai-info-head"><span>✨ Cevap hakkında</span><span class="ai-info-tag">AI DESTEKLİ</span></div><div>'+esc(aiText)+'</div></div></div><div class="vote-actions">'+voterButtons+'</div></div>'
 }
 function showVoting(sync=null){
+ const rush=$('rushBanner');if(rush){rush.classList.add('hidden');rush.classList.remove('show');}
  const syncedVotes=sync?.votes||{};
  const syncedDone=sync?.votingDone||{};
  votedCount=0;localVotes={};netVotes=Object.assign({},syncedVotes);votingDone=Object.assign({},syncedDone);remoteVotes=Object.assign({},syncedVotes);
