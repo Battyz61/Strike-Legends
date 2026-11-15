@@ -1934,11 +1934,6 @@ function updateVoteSummary(){
    else status.textContent='Oyların tamamlandı. Sonuçlar bekleniyor...';
  }
 }
-   if(localDone<localRequired) status.textContent='Değerlendirmen: '+localDone+'/'+localRequired;
-   else if(!votingDone[me]) status.textContent='Tüm cevapları değerlendirdin.';
-   else status.textContent='Oyların tamamlandı. Sonuçlar bekleniyor...';
- }
-}
 function allHumanVotesPresent(){
  const humans=Object.keys(onlinePlayers);
  if(!humans.length)return true;
