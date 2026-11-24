@@ -9,9 +9,10 @@ function json(data, status = 200) {
 
 function normalize(value) {
   return String(value || '')
+    .normalize('NFC')
     .trim()
     .toLocaleUpperCase('tr-TR')
-    .replace(/\\s+/g, '');
+    .replace(/\s+/g, '');
 }
 
 function categoryKey(value) {
@@ -19,12 +20,18 @@ function categoryKey(value) {
 }
 
 function letterCount(value) {
-  return Array.from(String(value || '').replace(/\\s+/g, '')).length;
+  return Array.from(String(value || '').replace(/\s+/g, '')).length;
 }
 
 function forceNotFit(parsed, reason) {
   parsed.uygunluk = 'Uygun görünmüyor';
   parsed.guven = 'Yüksek';
+  parsed.gerekce = reason;
+}
+
+function forceMaybe(parsed, reason) {
+  parsed.uygunluk = 'Tartışmalı';
+  parsed.guven = 'Orta';
   parsed.gerekce = reason;
 }
 
@@ -48,7 +55,7 @@ async function handleAi(request, env) {
     const cleanAnswer = String(body.answer || '').trim().slice(0, 160);
     const cleanLetter = String(body.letter || '').trim().slice(0, 3);
 
-    if (!cleanCategory || !cleanAnswer) {
+    if (!cleanCategory || !cleanAnswer || cleanAnswer === 'Cevap yok') {
       return json({ error: 'category and answer are required' }, 400);
     }
 
@@ -60,6 +67,7 @@ async function handleAi(request, env) {
     const letterNorm = normalize(cleanLetter);
     const startsWithLetter = !letterNorm || answerNorm.startsWith(letterNorm);
     const category = categoryKey(cleanCategory);
+    const answerLower = cleanAnswer.toLocaleLowerCase('tr-TR').replace(/[’']/g, '').trim();
 
     const prompt =
       'Sen İsim Şehir oyununun tarafsız yardımcı hakemisin. Türkçe cevap ver. ' +
@@ -82,7 +90,7 @@ async function handleAi(request, env) {
     const requestBody = {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        maxOutputTokens: 220,
+        maxOutputTokens: 500,
         responseMimeType: 'application/json',
         responseSchema: {
           type: 'object',
@@ -105,22 +113,32 @@ async function handleAi(request, env) {
 
     let response = null;
     let data = {};
+    const retryDelays = [0, 800];
 
     for (const model of MODEL_CANDIDATES) {
-      response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/' +
-          model +
-          ':generateContent?key=' +
-          encodeURIComponent(env.GEMINI_API_KEY),
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(requestBody)
+      for (let attempt = 0; attempt < retryDelays.length; attempt++) {
+        if (retryDelays[attempt]) {
+          await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
         }
-      );
 
-      data = await response.json().catch(() => ({}));
-      if (response.ok) break;
+        response = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' +
+            model +
+            ':generateContent?key=' +
+            encodeURIComponent(env.GEMINI_API_KEY),
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          }
+        );
+
+        data = await response.json().catch(() => ({}));
+        if (response.ok) break;
+        if (response.status < 500) break;
+      }
+
+      if (response?.ok) break;
     }
 
     if (!response?.ok) {
@@ -142,42 +160,84 @@ async function handleAi(request, env) {
     try {
       parsed = JSON.parse(raw);
     } catch {
-      return json({ error: 'AI_INVALID_RESPONSE' }, 502);
+      const cleaned = raw.replace(/^\s*```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch {
+        return json({ error: 'AI_INVALID_RESPONSE' }, 502);
+      }
     }
 
     const evidence = [String(parsed.gerekce || ''), String(parsed.bilgi || '')].join(' ');
+    const evidenceLower = evidence.toLocaleLowerCase('tr-TR');
     const count = letterCount(cleanAnswer);
 
-    // Oyun kurallarının kesin olduğu noktalar modelden bağımsızdır.
+    // 1. Kesin başlangıç harfi kontrolü
     if (letterNorm && answerNorm && !startsWithLetter) {
       forceNotFit(parsed, 'Cevap seçilen harfle başlamıyor; bu nedenle harf kuralına uygun değildir.');
     }
 
-    // Kategori adları bazen "N ile 3 harfli kelime" gibi ek kurallar içerir.
-    // Harf sayısı kontrolü, kategori adının birebir aynı olmasına bağlı kalmamalı.
-    const isThreeLetterCategory = /(?:^|\\b)3\\s*harfli\\s+kelime(?:\\b|$)/i.test(category);
-    const isEightLetterCategory = /(?:^|\\b)8\\s*harfli\\s+kelime(?:\\b|$)/i.test(category);
+    // 2. Harf sayısı kategorileri için deterministik kontrol
+    const isThreeLetterCategory = /(?:^|\b)3\s*harfli\s+kelime(?:\b|$)/i.test(category);
+    const isEightLetterCategory = /(?:^|\b)8\s*harfli\s+kelime(?:\b|$)/i.test(category);
 
-    if (isThreeLetterCategory && count !== 3) {
-      forceNotFit(parsed, 'Cevap tam 3 harfli değil; bu kategori yalnızca 3 harfli kelimeleri kabul eder.');
+    if (isThreeLetterCategory) {
+      if (count !== 3) {
+        forceNotFit(parsed, 'Cevap tam 3 harfli değil; bu kategori yalnızca 3 harfli kelimeleri kabul eder.');
+      } else if (
+        startsWithLetter &&
+        parsed.uygunluk === 'Uygun görünmüyor' &&
+        /\b(\d+|üç|dört|beş|altı|yedi|sekiz|dokuz|on)\s*harf/i.test(evidenceLower)
+      ) {
+        parsed.uygunluk = 'Uygun görünüyor';
+        parsed.guven = 'Yüksek';
+        parsed.gerekce = 'Cevap seçilen harfle başlıyor ve tam 3 harflidir.';
+      }
     }
 
-    if (isEightLetterCategory && count !== 8) {
-      forceNotFit(parsed, 'Cevap tam 8 harfli değil; bu kategori yalnızca 8 harfli kelimeleri kabul eder.');
+    if (isEightLetterCategory) {
+      if (count !== 8) {
+        forceNotFit(parsed, 'Cevap tam 8 harfli değil; bu kategori yalnızca 8 harfli kelimeleri kabul eder.');
+      } else if (
+        startsWithLetter &&
+        parsed.uygunluk === 'Uygun görünmüyor' &&
+        /\b(\d+|yedi|sekiz|dokuz|on)\s*harf/i.test(evidenceLower)
+      ) {
+        parsed.uygunluk = 'Uygun görünüyor';
+        parsed.guven = 'Yüksek';
+        parsed.gerekce = 'Cevap seçilen harfle başlıyor ve tam 8 harflidir.';
+      }
     }
 
-    // Model doğru başlayan cevabı yalnızca harf gerekçesiyle reddederse bunu düzelt.
+    // 3. Kategoriye özgü deterministik güvenlik kuralları
+    if (startsWithLetter) {
+      if (category === 'bitki' && /^(erik|elma|armut|kiraz|şeftali|kayısı|portakal|limon|mandalina|nar|zeytin|incir|üzüm|dut|vişne|ayva)$/.test(answerLower)) {
+        forceMaybe(parsed, 'Cevap hem ağacın/bitkinin adını hem de meyvesini ifade edebilir; oyuncular değerlendirmelidir.');
+      }
+      if (category === 'hayvan' && /^(süt|yün|deri|yumurta|bal|peynir|tereyağı)$/.test(answerLower)) {
+        forceNotFit(parsed, 'Cevap hayvanın kendisi değil, hayvansal bir üründür.');
+      }
+      if (category === 'bitki' && /^(un|yağ|salça|şeker|reçel)$/.test(answerLower)) {
+        forceNotFit(parsed, 'Cevap bitkinin kendisi değil, işlenmiş bitkisel bir üründür.');
+      }
+      if (category === 'ülke' && /^(trabzon|ankara|istanbul|izmir|bursa|antalya|rize|ordu|samsun|adana|konya|mersin)$/.test(answerLower)) {
+        forceNotFit(parsed, 'Cevap bir ülke değil, şehir adıdır.');
+      }
+      if (category === 'şehir' && /(?:mahalle\w*|semt\w*|köy\w*|ilçe\w*|belde\w*|kasaba\w*|mezra\w*)/i.test(evidenceLower) && /değil|ilçesi|mahallesi|semti|köyü|beldesi/i.test(evidenceLower)) {
+        forceNotFit(parsed, 'Cevap bir il/şehir değil, ilçe veya alt yerleşim birimidir.');
+      }
+    }
+
+    // 4. Model doğru başlayan cevabı yalnızca harf gerekçesiyle reddederse düzelt
     if (
       startsWithLetter &&
       parsed.uygunluk === 'Uygun görünmüyor' &&
       /başlamıyor|başlamamaktadır|seçilen harf|ilk harf|harf.*uyuşm/i.test(evidence)
     ) {
-      parsed.uygunluk = 'Tartışmalı';
-      parsed.guven = 'Orta';
-      parsed.gerekce = 'Cevap seçilen harfle başlıyor; harf kuralı açısından uygundur.';
+      forceMaybe(parsed, 'Cevap seçilen harfle başlıyor; harf kuralı açısından uygundur.');
     }
 
-    // Model bilgi/gerekçe arasında açık çelişki ürettiyse kesin hükmü yumuşat.
+    // 5. Bilgi ve gerekçe çelişkisini yumuşat
     const contradiction =
       /bir (isim|şehir|il|hayvan|bitki|ülke) (değil|değildir)/i.test(evidence) &&
       /bir (isim|şehir|il|hayvan|bitki|ülke) (dir|dır|türüdür|adıdır)/i.test(evidence);
