@@ -565,7 +565,7 @@ body{min-height:100dvh}
   text-rendering: optimizeLegibility !important;
 }
 body, input, button, select, textarea {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif !important;
   -webkit-font-smoothing: antialiased !important;
   -moz-osx-font-smoothing: grayscale !important;
 }
@@ -660,12 +660,13 @@ body, input, button, select, textarea {
 <section id="room" class="screen-room hidden"><div class="room-shell">
 <header class="room-header"><div><span class="room-eyebrow">✦ ARKADAŞLARLA OYNA</span><h1>Oda <span>Hazır</span></h1><p>Arkadaşlarını davet et, oyunu birlikte hazırlayın.</p></div><div class="room-code-box"><span>ODA KODU</span><strong id="roomCode"></strong><div style="display:flex;gap:6px;"><button class="room-icon-btn" onclick="copyRoom(false)" title="Kodu Kopyala">Kopyala</button><button class="room-icon-btn" onclick="copyRoom(true)" title="Bağlantıyı Kopyala">🔗 Link</button><button class="room-icon-btn" onclick="openGameMenu()">Menü</button></div></div></header>
 <section class="room-surface"><div class="surface-heading"><div><span>OYUNCULAR</span><h2>Kimler burada?</h2></div><b id="playerCount">1 kişi</b></div><div id="players" class="players"></div><div id="netStatus" class="room-status">🌐 Oda bağlantısı hazırlanıyor...</div></section>
-<section id="categoryPanel" class="room-surface"><div class="surface-heading"><div><span>OYUNU HAZIRLA</span><h2>Kategoriler</h2></div><em>🇹🇷 Türkçe</em></div><div id="categoryOptions" class="category-options"></div><button class="subtle-action" onclick="shuffleCats()">Karıştır ↗</button><div class="selection-heading"><span>🔤 HARF HAVUZU</span><strong id="letterSelectionCount">29 / 29 seçili</strong></div><div id="letterOptions" class="letter-options"></div><div class="selection-actions"><button onclick="selectAllLetters()">Tümünü Seç</button><button onclick="selectCommonLetters()">Yaygın Harfler</button></div></section>
+<section id="categoryPanel" class="room-surface"><div class="surface-heading"><div><span>OYUNU HAZIRLA</span><h2>Kategoriler</h2></div><em style="display:inline-flex;align-items:center;gap:6px"><svg width="16" height="12" viewBox="0 0 24 16" aria-hidden="true" style="border-radius:2px;display:inline-block"><rect width="24" height="16" fill="#E30A17"/><circle cx="10.2" cy="8" r="4" fill="#fff"/><circle cx="11.4" cy="8" r="3.2" fill="#E30A17"/><polygon points="15.2,8 13.7,8.5 14.3,7.1 13.3,6 14.7,6.1 15.2,4.8 15.7,6.1 17.1,6 16.1,7.1 16.7,8.5" fill="#fff"/></svg>Türkçe</em></div><div id="categoryOptions" class="category-options"></div><button class="subtle-action" onclick="shuffleCats()">Karıştır ↗</button><div class="selection-heading"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>HARF HAVUZU</span><strong id="letterSelectionCount">29 / 29 seçili</strong></div><div id="letterOptions" class="letter-options"></div><div class="selection-actions"><button onclick="selectAllLetters()">Tümünü Seç</button><button onclick="selectCommonLetters()">Yaygın Harfler</button></div></section>
 <section class="room-surface"><div class="surface-heading"><div><span>OYUN AYARLARI</span><h2>Maç ayarları</h2></div></div><div id="roomSettingsSummary" class="room-settings-summary"></div><button id="botBtn" class="secondary-room-btn" onclick="addBot()">🤖 Test Botu Ekle</button></section>
 <footer class="room-start"><div><strong>Hazır mısınız?</strong><span>Host oyunu başlatabilir. Ayarlar senkronlanır.</span></div><button id="startBtn" class="room-start-btn" onclick="startGame()">Oyunu Başlat →</button></footer>
 </div></section>
 <section id="game" class="screen-game hidden"><div class="game-shell"><header class="game-header"><div class="game-brand"><span></span> İsim Şehir</div><div style="display:flex;align-items:center;gap:8px;"><button id="muteBtn" class="room-icon-btn mute-btn" type="button" onclick="toggleAudioMute()" aria-label="Sesi Aç/Kapat" title="Ses Aç/Kapat">🔊</button><span id="roundNo" class="roundnum">1. Tur</span><button class="room-icon-btn" onclick="openGameMenu()">Menü</button></div></header><div class="game-intro"><span>YARIŞ</span><h1>Harfini kullan, cevaplarını tamamla.</h1></div><div id="wheelArea" class="wheel-wrap"><div class="wheel-pointer"></div><div id="wheel" class="wheel"><div id="letter" class="wheel-center">?</div></div><div id="wheelBurst" class="wheel-burst">HARF HAZIR</div></div><div id="wheelLabel" class="wheel-label">Harf seçiliyor...</div><div id="rushBanner" class="rush-banner hidden"><span class="rush-icon">🛑</span><span class="rush-kicker">İSİM ŞEHİR DURDU!</span><span id="rushText" class="rush-sub">Rakip bitirdi, son 15 saniye!</span></div>
 <div class="timer-hud" id="timerHud"><div class="timer-row"><span>KALAN SÜRE</span><strong id="timer">120 sn</strong></div><div class="timer-track"><div id="timerFill" class="timer-fill"></div></div></div><div id="status" class="status">Cevaplarını seçilen harfle doldur.</div><div id="answers" class="answers"></div><button id="finishBtn" class="game-submit-btn" onclick="finishRound()">Cevapları Gönder →</button><div class="scorebar"><div class="score"><span>Toplam Puan</span><b id="myScore">0</b></div><div class="score"><span>Rakip</span><b id="enemyScore">0</b></div><div class="score"><span>Bu Tur</span><b id="roundScore">0</b></div></div></div></section>
+</main>
 <div id="gameMenu" class="menu-overlay" onclick="if(event.target===this)closeGameMenu()"><div class="menu-box"><h2>Oyun Menüsü</h2><p>Oyundan çıkabilir, ana menüye dönebilir veya oyuna devam edebilirsin.</p><button class="btn cancel-btn" onclick="closeGameMenu()">Oyuna Devam Et</button><button class="btn secondary" onclick="returnToMainMenu()">Ana Menüye Dön</button><button class="btn danger-btn" onclick="leaveGame()">Odadan Çık</button></div></div><div id="roundTransition" class="round-transition" aria-hidden="true"><div class="round-transition-card"><div class="round-transition-kicker">YENİ TUR HAZIRLANIYOR</div><div id="roundTransitionTitle" class="round-transition-title">3. TUR</div><div id="roundTransitionSub" class="round-transition-sub">Harf hazırlanıyor...</div><div class="round-transition-progress"><span></span><span></span><span></span></div></div></div><div id="toast" class="toast"></div>
 <div id="reactionContainer" class="reaction-container" aria-hidden="true"></div>
 <div id="reactionBar" class="reaction-bar hidden">
@@ -756,6 +757,7 @@ function resetLocalGameState(){
  peer=null;hostPeer=null;connections=[];onlinePlayers={};roomRejected=false;netAnswers={};netVotes={};submittedPlayers={};votingDone={};localVotes={};remoteVotes={};pendingNetMessages=[];lastVotingResult=null;
  round=1;gameFinished=false;myScore=0;netScores={};roundState=null;roundToken=0;votingOpenedRound=0;reconnectAttempts=0;reconnecting=false;disconnectGraceTimers={};
  isHost=false;roomId='';me='';letterNow='';bots=[];
+ const gameEl=$('game');if(gameEl)gameEl.classList.remove('final-phase','results-phase','round-phase','voting-phase');
 }
 function returnToMainMenu(){
  closeGameMenu();
@@ -2095,7 +2097,7 @@ function showVoting(sync=null){
   html+='</div></div>';
  });
  html+='</div>' +
-  '<div class="vote-summary"><span>🗳️ Senin değerlendirmen</span><b id="voteCount">0 / 0</b></div>' +
+  '<div class="vote-summary"><span style="display:inline-flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Senin değerlendirmen</span><b id="voteCount">0 / 0</b></div>' +
  '</div>';
  $('answers').innerHTML=html;$('answers').classList.remove('hidden-answers');$('finishBtn').classList.remove('submitted','waiting','votes-complete','votes-waiting');$('finishBtn').disabled=false;$('finishBtn').onclick=completeVoting;$('status').textContent='Cevapları değerlendir ve oylarını tamamla.';
  // Rehydrate votes after a reconnect so a player does not lose their progress.
@@ -2396,6 +2398,7 @@ function showResults(gains,details=[],scoresOverride=null){playUiSound('victory'
 }
 function resetRoundVisuals(){
  clearInterval(timerId);stopWheelSpin();
+ const gamePhaseEl=$('game');if(gamePhaseEl)gamePhaseEl.classList.remove('final-phase');
  const wheel=$('wheel');
  if(wheel){wheel.classList.remove('spinning','reveal-pop');wheel.style.transform='';}
  const answers=$('answers');
@@ -2438,7 +2441,7 @@ function nextRound(ev){
 }
 function showFinalResults(announce=true){
  gameFinished=true;roundState=roundState||{};roundState.phase='results';
- const gameEl=$('game');if(gameEl){gameEl.classList.add('results-phase');gameEl.classList.remove('round-phase','voting-phase');}
+ const gameEl=$('game');if(gameEl){gameEl.classList.add('results-phase','final-phase');gameEl.classList.remove('round-phase','voting-phase');}
  const answersEl=$('answers');if(answersEl){answersEl.classList.add('results-mode');answersEl.classList.remove('round-mode','voting-mode');}
  if(isHost&&announce)broadcast({type:'gameFinished',round,scores:netScores});
  const all=[...new Set([...Object.keys(onlinePlayers),...bots.map(b=>b.name),me,...Object.keys(netScores)])].map(name=>({name,score:Number(netScores[name]||0)})).sort((a,b)=>b.score-a.score);
@@ -2515,7 +2518,8 @@ document.addEventListener('DOMContentLoaded',()=>{setInterval(updateReactionBar,
  document.addEventListener('visibilitychange',handleVisibilityConnection);
  window.addEventListener('pageshow',handleVisibilityConnection);
  window.addEventListener('beforeunload',()=>{if(isHost&&roomId)persistHostSession()});
- if(!restoreHostSession())restoreGuestSession();
+ const urlMode=new URLSearchParams(window.location.search).get('mode');
+ if(urlMode!=='create'&&urlMode!=='join'){if(!restoreHostSession())restoreGuestSession();}
  setInterval(()=>{
    if(document.visibilityState!=='visible')return;
    if(isHost){
@@ -2671,7 +2675,11 @@ function showFloatingReaction(emoji, sender, text=''){
 function updateReactionBar(){
  const bar = $('reactionBar');
  if(!bar) return;
- const inActive = (!!roomId) || ($('game') && !$('game').classList.contains('hidden')) || ($('room') && $('room').style.display === 'block');
+ const gameEl = $('game');
+ const roomEl = $('room');
+ const gameShown = !!(gameEl && !gameEl.classList.contains('hidden') && getComputedStyle(gameEl).display !== 'none');
+ const roomShown = !!(roomEl && !roomEl.classList.contains('hidden') && getComputedStyle(roomEl).display !== 'none');
+ const inActive = (!!roomId) || gameShown || roomShown;
  bar.classList.toggle('hidden', !inActive);
 }
 function showRoundTransition(done){
@@ -2833,6 +2841,7 @@ addEventListener('resize',resize,{passive:true});resize();frame()})();
     try{
       const p=new URLSearchParams(window.location.search), mode=p.get('mode');
       if(mode!=='create'&&mode!=='join')return;
+      resetLocalGameState();clearHostSession();clearGuestSession();
       const name=(p.get('name')||'Oyuncu').trim().slice(0,18)||'Oyuncu';
       const code=(p.get('code')||'').replace(/\s/g,'');
       const raw=Number(p.get('avatar')), avatar=Number.isFinite(raw)?Math.max(0,Math.min(7,raw)):0;
@@ -3014,7 +3023,7 @@ body:has(#game:not(.hidden)) #room {
 
 /* Universal Typography & Subpixel Crisp Font Rendering */
 html, body, button, input, select, textarea, div, span, p, h1, h2, h3, h4 {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif !important;
   -webkit-font-smoothing: antialiased !important;
   -moz-osx-font-smoothing: grayscale !important;
   text-rendering: optimizeLegibility !important;
@@ -4389,14 +4398,23 @@ body.vortex-page {
 }
 
 .reaction-bar {
-  position: fixed;
-  bottom: 18px;
-  right: 22px;
-  z-index: 10000;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 14px !important;
+  transform: translateX(-50%) !important;
+  z-index: 10000 !important;
+  display: flex !important;
+  flex-direction: column-reverse !important;
+  align-items: center !important;
+  gap: 8px !important;
+  max-width: calc(100vw - 20px) !important;
+}
+
+.reaction-bar:not(.hidden) {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .reaction-bar.hidden {
@@ -4420,12 +4438,27 @@ body.vortex-page {
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
+  color: #ffffff !important;
+  -webkit-text-fill-color: currentColor !important;
   font-size: 18px;
+  line-height: 1;
   display: grid;
   place-items: center;
   cursor: pointer;
   transition: transform 0.15s ease, background 0.15s ease;
   user-select: none;
+}
+
+.react-btn,
+.floating-reaction .reaction-emoji,
+.final-trophy,
+.rush-icon,
+.mute-btn {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", 'Inter', sans-serif !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-rendering: auto !important;
+  font-style: normal !important;
 }
 
 .react-btn:hover {
@@ -4449,7 +4482,7 @@ body.vortex-page {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  width: 210px;
+  width: 215px;
 }
 
 .quick-chat-menu.hidden {
@@ -4465,14 +4498,21 @@ body.vortex-page {
   padding: 4px 8px;
 }
 
+.quick-chat-item,
+.rank {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif !important;
+  text-rendering: auto !important;
+}
+
 .quick-chat-item {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
   padding: 8px 10px;
-  color: #f1f5f9;
+  color: #f1f5f9 !important;
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.35;
   text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -4481,14 +4521,59 @@ body.vortex-page {
 .quick-chat-item:hover {
   background: rgba(139, 92, 246, 0.2);
   border-color: rgba(139, 92, 246, 0.4);
-  color: #fff;
+  color: #fff !important;
+}
+
+@media (min-width: 641px) {
+  #game.final-phase .game-shell {
+    padding-top: 18px !important;
+  }
+}
+
+#game.final-phase .game-header {
+  margin-bottom: 14px !important;
+}
+
+#game.final-phase .result-panel {
+  gap: 12px !important;
+}
+
+#game.final-phase .result-hero.final-hero {
+  padding: 18px 20px !important;
+}
+
+#game.final-phase .round-details.final-summary {
+  padding: 14px 20px !important;
+}
+
+#game.final-phase .leaderboard {
+  gap: 8px !important;
+  margin: 4px 0 !important;
+}
+
+#game.final-phase .leader-row {
+  padding: 11px 16px !important;
+}
+
+#game.final-phase .end-actions {
+  margin-top: 2px !important;
+}
+
+#game.final-phase .scorebar {
+  margin-top: 12px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reaction-container .floating-reaction {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translateX(-50%) translateY(-48px) rotate(var(--rot, 0deg)) !important;
+  }
 }
 
 @media (max-width: 600px) {
   .reaction-bar {
-    right: 50%;
-    transform: translateX(50%);
-    bottom: 12px;
+    bottom: 10px !important;
   }
   .react-btn {
     width: 32px;
