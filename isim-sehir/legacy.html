@@ -647,7 +647,7 @@ body, input, button, select, textarea {
 <div class="card menu-card"><div class="card-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6v10M24 32v10M6 24h10M32 24h10M11 11l7 7M30 30l7 7M37 11l-7 7M18 30l-7 7"/><circle cx="24" cy="24" r="8"/></svg></div><h2>Oda Kur</h2><p>Sen host ol, ayarları belirle ve oda kodunu arkadaşlarınla paylaş.</p><div class="name-hint"><span>Oyuncu adı</span><span id="hostRecent"></span></div><input id="hostName" class="input" maxlength="18" placeholder="Adını yaz"><div class="avatar-picker-label">Avatarını seç</div><div id="hostAvatarGrid" class="avatar-grid"></div><div class="setup-settings">
 <div class="setup-settings-head"><div><small>OYUN AYARLARI</small><b>Maç başlamadan önce belirle</b></div><span>HOST</span></div>
 <div class="settings-row">
-<div class="setting"><label>TUR SÜRESİ</label><select id="durationSelect"><option value="30">30 saniye</option><option value="60">1 dakika</option><option value="120" selected>2 dakika</option><option value="180">3 dakika</option></select></div>
+<div class="setting"><label>TUR SÜRESİ</label><select id="durationSelect"><option value="30">30 saniye</option><option value="60">1 dakika</option><option value="90">90 saniye</option><option value="120" selected>2 dakika</option><option value="180">3 dakika</option></select></div>
 <div class="setting"><label>HARF ÇARKI</label><select id="wheelSelect"><option value="on" selected>Açık</option><option value="off">Kapalı</option></select></div>
 <div class="setting"><label>OYUNCU SAYISI</label><select id="playerLimit"><option value="2">2 Oyuncu</option><option value="3">3 Oyuncu</option><option value="4" selected>4 Oyuncu</option><option value="5">5 Oyuncu</option><option value="6">6 Oyuncu</option><option value="7">7 Oyuncu</option><option value="8">8 Oyuncu</option><option value="9">9 Oyuncu</option><option value="10">10 Oyuncu</option></select></div>
 <div class="setting"><label>TUR SAYISI</label><select id="roundLimit"><option value="3">3 Tur</option><option value="5" selected>5 Tur</option><option value="10">10 Tur</option></select></div>
@@ -1701,7 +1701,7 @@ function newRound(forcedLetter=null,announce=true){
    const isLast=idx===cats.length-1;
    return '<div class="answer"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" placeholder="'+esc(c)+'..." autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="'+(isLast?'send':'next')+'"></div>';
  }).join('');
- $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger','critical');const rush=$('rushBanner');if(rush){rush.classList.add('hidden');rush.classList.remove('show');}const hud=$('timerHud');if(hud)hud.classList.remove('rush-active');$('status').textContent='Harf çarkı dönüyor...';
+ $('answers').classList.add('hidden-answers');$('timer').textContent=selectedDuration()+' sn';$('timer').classList.remove('danger','critical');const rs=$('roundScore');if(rs)rs.textContent='0';const rush=$('rushBanner');if(rush){rush.classList.add('hidden');rush.classList.remove('show');}const hud=$('timerHud');if(hud)hud.classList.remove('rush-active');$('status').textContent='Harf çarkı dönüyor...';
  // A previous results screen hides this button. Every new round must restore it,
  // including rounds reached after a reconnect on a guest device.
  $('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').textContent='Cevapları Gönder';$('finishBtn').disabled=true;$('finishBtn').onclick=finishRound;
@@ -2442,11 +2442,23 @@ function showFinalResults(announce=true){
  const answersEl=$('answers');if(answersEl){answersEl.classList.add('results-mode');answersEl.classList.remove('round-mode','voting-mode');}
  if(isHost&&announce)broadcast({type:'gameFinished',round,scores:netScores});
  const all=[...new Set([...Object.keys(onlinePlayers),...bots.map(b=>b.name),me,...Object.keys(netScores)])].map(name=>({name,score:Number(netScores[name]||0)})).sort((a,b)=>b.score-a.score);
+ const topScore=all.length?all[0].score:0;
+ const topWinners=all.filter(x=>x.score===topScore);
+ const isTie=topWinners.length>1;
+ const finalHeadline=isTie?'🤝 Berabere! · Tüm oyuncular eşit puanda':(topWinners[0]?.name===me?'👑 Şampiyon Sensin!':'🏆 Kazanan: '+esc(topWinners[0]?.name||''));
+ let currentRank=1;
+ const rankedRows=all.map((x,i)=>{
+  if(i>0&&x.score<all[i-1].score)currentRank=i+1;
+  const medal=currentRank===1?'🥇':currentRank===2?'🥈':currentRank===3?'🥉':'#'+currentRank;
+  const winCls=currentRank===1?' is-winner':'';
+  return '<div class="leader-row'+winCls+'"><div class="rank">'+medal+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x.name))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+formatPoints(x.score)+'</div></div>';
+ }).join('');
  const rematchBtnHtml=isHost
   ?'<button class="btn rematch-btn" id="rematchBtn" onclick="startRematch()">🔄 Rövanş Başlat</button>'
   :'<button class="btn rematch-btn" id="rematchBtn" onclick="requestRematch()">🔄 Rövanş İste</button>';
- $('answers').innerHTML='<div class="result-panel"><div class="result-hero final-hero"><div class="result-kicker">MAÇ TAMAMLANDI</div><div class="final-trophy">🏆</div><div class="big-score">'+(netScores[me]||0)+'</div><div class="result-sub">Toplam puanın</div></div><div class="round-details final-summary"><div class="detail-title">Tüm turlar tamamlandı</div><p style="color:var(--muted);margin:6px 0 0">Final skorları ve oyuncu sıralaması.</p></div><div class="leaderboard">'+all.map((x,i)=>'<div class="leader-row"><div class="rank">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</div><div class="leader-avatar">'+avatarSvg(leaderboardAvatarId(x.name))+'</div><div class="leader-name">'+esc(x.name)+'</div><div class="leader-gain">'+x.score+'</div></div>').join('')+'</div><div class="end-actions">'+rematchBtnHtml+'<button class="btn secondary" onclick="returnToMainMenu()">🏠 Ana Menü</button></div></div>';
- $('status').textContent='🏆 Oyun tamamlandı!';$('finishBtn').style.display='none';$('finishBtn').classList.add('hidden');
+ $('answers').innerHTML='<div class="result-panel"><div class="result-hero final-hero"><div class="result-kicker">MAÇ TAMAMLANDI</div><div class="final-trophy">'+(isTie?'🤝':'🏆')+'</div><div class="big-score">'+formatPoints(netScores[me]||0)+'</div><div class="result-sub">'+finalHeadline+'</div></div><div class="round-details final-summary"><div class="detail-title">Tüm turlar tamamlandı</div><p style="color:var(--muted);margin:6px 0 0">Final skorları ve oyuncu sıralaması.</p></div><div class="leaderboard">'+rankedRows+'</div><div class="end-actions">'+rematchBtnHtml+'<button class="btn secondary" onclick="returnToMainMenu()">🏠 Ana Menü</button></div></div>';
+ $('status').textContent=isTie?'🤝 Maç '+formatPoints(topScore)+' - '+formatPoints(topScore)+' berabere tamamlandı!':'🏆 Oyun tamamlandı!';$('finishBtn').style.display='none';$('finishBtn').classList.add('hidden');
+ try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){window.scrollTo(0,0)}
 }
 function startRematch(){
  if(!isHost)return;
@@ -3033,7 +3045,7 @@ body.vortex-page {
   border: 1px solid rgba(255,255,255,0.09) !important;
   box-shadow: 0 30px 90px rgba(0,0,0,0.55), inset 0 1px rgba(255,255,255,0.035) !important;
   border-radius: 26px !important;
-  padding: 24px 28px 88px 28px !important;
+  padding: 24px 28px 116px 28px !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
 }
@@ -3043,7 +3055,7 @@ body.vortex-page {
     padding: 14px 10px !important;
   }
   #room .room-shell, #game .game-shell {
-    padding: 16px 14px 92px 14px !important;
+    padding: 16px 14px 112px 14px !important;
     border-radius: 22px !important;
   }
 }
@@ -4154,6 +4166,7 @@ body.vortex-page {
   gap: 14px !important;
 }
 
+.leader-row.is-winner,
 .leader-row:first-child {
   background: linear-gradient(90deg, rgba(139,92,246,0.18), rgba(34,211,238,0.05)) !important;
   border: 1px solid rgba(139,92,246,0.45) !important;
@@ -4221,6 +4234,7 @@ body.vortex-page {
   margin-top: 0 !important;
 }
 
+#game .btn.rematch-btn,
 .rematch-btn {
   background: linear-gradient(135deg, #10b981, #059669) !important;
   color: #fff !important;
@@ -4238,18 +4252,32 @@ body.vortex-page {
   gap: 8px !important;
 }
 
+#game .btn.rematch-btn:hover,
 .rematch-btn:hover {
   background: linear-gradient(135deg, #34d399, #10b981) !important;
   box-shadow: 0 14px 40px rgba(16,185,129,.55) !important;
   transform: translateY(-2px) !important;
 }
 
+#game .btn.rematch-btn.waiting,
 .rematch-btn.waiting {
   opacity: .8 !important;
   cursor: not-allowed !important;
   background: rgba(16,185,129,.25) !important;
   border: 1px solid rgba(16,185,129,.4) !important;
   box-shadow: none !important;
+}
+
+#game .end-actions .btn.secondary {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  color: #f7f8fc !important;
+  box-shadow: none !important;
+}
+
+#game .end-actions .btn.secondary:hover {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.28) !important;
 }
 
 /* Modals & Overlays */
