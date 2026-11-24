@@ -14,13 +14,10 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.468.0",
-    "simplex-noise": "^4.0.3",
-    "tailwind-merge": "^3.3.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-select": "^2.2.5",
-    "@radix-ui/react-switch": "^1.2.5"
+    "simplex-noise": "^4.0.3",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
