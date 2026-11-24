@@ -734,6 +734,16 @@ function setActiveScreen(screen){
  if(quick)quick.classList.toggle('hidden',!showLobby);
  if(room){room.classList.toggle('hidden',!showRoom);room.style.display=showRoom?'block':'none';}
  if(showRoom&&catPanel)catPanel.classList.remove('hidden');
+ if(showLobby||showRoom){
+   const startBtn=$('startBtn'),botBtn=$('botBtn');
+   if(startBtn)startBtn.classList.remove('hidden');
+   if(botBtn)botBtn.classList.remove('hidden');
+ }
+ if(showLobby){
+   ['createRoomBtn','joinRoomBtn'].forEach(id=>{const b=$(id);if(b){b.disabled=false;b.classList.remove('loading');}});
+   ['myScore','enemyScore','roundScore'].forEach(id=>{const s=$(id);if(s)s.textContent='0';});
+   const ans=$('answers');if(ans){ans.innerHTML='';ans.classList.add('hidden-answers');}
+ }
  if(game){game.classList.toggle('hidden',!showGame);game.style.display=showGame?'block':'none';}
  if(showRoom||showLobby){try{window.scrollTo({top:0,behavior:'auto'})}catch(e){window.scrollTo(0,0)}}
  if(typeof updateReactionBar==='function')updateReactionBar();
@@ -822,9 +832,9 @@ function enter(name,join){
  roomRejected=false;
  try{
   if(!join)clearHostSession();
-  if(!cats.length){toast('En az 1 kategori seçmelisin.');return}
+  if(!cats.length){toast('En az 1 kategori seçmelisin.');['createRoomBtn','joinRoomBtn'].forEach(id=>{const b=$(id);if(b){b.disabled=false;b.classList.remove('loading');}});return}
   const requestedCode=join?String($('joinCode')?.value||'').trim().replace(/\s/g,''):'';
-  if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');$('joinCode')?.focus();return}
+  if(join&&!/^\d{6}$/.test(requestedCode)){toast('6 haneli oda kodunu gir.');['createRoomBtn','joinRoomBtn'].forEach(id=>{const b=$(id);if(b){b.disabled=false;b.classList.remove('loading');}});$('joinCode')?.focus();return}
   me=(name||'Oyuncu').trim()||'Oyuncu';
   rememberName(me);rememberAvatar(myAvatar);
   if(join){try{sessionStorage.removeItem(GUEST_SESSION_KEY)}catch(e){}}
@@ -4091,10 +4101,26 @@ body.vortex-page {
   display: flex !important;
   flex-direction: column !important;
   align-items: flex-start !important;
-  gap: 2px !important;
+  gap: 3px !important;
   border-radius: 10px !important;
-  padding: 8px 11px !important;
-  font-size: 11px !important;
+  padding: 9px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  text-decoration: none !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.answer-decision b {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  text-decoration: none !important;
+}
+
+.answer-decision span {
+  font-size: 11.5px !important;
+  line-height: 1.35 !important;
+  text-decoration: none !important;
 }
 
 .answer-decision.correct {
