@@ -1,14 +1,61 @@
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { ArrowRight, Gamepad2, Globe2, Sparkles, Users, Zap } from "lucide-react"
 import { Vortex } from "@/components/ui/vortex"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
-const avatars = ["Nova", "Pulse", "Vega", "Orbit", "Flux", "Echo", "Lumen", "Astra"]
-function goToGame(mode: "create" | "join", name: string, code?: string, avatarIndex = 0, settings?: {duration:string;wheel:string;playerLimit:string;roundLimit:string}) {
-  const params = new URLSearchParams({ mode, name: name.trim() || "Oyuncu", avatar: String(avatarIndex) })
+const AVATARS = ["Nova", "Pulse", "Vega", "Orbit", "Flux", "Echo", "Lumen", "Astra"] as const
+
+const DURATION_OPTIONS = [
+  ["60", "60 sn"],
+  ["90", "90 sn"],
+  ["120", "120 sn"],
+  ["180", "180 sn"],
+] as const
+
+const WHEEL_OPTIONS = [
+  ["on", "Açık"],
+  ["off", "Kapalı"],
+] as const
+
+const PLAYER_LIMIT_OPTIONS = [
+  ["2", "2"],
+  ["4", "4"],
+  ["6", "6"],
+  ["8", "8"],
+  ["10", "10"],
+] as const
+
+const ROUND_LIMIT_OPTIONS = [
+  ["3", "3"],
+  ["5", "5"],
+  ["10", "10"],
+] as const
+
+const FOOTER_STATS = [
+  ["Puan", "Yeşil oy = +10"],
+  ["Harf", "Her tur yeni harf"],
+  ["Çoklu", "2-10 oyuncu"],
+] as const
+
+function goToGame(
+  mode: "create" | "join",
+  name: string,
+  code?: string,
+  avatarIndex = 0,
+  settings?: { duration: string; wheel: string; playerLimit: string; roundLimit: string }
+) {
+  const cleanName = name.trim() || "Oyuncu"
+  try {
+    if (name.trim()) localStorage.setItem("isimSehirName", name.trim())
+  } catch {
+    // ignore storage errors
+  }
+  const params = new URLSearchParams({ mode, name: cleanName, avatar: String(avatarIndex) })
   if (mode === "join" && code) params.set("code", code.replace(/\s/g, ""))
-  if (mode === "create" && settings) Object.entries(settings).forEach(([key,value]) => params.set(key,value))
+  if (mode === "create" && settings) {
+    Object.entries(settings).forEach(([key, value]) => params.set(key, value))
+  }
   window.location.href = new URL(`legacy.html?${params.toString()}`, window.location.href).href
 }
 
@@ -24,26 +71,44 @@ export default function App() {
   const [roundLimit, setRoundLimit] = useState("5")
 
   const recentName = useMemo(() => {
-    try { return localStorage.getItem("isimSehirName") || "" } catch { return "" }
+    try {
+      return localStorage.getItem("isimSehirName") || ""
+    } catch {
+      return ""
+    }
   }, [])
 
-  const chooseName = (setter: (value: string) => void) => {
-    if (recentName) setter(recentName)
-  }
+  const chooseName = useCallback(
+    (setter: (value: string) => void) => {
+      if (recentName) setter(recentName)
+    },
+    [recentName]
+  )
 
-  const create = () => {
+  const create = useCallback(() => {
     setError("")
-    goToGame("create", hostName, undefined, avatar, {duration,wheel,playerLimit,roundLimit})
-  }
+    goToGame("create", hostName, undefined, avatar, { duration, wheel, playerLimit, roundLimit })
+  }, [hostName, avatar, duration, wheel, playerLimit, roundLimit])
 
-  const join = () => {
+  const join = useCallback(() => {
     const code = joinCode.trim()
     if (!/^\d{6}$/.test(code)) {
       setError("6 haneli oda kodunu gir kral.")
       return
     }
+    setError("")
     goToGame("join", guestName, code, avatar)
-  }
+  }, [joinCode, guestName, avatar])
+
+  const settingControls = useMemo(
+    () => [
+      { label: "Tur süresi", value: duration, setter: setDuration, options: DURATION_OPTIONS },
+      { label: "Çark", value: wheel, setter: setWheel, options: WHEEL_OPTIONS },
+      { label: "Oyuncu", value: playerLimit, setter: setPlayerLimit, options: PLAYER_LIMIT_OPTIONS },
+      { label: "Tur sayısı", value: roundLimit, setter: setRoundLimit, options: ROUND_LIMIT_OPTIONS },
+    ],
+    [duration, wheel, playerLimit, roundLimit]
+  )
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#03040b] text-white selection:bg-violet-500/30">
@@ -116,39 +181,56 @@ export default function App() {
 
             <div className="mt-4 flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">Avatarını seç</span>
-              <span className="text-[10px] text-violet-300">{avatars[avatar]}</span>
+              <span className="text-[10px] text-violet-300">{AVATARS[avatar]}</span>
             </div>
             <div className="mt-2 grid grid-cols-8 gap-1.5">
-              {avatars.map((name, i) => (
-                <button key={name} type="button" onClick={() => setAvatar(i)} aria-label={name} aria-pressed={avatar === i}
-                  className={`aspect-square rounded-xl border p-1 text-[10px] font-bold transition ${avatar === i ? "border-violet-300 bg-violet-500/20 shadow-[0_0_18px_rgba(124,92,255,.25)]" : "border-white/8 bg-white/[.025] hover:border-white/20"}`}>
-                  <span className="grid size-full place-items-center rounded-lg bg-gradient-to-br from-violet-500/50 to-cyan-400/30">{name[0]}</span>
+              {AVATARS.map((name, i) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setAvatar(i)}
+                  aria-label={name}
+                  aria-pressed={avatar === i}
+                  className={`aspect-square rounded-xl border p-1 text-[10px] font-bold transition ${
+                    avatar === i
+                      ? "border-violet-300 bg-violet-500/20 shadow-[0_0_18px_rgba(124,92,255,.25)]"
+                      : "border-white/8 bg-white/[.025] hover:border-white/20"
+                  }`}
+                >
+                  <span className="grid size-full place-items-center rounded-lg bg-gradient-to-br from-violet-500/50 to-cyan-400/30">
+                    {name[0]}
+                  </span>
                 </button>
               ))}
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-2">
-              {[
-                ["Tur süresi", duration, setDuration, [["60","60 sn"],["90","90 sn"],["120","120 sn"],["180","180 sn"]]],
-                ["Çark", wheel, setWheel, [["on","Açık"],["off","Kapalı"]]],
-                ["Oyuncu", playerLimit, setPlayerLimit, [["2","2"],["4","4"],["6","6"],["8","8"],["10","10"]]],
-                ["Tur sayısı", roundLimit, setRoundLimit, [["3","3"],["5","5"],["10","10"]]],
-              ].map(([label,value,setter,options]) => (
-                <label key={label as string} className="rounded-2xl border border-white/8 bg-white/[.025] p-3">
-                  <span className="block text-[9px] font-black uppercase tracking-[.16em] text-white/35">{label as string}</span>
-                  <select value={value as string} onChange={e => (setter as (v:string)=>void)(e.target.value)}
-                    className="mt-2 h-9 w-full rounded-xl border border-white/10 bg-black/30 px-2 text-xs text-white outline-none focus:border-violet-400/60">
-                    {(options as string[][]).map(([v,t]) => <option key={v} value={v}>{t}</option>)}
+              {settingControls.map(({ label, value, setter, options }) => (
+                <label key={label} className="rounded-2xl border border-white/8 bg-white/[.025] p-3">
+                  <span className="block text-[9px] font-black uppercase tracking-[.16em] text-white/35">{label}</span>
+                  <select
+                    value={value}
+                    onChange={e => setter(e.target.value)}
+                    className="mt-2 h-9 w-full rounded-xl border border-white/10 bg-black/30 px-2 text-xs text-white outline-none focus:border-violet-400/60"
+                  >
+                    {options.map(([v, t]) => (
+                      <option key={v} value={v}>
+                        {t}
+                      </option>
+                    ))}
                   </select>
                 </label>
               ))}
             </div>
 
             <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-white/[.015] p-3 text-center">
-              <span className="text-[11px] font-medium text-white/40">✦ Kategori ve harf havuzu oda lobisinde belirlenir.</span>
+              <span className="text-[11px] font-medium text-white/40">🎲 Kategori ve harf havuzu oda lobisinde belirlenir.</span>
             </div>
 
-            <Button onClick={create} className="mt-5 h-12 w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 font-black shadow-[0_12px_35px_rgba(124,92,255,.22)] hover:from-violet-500 hover:to-fuchsia-400">
+            <Button
+              onClick={create}
+              className="mt-5 h-12 w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 font-black shadow-[0_12px_35px_rgba(124,92,255,.22)] hover:from-violet-500 hover:to-fuchsia-400"
+            >
               Oda Oluştur <ArrowRight className="ml-1 size-4" />
             </Button>
           </Card>
@@ -169,26 +251,41 @@ export default function App() {
               )}
             </div>
 
-            <input value={guestName} onChange={e => setGuestName(e.target.value)} maxLength={18} placeholder="Oyuncu adın"
-              className="h-12 w-full rounded-2xl border border-white/10 bg-black/30 px-4 text-sm outline-none transition focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-500/10" />
-            <input value={joinCode} onChange={e => setJoinCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              onKeyDown={e => e.key === "Enter" && join()} inputMode="numeric" placeholder="6 haneli oda kodu"
-              className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/30 px-4 text-sm tracking-[.25em] outline-none transition focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-500/10" />
+            <input
+              value={guestName}
+              onChange={e => setGuestName(e.target.value)}
+              maxLength={18}
+              placeholder="Oyuncu adın"
+              className="h-12 w-full rounded-2xl border border-white/10 bg-black/30 px-4 text-sm outline-none transition focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-500/10"
+            />
+            <input
+              value={joinCode}
+              onChange={e => {
+                if (error) setError("")
+                setJoinCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }}
+              onKeyDown={e => e.key === "Enter" && join()}
+              inputMode="numeric"
+              placeholder="6 haneli oda kodu"
+              className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-black/30 px-4 text-sm tracking-[.25em] outline-none transition focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-500/10"
+            />
 
-            {error && <div className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">{error}</div>}
+            {error && (
+              <div className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">{error}</div>
+            )}
 
-            <Button onClick={join} variant="secondary" className="mt-5 h-12 w-full rounded-2xl border border-cyan-300/15 bg-cyan-500/10 font-black text-cyan-100 hover:bg-cyan-500/15">
+            <Button
+              onClick={join}
+              variant="secondary"
+              className="mt-5 h-12 w-full rounded-2xl border border-cyan-300/15 bg-cyan-500/10 font-black text-cyan-100 hover:bg-cyan-500/15"
+            >
               Odaya Katıl <ArrowRight className="ml-1 size-4" />
             </Button>
           </Card>
         </section>
 
         <section className="mt-4 grid grid-cols-3 gap-2">
-          {[
-            ["Puan", "Yeşil oy = +10"],
-            ["Harf", "Her tur yeni harf"],
-            ["Çoklu", "2–10 oyuncu"],
-          ].map(([title, sub]) => (
+          {FOOTER_STATS.map(([title, sub]) => (
             <div key={title} className="rounded-2xl border border-white/8 bg-white/[.025] px-3 py-4 text-center backdrop-blur-xl">
               <div className="text-sm font-black">{title}</div>
               <div className="mt-1 text-[10px] text-white/35">{sub}</div>
@@ -196,9 +293,7 @@ export default function App() {
           ))}
         </section>
 
-        <footer className="mt-8 text-center text-[10px] text-white/20">
-          Vortex Arena · İsim Şehir
-        </footer>
+        <footer className="mt-8 text-center text-[10px] text-white/20">Vortex Arena · İsim Şehir</footer>
       </div>
     </main>
   )
