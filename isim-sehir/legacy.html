@@ -965,9 +965,16 @@ function restoreHostSession(){
  return true;
 }
 function restoreHostPhase(data){
- if(!isHost)return;setActiveScreen('game');$('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('myScore').textContent=myScore;
- if(gameFinished){showFinalResults(false);return}
+ if(!isHost)return;
  const phase=roundState?.phase||'lobby';
+ if(!gameFinished&&phase==='lobby'){
+  setActiveScreen('room');
+  renderPlayers();
+  renderRoomSettingsSummary();
+  return;
+ }
+ setActiveScreen('game');$('startBtn').classList.add('hidden');$('botBtn').classList.add('hidden');$('myScore').textContent=myScore;
+ if(gameFinished){showFinalResults(false);return}
  if(phase==='round'){
   const elapsed=Math.max(0,Math.floor((Date.now()-Number(data.savedAt||Date.now()))/1000));
   resumeActiveRound({duration:Number(data.settings?.duration)||selectedDuration(),seconds:Math.max(1,Number(data.seconds||1)-elapsed)});
@@ -980,7 +987,7 @@ function restoreHostPhase(data){
   $('answers').innerHTML=cats.map(c=>{const x=answerForCategory(mine,c)||{val:''};return '<div class="answer answer-filled"><label>'+esc(c)+'</label><input maxlength="30" data-cat="'+esc(c)+'" value="'+esc(x.val||'')+'" disabled></div>'}).join('');
   $('answers').classList.remove('hidden-answers');$('status').textContent='📨 Cevaplar bekleniyor...';$('finishBtn').style.display='';$('finishBtn').classList.remove('hidden');$('finishBtn').disabled=true;$('finishBtn').textContent='✓ Cevapların kaydedildi';$('finishBtn').classList.add('waiting');
  }else if(phase==='results'&&lastVotingResult){showResults(lastVotingResult.gains||{},lastVotingResult.details||[],lastVotingResult.scores||netScores)}
- else{$('game').classList.add('hidden');$('startBtn').classList.remove('hidden');$('botBtn').classList.remove('hidden');$('status').textContent='🟢 Oda geri yüklendi — oyuncular bekleniyor.'}
+ else{setActiveScreen('room');renderPlayers();renderRoomSettingsSummary();}
 }
 function createPeer(id){return new Peer(id,{host:'0.peerjs.com',port:443,path:'/',secure:true,debug:2,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]}})}
 function setConnectionUiState(level,message,showReconnect=false){
@@ -1617,7 +1624,7 @@ function addBot(){
  const limit=Number($('playerLimit')?.value||4);
  const humanCount=Object.keys(onlinePlayers).length||1;
  if(humanCount+bots.length>=limit){toast('Oyuncu limiti dolu.');return}
- const nextNum=bots.reduce((m,b)=>{const n=Number(String(b.name||'').replace(/D+/g,''));return Number.isFinite(n)?Math.max(m,n):m;},0)+1;
+ const nextNum=bots.reduce((m,b)=>{const n=Number(String(b.name||'').replace(/[^0-9]+/g,''));return Number.isFinite(n)?Math.max(m,n):m;},0)+1;
  bots.push({name:'Bot '+nextNum,score:0,answers:[],avatar:(bots.length+4)%AVATARS.length});
  renderPlayers();toast('🤖 Test botu eklendi')
 }
@@ -4790,7 +4797,21 @@ body.vortex-page {
   display: none !important;
 }
 #room .player {
-  justify-content: space-between;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+}
+body:has(#reactionBar:not(.hidden)) .toast {
+  bottom: 76px !important;
+  z-index: 10050 !important;
+}
+@media (max-width: 600px) {
+  body:has(#reactionBar:not(.hidden)) .toast {
+    bottom: 68px !important;
+    max-width: calc(100vw - 24px) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 #room .player > span {
   min-width: 0;
