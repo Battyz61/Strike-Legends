@@ -2202,6 +2202,8 @@ function voteRow(owner,x,empty=false){
  return '<div class="vote-player'+(isEmptyAnswer?' empty-answer':'')+'" data-owner="'+owner+'" data-answer="'+esc(answerOwner)+'"><div class="avatar '+(owner.startsWith('bot')?'bot':'')+'">'+avatarSvg(ownerAvatar,true)+'</div><div class="vote-info"><div class="vote-name-row"><div class="vote-name">'+esc(answerOwner)+'</div>'+ownBadge+'</div><div class="vote-value">'+esc(displayVal)+'</div><div class="vote-note">'+(isEmptyAnswer?'Cevap verilmedi':'Oylar')+'</div><div class="vote-voters">'+botVotes+humanVotes+'<span class="player-vote my-vote pending"></span></div></div>'+aiBlock+'<div class="vote-actions">'+voterButtons+'</div></div>';
 }
 function showVoting(sync=null){
+ clearInterval(timerId);
+ roundState={...(roundState||{token:++roundToken}),phase:'voting'};
  const rush=$('rushBanner');if(rush){rush.classList.add('hidden');rush.classList.remove('show');}
  const syncedVotes=sync?.votes||{};
  const syncedDone=sync?.votingDone||{};
