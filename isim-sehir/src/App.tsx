@@ -4,7 +4,16 @@ import { Vortex } from "@/components/ui/vortex"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
-const avatars = ["Nova", "Pulse", "Vega", "Orbit", "Flux", "Echo", "Lumen", "Astra"]
+const avatars = [
+  { name: "Nova", bg: "#6d5dfc", fg: "#d9d5ff", shape: "M24 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm-11 28c1-7 5-10 11-10s10 3 11 10" },
+  { name: "Pulse", bg: "#14b8a6", fg: "#bffcf2", shape: "M24 7l3 11 10 3-10 3-3 12-3-12-10-3 10-3z" },
+  { name: "Vega", bg: "#f97316", fg: "#ffe0c2", shape: "M24 7l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z" },
+  { name: "Orbit", bg: "#06b6d4", fg: "#c8f8ff", shape: "M24 7a17 17 0 1 0 0 34 17 17 0 0 0-0-34Zm0 7a10 10 0 1 1 0 20 10 10 0 0 1 0-20Z" },
+  { name: "Flux", bg: "#e11d48", fg: "#ffd0db", shape: "M14 13h20l-3 22H17zM18 9h12M20 18h8M20 24h8" },
+  { name: "Echo", bg: "#8b5cf6", fg: "#e9ddff", shape: "M11 24c0-8 6-14 13-14s13 6 13 14-6 14-13 14-13-6-13-14Zm7 0h12M24 17v14" },
+  { name: "Lumen", bg: "#eab308", fg: "#fff2ad", shape: "M24 6l3 12 11 6-11 6-3 12-3-12-11-6 11-6z" },
+  { name: "Astra", bg: "#3b82f6", fg: "#d9e9ff", shape: "M24 7l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" },
+]
 function goToGame(mode: "create" | "join", name: string, code?: string, avatarIndex = 0, settings?: {duration:string;wheel:string;playerLimit:string;roundLimit:string}) {
   const params = new URLSearchParams({ mode, name: name.trim() || "Oyuncu", avatar: String(avatarIndex) })
   if (mode === "join" && code) params.set("code", code.replace(/\s/g, ""))
@@ -21,7 +30,12 @@ export default function App() {
       return (p.get("code") || p.get("join") || "").replace(/\D/g, "").slice(0, 6)
     } catch { return "" }
   })
-  const [avatar, setAvatar] = useState(0)
+  const [avatar, setAvatar] = useState(() => {
+    try {
+      const n = Number(localStorage.getItem("isimSehirAvatar"))
+      return Number.isFinite(n) ? ((Math.trunc(n) % avatars.length) + avatars.length) % avatars.length : 0
+    } catch { return 0 }
+  })
   const [error, setError] = useState("")
   const [duration, setDuration] = useState("120")
   const [wheel, setWheel] = useState("on")
@@ -121,13 +135,16 @@ export default function App() {
 
             <div className="mt-4 flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">Avatarını seç</span>
-              <span className="text-[10px] text-violet-300">{avatars[avatar]}</span>
+              <span className="text-[10px] text-violet-300">{avatars[avatar]?.name}</span>
             </div>
             <div className="mt-2 grid grid-cols-8 gap-1.5">
-              {avatars.map((name, i) => (
-                <button key={name} type="button" onClick={() => setAvatar(i)} aria-label={name} aria-pressed={avatar === i}
-                  className={`aspect-square rounded-xl border p-1 text-[10px] font-bold transition ${avatar === i ? "border-violet-300 bg-violet-500/20 shadow-[0_0_18px_rgba(124,92,255,.25)]" : "border-white/8 bg-white/[.025] hover:border-white/20"}`}>
-                  <span className="grid size-full place-items-center rounded-lg bg-gradient-to-br from-violet-500/50 to-cyan-400/30">{name[0]}</span>
+              {avatars.map((item, i) => (
+                <button key={item.name} type="button" onClick={() => { setAvatar(i); try { localStorage.setItem("isimSehirAvatar", String(i)) } catch {} }} aria-label={item.name} aria-pressed={avatar === i} title={item.name}
+                  className={`aspect-square rounded-xl border p-1 transition ${avatar === i ? "border-violet-300 bg-violet-500/20 shadow-[0_0_18px_rgba(124,92,255,.25)] scale-[1.03]" : "border-white/8 bg-white/[.025] hover:border-white/20"}`}>
+                  <svg viewBox="0 0 48 48" aria-hidden="true" className="size-full rounded-lg">
+                    <circle cx="24" cy="24" r="22" fill={item.bg} />
+                    <path d={item.shape} fill="none" stroke={item.fg} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </button>
               ))}
             </div>
